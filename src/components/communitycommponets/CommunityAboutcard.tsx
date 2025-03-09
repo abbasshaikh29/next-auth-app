@@ -6,11 +6,11 @@ interface NewCommmunityPageProps {
 }
 function CommunityAboutcard({ title, description }: NewCommmunityPageProps) {
   return (
-    <div className="card w-96 bg-blue-100 shadow-xl h-96 rounded-lg">
+    <div className="card w-80 bg-blue-100 shadow-xl h-96 rounded-lg">
       <figure className="px-4 pt-4">
         <img
           src="https://placeimg.com/400/225/arch"
-          alt="Adonis Gang"
+          alt="Community Image"
           className="rounded-xl"
         />
       </figure>

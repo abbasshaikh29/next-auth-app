@@ -127,57 +127,67 @@ export default function PostCard({
           onClick={() => setIsDialogOpen(true)}
           className="px-4 py-2"
         >
-          <h4 className="font-bold mb-2">{post.title}</h4>
-          <div className="space-y-2">
-            {content.map(
-              (item: { type: string; content: string }, index: number) => (
-                <div key={index}>
-                  {item?.type === "text" && (
-                    <p className="text-gray-600 leading-relaxed">
-                      {item.content}
-                    </p>
-                  )}
-                  {item?.type === "image" && (
+          <div className="flex">
+            <div className="w-3/4">
+              <h4 className="font-bold mb-2">{post.title}</h4>
+              <div className="space-y-2">
+                {content.map(
+                  (item: { type: string; content: string }, index: number) => (
+                    <div key={index}>
+                      {item?.type === "text" && (
+                        <p className="text-gray-600 leading-relaxed">
+                          {item.content}
+                        </p>
+                      )}
+                      {item?.type === "link" &&
+                        (item.content.startsWith("http") ? (
+                          <a
+                            href={item.content}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:underline"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {item.content}
+                          </a>
+                        ) : (
+                          <Link
+                            href={item.content}
+                            className="text-blue-500 hover:underline"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {item.content}
+                          </Link>
+                        ))}
+                      {item?.type === "file" && (
+                        <a
+                          href={item.content}
+                          download
+                          className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <FileText className="h-4 w-4" />
+                          Download File
+                        </a>
+                      )}
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+            <div className="w-1/4 flex justify-center">
+              {content.map(
+                (item: { type: string; content: string }, index: number) =>
+                  item?.type === "image" && (
                     <img
+                      key={index}
                       src={item.content}
                       alt=""
-                      className="w-full h-auto rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
+                      className="w-20 h-auto rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
                     />
-                  )}
-                  {item?.type === "link" &&
-                    (item.content.startsWith("http") ? (
-                      <a
-                        href={item.content}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {item.content}
-                      </a>
-                    ) : (
-                      <Link
-                        href={item.content}
-                        className="text-blue-500 hover:underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {item.content}
-                      </Link>
-                    ))}
-                  {item?.type === "file" && (
-                    <a
-                      href={item.content}
-                      download
-                      className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <FileText className="h-4 w-4" />
-                      Download File
-                    </a>
-                  )}
-                </div>
-              )
-            )}
+                  )
+              )}
+            </div>
           </div>
         </CardContent>
 
@@ -264,13 +274,6 @@ export default function PostCard({
                   {item.type === "text" && (
                     <p className="text-gray-600">{item.content}</p>
                   )}
-                  {item.type === "image" && (
-                    <img
-                      src={item.content}
-                      alt=""
-                      className="max-h-[500px] w-full object-contain rounded-md"
-                    />
-                  )}
                   {item.type === "link" && (
                     <a
                       href={item.content}
@@ -293,6 +296,17 @@ export default function PostCard({
                   )}
                 </div>
               )
+            )}
+            {content.map(
+              (item: { type: string; content: string }, index: number) =>
+                item.type === "image" && (
+                  <img
+                    key={index}
+                    src={item.content}
+                    alt=""
+                    className="w-40 h-40 object-contain rounded-md"
+                  />
+                )
             )}
           </div>
 

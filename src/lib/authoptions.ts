@@ -36,6 +36,7 @@ export const authoption: NextAuthOptions = {
             username: user.username, // Include the username
             name: user.username, // Use username as the name
             image: user.profileImage, // Add profile image if available
+            // Add slug to the user
           };
         } catch (error) {
           console.error("Authentication error:", error);

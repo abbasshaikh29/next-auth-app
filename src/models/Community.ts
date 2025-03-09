@@ -1,5 +1,4 @@
 import mongoose, { Schema, model, models } from "mongoose";
-
 import slugify from "slugify"; // Install slugify: npm install slugify
 
 export interface ICommunity {
@@ -7,7 +6,7 @@ export interface ICommunity {
   name: string;
   slug?: string;
   description?: string;
-  createdBy: string;
+  createdBySlug: string;
   createdAt: Date;
 }
 
@@ -15,13 +14,20 @@ const communitySchema = new Schema<ICommunity>({
   name: { type: String, required: true },
   description: { type: String },
   slug: { type: String, unique: true, sparse: true }, // Add sparse: true
-  createdBy: { type: String, required: true },
+  createdBySlug: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
 });
 
 communitySchema.pre("save", async function (next) {
-  if (this.isModified("username")) {
+  console.log("Pre-save hook triggered");
+  console.log("Name:", this.name);
+  console.log("Current slug:", this.slug);
+
+  // Generate slug if name is present and slug is not already set
+  if (this.name && !this.slug) {
+    console.log("Generating slug from name:", this.name);
     this.slug = slugify(this.name, { lower: true, strict: true });
+    console.log("Generated slug:", this.slug);
   }
   next();
 });

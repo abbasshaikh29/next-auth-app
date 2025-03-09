@@ -22,7 +22,7 @@ interface PostWithAuthor extends Omit<IPost, "likes"> {
 }
 
 export default function HomeIdPage() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const { data: session } = useSession();
   const [community, setCommunity] = useState<ICommunity | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,12 +32,12 @@ export default function HomeIdPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!id) {
+      if (!slug) {
         return;
       }
-      if (typeof id !== "string") return;
+      if (typeof slug !== "string") return;
       try {
-        const communityResponse = await fetch(`/api/community/${id}`);
+        const communityResponse = await fetch(`/api/community/${slug}`);
         if (!communityResponse.ok) {
           throw new Error("Failed to fetch community");
         }
@@ -45,7 +45,7 @@ export default function HomeIdPage() {
         setCommunity(communityData);
 
         const postsResponse = await fetch(
-          `/api/community/posts?communityId=${id}`
+          `/api/community/posts?communitySlug=${slug}`
         );
         if (!postsResponse.ok) {
           throw new Error("Failed to fetch posts");
@@ -61,7 +61,7 @@ export default function HomeIdPage() {
     };
 
     fetchData();
-  }, [id]);
+  }, [slug]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -75,8 +75,8 @@ export default function HomeIdPage() {
     return <div>Community not found.</div>;
   }
 
-  // Check if id is available before rendering CreatePost
-  if (!id) {
+  // Check if slug is available before rendering CreatePost
+  if (!slug) {
     return <div>Loading community...</div>;
   }
 
@@ -93,7 +93,7 @@ export default function HomeIdPage() {
               </div>
               <div className=" rounded-lg shadow-md p-4">
                 <CreatePost
-                  communityId={id as string}
+                  communitySlug={slug as string}
                   authorId={session?.user?.id as string}
                   onPostCreated={(newPost) => {
                     setPosts((prevPosts) => [newPost, ...prevPosts]);

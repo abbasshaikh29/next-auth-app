@@ -37,8 +37,8 @@ class ApiClient {
     return this.fetch<ICommunity[]>("/community");
   }
 
-  async getcommunity(id: string) {
-    return this.fetch<ICommunity>(`/community/${id}`);
+  async getcommunity(slug: string) {
+    return this.fetch<ICommunity>(`/community/${slug}`);
   }
 
   async createCommunity(CommunityData: CommunityFormData) {

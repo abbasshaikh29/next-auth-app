@@ -53,7 +53,7 @@ export default function CommunityCreateForm() {
       const communityData = { ...data, createdAt: new Date() };
       await apiClient.createCommunity(communityData); // Pass the entire data object
       showNotification("community created successfully!", "success");
-      router.push("/NewCommunitypage"); // Redirect to the new community page
+      router.push("/Newcompage"); // Redirect to the new community page
       // Reset form after successful submission
       setValue("name", "");
       setValue("description", "");

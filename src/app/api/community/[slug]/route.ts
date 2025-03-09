@@ -1,33 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dbconnect } from "@/lib/db";
 import { Community } from "@/models/Community";
-import { Types } from "mongoose";
 
 interface CommunityType {
   _id: string;
   name: string;
   description?: string;
+  slug: string;
   // Add other fields as needed
 }
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { slug: string } }
 ) {
   try {
-    // Ensure params is properly awaited
-    const { id } = await params;
-
-    // Validate the ID
-    if (!Types.ObjectId.isValid(id)) {
-      return NextResponse.json(
-        { error: "Invalid community ID" },
-        { status: 400 }
-      );
-    }
+    const { slug } = await params;
 
     await dbconnect();
-    const community: CommunityType | null = await Community.findById(id);
+    const community: CommunityType | null = await Community.findOne({ slug });
 
     if (!community) {
       return NextResponse.json(

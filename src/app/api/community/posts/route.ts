@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authoption } from "@/lib/authoptions";
 import { dbconnect } from "@/lib/db";
 import { Post, IPost } from "@/models/Posts";
+import { Community } from "@/models/Community";
 import mongoose from "mongoose";
 import { User } from "@/models/User";
 
@@ -13,18 +14,27 @@ export async function GET(request: NextRequest) {
   try {
     await dbconnect();
 
-    // Extract community ID from the query parameters
-    const communityId = request.nextUrl.searchParams.get("communityId");
+    // Extract community slug from the query parameters
+    const communitySlug = request.nextUrl.searchParams.get("communitySlug");
 
-    if (!communityId) {
+    if (!communitySlug) {
       return NextResponse.json(
-        { error: "Missing communityId" },
+        { error: "Missing communitySlug" },
         { status: 400 }
       );
     }
 
+    // Find community by slug first
+    const community = await Community.findOne({ slug: communitySlug });
+    if (!community) {
+      return NextResponse.json(
+        { error: "Community not found" },
+        { status: 404 }
+      );
+    }
+
     // Modify the query to filter by community ID
-    const posts = await Post.find({ communityId }).populate(
+    const posts = await Post.find({ communityId: community._id }).populate(
       "createdBy",
       "name"
     );
@@ -71,16 +81,16 @@ export async function POST(request: NextRequest) {
     }
 
     await dbconnect();
-    const { title, content, communityId } = await request.json();
+    const { title, content, communitySlug } = await request.json();
 
     // Validate required fields
-    if (!title || !content || !communityId) {
+    if (!title || !content || !communitySlug) {
       return NextResponse.json(
         {
           error: `Missing required fields: ${[
             !title && "title",
             !content && "content",
-            !communityId && "communityId",
+            !communitySlug && "communitySlug",
           ]
             .filter(Boolean)
             .join(", ")}`,
@@ -107,12 +117,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Find community by slug
+    const community = await Community.findOne({ slug: communitySlug });
+    if (!community) {
+      return NextResponse.json(
+        { error: "Community not found" },
+        { status: 404 }
+      );
+    }
+
     const postData = {
       title,
       content: processedContent,
       authorName: user.username || user.name,
       createdBy: new mongoose.Types.ObjectId(session.user.id),
-      communityId: new mongoose.Types.ObjectId(communityId),
+      communityId: community._id,
     };
 
     const newPost = await Post.create(postData);

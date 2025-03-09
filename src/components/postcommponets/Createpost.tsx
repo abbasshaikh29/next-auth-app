@@ -15,7 +15,7 @@ interface PostContent {
 }
 
 interface CreatePostProps {
-  communityId: string;
+  communitySlug: string;
   authorId: string;
   onPostCreated?: (newPost: any) => void;
 }
@@ -26,7 +26,7 @@ interface ApiResponse {
 }
 
 export function CreatePost({
-  communityId,
+  communitySlug,
   authorId,
   onPostCreated,
 }: CreatePostProps) {
@@ -76,7 +76,7 @@ export function CreatePost({
         body: JSON.stringify({
           title: title,
           content: JSON.stringify(finalContents),
-          communityId: communityId,
+          communitySlug: communitySlug,
         }),
       });
 

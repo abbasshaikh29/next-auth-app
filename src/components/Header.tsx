@@ -57,7 +57,17 @@ export default function Header({ title }: CommmunitytitelProps) {
                       </span>
                     </li>
                     <li className="divider my-1"></li>
-
+                    <li>
+                      <Link
+                        href={"/profile"}
+                        className="px-4 py-2 hover:bg-base-200 block w-full"
+                        onClick={() =>
+                          showNotification("Create your Community", "info")
+                        }
+                      >
+                        Profile
+                      </Link>
+                    </li>
                     <li>
                       <Link
                         href={"/communityform"}
@@ -69,13 +79,24 @@ export default function Header({ title }: CommmunitytitelProps) {
                         CreateCommunity
                       </Link>
                     </li>
-
                     <li>
+                      <Link
+                        href={"/communitySettings"}
+                        className="px-4 py-2 hover:bg-base-200 block w-full"
+                        onClick={() =>
+                          showNotification("Create your Community", "info")
+                        }
+                      >
+                        Settings
+                      </Link>
+                    </li>
+                    <li className="divider my-1"></li>{" "}
+                    <li className="items-center px-20">
                       <button
                         onClick={handleSignOut}
                         className="btn btn-primary"
                       >
-                        Sign Out
+                        Log Out
                       </button>
                     </li>
                   </>

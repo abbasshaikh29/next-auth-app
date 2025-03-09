@@ -20,9 +20,9 @@ function truncateDescription(description: string | undefined): string {
 export default function Communityfeed({ communitys }: CommunityfeedProps) {
   const router = useRouter();
 
-  const handleJoinClick = (communityId: string) => {
-    router.push(`/Newcompage/${communityId}`);
-    console.log("Joining community with ID:", communityId);
+  const handleJoinClick = (communityslug: string) => {
+    router.push(`/Newcompage/${communityslug}/about`);
+    console.log("Joining community with ID:", communityslug);
   };
 
   return (
@@ -43,7 +43,7 @@ export default function Communityfeed({ communitys }: CommunityfeedProps) {
                 <button
                   className="btn btn-primary"
                   onClick={() =>
-                    handleJoinClick(community._id?.toString() || "")
+                    handleJoinClick(community.slug?.toString() || "")
                   }
                 >
                   Join Now

@@ -8,7 +8,7 @@ function Searchs() {
     <div className="relative w-full">
       <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
       <Input
-        placeholder="Search"
+        placeholder="Search Post"
         className="pl-10 rounded-full w-full"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}

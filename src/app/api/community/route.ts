@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authoption } from "@/lib/authoptions";
 import { dbconnect } from "@/lib/db";
 import { Community, ICommunity } from "@/models/Community";
-
+import slugify from "slugify";
 export async function GET() {
   try {
     await dbconnect();
@@ -41,15 +41,26 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Create new video with default values
-    const videoData: ICommunity = {
+    console.log(session);
+    // Create new community with default values
+    const communityData: ICommunity = {
       ...body,
-      createdBy: session.user.id,
+      createdBySlug: session.user.username,
     };
 
-    const newVideo = await Community.create(videoData);
-    return NextResponse.json(newVideo);
+    // Create document instance
+    const newCommunity = new Community(communityData);
+
+    // Explicitly generate slug if not set
+    if (!newCommunity.slug && newCommunity.name) {
+      newCommunity.slug = slugify(newCommunity.name, {
+        lower: true,
+        strict: true,
+      });
+    }
+
+    await newCommunity.save();
+    return NextResponse.json(newCommunity);
   } catch (error) {
     console.error("Error creating video:", error);
     return NextResponse.json(
