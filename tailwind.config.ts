@@ -18,6 +18,6 @@ export default {
   },
   plugins: [daisyui],
   daisyui: {
-    themes: ["retro"],
+    themes: [, "forest", "lemonade"],
   },
 } satisfies Config;

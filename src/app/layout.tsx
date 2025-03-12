@@ -1,13 +1,11 @@
-import type { Metadata } from "next";
+"use client";
+
 import { Geist, Geist_Mono } from "next/font/google";
 import Providers from "../components/Provider";
+import { ThemeProvider } from "../components/ThemeProvider";
 import "./globals.css";
 import ErrorBoundary from "../components/ErrorBoundary";
-
-export const metadata: Metadata = {
-  title: "SKOOL",
-  description: "Monitize your audience with SKOOL",
-};
+import { metadata } from "./layout.server";
 
 export default function RootLayout({
   children,
@@ -15,10 +13,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="bg-[#fcf7e7]">
+    <html lang="en">
       <body>
         <ErrorBoundary>
-          <Providers>{children}</Providers>
+          <Providers>
+            <ThemeProvider>{children}</ThemeProvider>
+          </Providers>
         </ErrorBoundary>
       </body>
     </html>

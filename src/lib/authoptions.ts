@@ -14,21 +14,28 @@ export const authoption: NextAuthOptions = {
       },
       async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
+          console.log("Missing credentials");
           return null;
         }
         try {
+          console.log("Attempting to connect to database");
           await dbconnect();
+          console.log("Searching for user:", credentials.email);
           const user = await User.findOne({ email: credentials.email });
           if (!user) {
+            console.log("User not found");
             return null;
           }
+          console.log("Comparing password hash");
           const isvaild = await bcrypt.compare(
             credentials.password,
             user.password
           );
           if (!isvaild) {
+            console.log("Password comparison failed");
             return null;
           }
+          console.log("Authentication successful for user:", user.email);
           // Return a user object with all required fields
           return {
             id: user._id.toString(),

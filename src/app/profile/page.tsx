@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, ChangeEvent, FormEvent } from "react";
 import { useSession } from "next-auth/react";
+import CommunityNav from "@/components/communitynav/CommunityNav";
 
 interface ProfileFormData {
   username: string;
@@ -42,6 +43,7 @@ export default function Profile() {
 
   return (
     <div className="max-w-2xl mx-auto p-4">
+      <CommunityNav />
       <h1 className="text-2xl font-bold mb-4">Profile Settings</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

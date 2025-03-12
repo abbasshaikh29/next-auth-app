@@ -4,9 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ICommunity } from "@/models/Community";
-import Header from "@/components/Header";
 import CommunityAboutcard from "@/components/communitycommponets/CommunityAboutcard";
-import { CreatePostModal } from "@/components/postcommponets/CreatePostModal";
 import { CreatePost } from "@/components/postcommponets/Createpost";
 import Searchs from "@/components/communitycommponets/Search";
 import { IPost } from "@/models/Posts";
@@ -81,8 +79,7 @@ export default function HomeIdPage() {
   }
 
   return (
-    <div className=" min-h-screen">
-      <Header title={community?.name} />
+    <div className=" min-h-screen bg-base-content">
       <CommunityNav />
       {community ? (
         <div className="container mx-auto mt-8">

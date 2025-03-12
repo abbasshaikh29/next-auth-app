@@ -5,10 +5,7 @@ import { useNotification } from "./Notification";
 import Link from "next/link";
 import { Home, User } from "lucide-react";
 
-interface CommmunitytitelProps {
-  title: string | null | undefined;
-}
-export default function Header({ title }: CommmunitytitelProps) {
+export default function Header() {
   const { data: session } = useSession();
   const { showNotification } = useNotification();
 
@@ -32,7 +29,7 @@ export default function Header({ title }: CommmunitytitelProps) {
               showNotification("Welcome to TheTribelab", "success")
             }
           >
-            {title ? title : "SKOOL"}
+            SKOOL
           </Link>
         </div>
         <div className="flex flex-1 justify-end px-2">
@@ -81,10 +78,10 @@ export default function Header({ title }: CommmunitytitelProps) {
                     </li>
                     <li>
                       <Link
-                        href={"/communitySettings"}
+                        href={"/UserSettings"}
                         className="px-4 py-2 hover:bg-base-200 block w-full"
                         onClick={() =>
-                          showNotification("Create your Community", "info")
+                          showNotification("Going to Settings", "info")
                         }
                       >
                         Settings

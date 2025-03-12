@@ -2,6 +2,7 @@
 
 import { SessionProvider } from "next-auth/react";
 import { NotificationProvider } from "./Notification";
+import { useRouter } from "next/router";
 
 const urlEndpoint = process.env.NEXT_PUBLIC_URL_ENDPOINT!;
 const publicKey = process.env.NEXT_PUBLIC_PUBLIC_KEY!;

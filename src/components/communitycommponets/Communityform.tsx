@@ -6,6 +6,8 @@ import { useNotification } from "../Notification";
 import { apiClient } from "@/lib/api-client";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import { useSession } from "next-auth/react";
+import mongoose from "mongoose";
 
 interface CommunityFormData {
   name: string;
@@ -20,6 +22,7 @@ export default function CommunityCreateForm() {
   const [CreateProgress, setCreateProgress] = useState(0);
   const { showNotification } = useNotification();
 
+  const { data: session } = useSession();
   const router = useRouter();
 
   const {
@@ -50,10 +53,18 @@ export default function CommunityCreateForm() {
 
     setLoading(true);
     try {
-      const communityData = { ...data, createdAt: new Date() };
-      await apiClient.createCommunity(communityData); // Pass the entire data object
+      if (!session?.user?.id) {
+        console.error("User ID not found in session");
+        return;
+      }
+      const communityData = {
+        ...data,
+        createdAt: new Date(),
+        createdBy: new mongoose.Types.ObjectId(session.user.id),
+      };
+      const createdCommunity = await apiClient.createCommunity(communityData); // Pass the entire data object
       showNotification("community created successfully!", "success");
-      router.push("/Newcompage"); // Redirect to the new community page
+      router.push(`/Newcompage/${createdCommunity.slug}`); // Redirect to the new community page
       // Reset form after successful submission
       setValue("name", "");
       setValue("description", "");
@@ -64,6 +75,7 @@ export default function CommunityCreateForm() {
         error instanceof Error ? error.message : "Failed to create community",
         "error"
       );
+      console.log(error);
     } finally {
       setLoading(false);
     }

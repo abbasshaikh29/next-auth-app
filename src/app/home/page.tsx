@@ -26,7 +26,7 @@ export default function Home() {
       <Header />
       <div className="container mx-auto px-4 py-8">
         <div className="container mx-auto flex flex-col items-center px-8 py-16  ">
-          <h1 className="text-6xl font-bold  ">Discover communities</h1>
+          <h1 className="text-6xl font-bold  ">Discover Communities</h1>
           <h1 className="text-4xl px-6 font-bold mb-8 ">or create one </h1>
           <Link href={"/communityform"}>
             <button className="btn btn-neutral">Create Community</button>

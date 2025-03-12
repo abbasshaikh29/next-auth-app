@@ -6,7 +6,7 @@ export interface ICommunity {
   name: string;
   slug?: string;
   description?: string;
-  createdBySlug: string;
+  createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
 }
 
@@ -14,7 +14,7 @@ const communitySchema = new Schema<ICommunity>({
   name: { type: String, required: true },
   description: { type: String },
   slug: { type: String, unique: true, sparse: true }, // Add sparse: true
-  createdBySlug: { type: String, required: true },
+  createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
   createdAt: { type: Date, default: Date.now },
 });
 

@@ -14,6 +14,7 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log("Attempting login with credentials:", { email, password });
     const result = await signIn("credentials", {
       email,
       password,

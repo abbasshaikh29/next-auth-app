@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { ICommunity } from "@/models/Community";
+import { IUser } from "@/models/User";
 
 interface AboutProps {
   slug: string;
@@ -22,6 +23,7 @@ async function getCommunity(slug: string): Promise<ICommunity | null> {
 
 function About({ slug }: AboutProps) {
   const [community, setCommunity] = useState<ICommunity | null>(null);
+  const [creator, setCreator] = useState<IUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,9 +55,9 @@ function About({ slug }: AboutProps) {
   }
 
   return (
-    <div className=" m-10 flex flex-col gap-4 bg-[#fff] p-4 rounded-md">
+    <div className=" m-10 flex flex-col gap-4 bg-base-300 p-4 rounded-md">
       <h1 className="text-2xl font-bold mb-4">{community?.name}</h1>
-      <div>Created by: {community?.createdBySlug}</div>
+      <p className="text-gray-600">Created by @{creator?.slug}</p>
       <div>about content: {community?.description}</div>
     </div>
   );

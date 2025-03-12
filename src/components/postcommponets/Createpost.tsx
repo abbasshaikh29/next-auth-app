@@ -1,9 +1,5 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { Image, Link, FileText, X } from "lucide-react";
 import { useState, useRef, useInsertionEffect } from "react";
 import { apiClient } from "@/lib/api-client";
@@ -101,14 +97,17 @@ export function CreatePost({
   };
 
   return (
-    <Card className="p-4 border  w-full">
+    <div className="card bg-primary text-base-content shadow-md w-full p-4">
       <h2 className="font-semibold mb-4">Create a Post</h2>
       <div className="space-y-4">
-        <Input
+        <input
+          type="text"
           placeholder="Post title"
           value={title}
-          className="rounded-md"
-          onChange={(e) => setTitle(e.target.value)}
+          className="input input-bordered w-full"
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setTitle(e.target.value)
+          }
         />
         <label htmlFor="imageInput" className="hidden">
           Image Input
@@ -143,7 +142,7 @@ export function CreatePost({
             key={index}
             className="flex items-center gap-2 p-2 bg-gray-50 rounded"
           >
-            {content.type === "image" && (
+            {content.type === "image" ? (
               <div className="relative w-full">
                 <Image className="h-4 w-4 absolute left-2 top-2" />
                 <img
@@ -152,54 +151,48 @@ export function CreatePost({
                   className="max-h-60 object-contain mx-auto"
                 />
               </div>
-            )}
-            {content.type === "link" && (
+            ) : content.type === "link" ? (
               <>
                 <Link className="h-4 w-4" />
                 <span className="flex-1">{content.content}</span>
               </>
-            )}
-            {content.type === "file" && (
+            ) : content.type === "file" ? (
               <>
                 <FileText className="h-4 w-4" />
                 <span className="flex-1">File uploaded</span>
               </>
-            )}
-            {content.type === "text" && (
+            ) : (
               <span className="flex-1">{content.content}</span>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
+              className="btn btn-ghost btn-sm"
               onClick={() => handleRemoveContent(index)}
             >
-              <X className="h-4 w-4" />
-            </Button>
+              e<X className="h-4 w-4" />
+            </button>
           </div>
         ))}
 
         <div className="space-y-2">
-          <Textarea
+          <textarea
             placeholder="What's on your mind?"
             value={currentInput}
-            className="rounded-md"
-            onChange={(e) => setCurrentInput(e.target.value)}
+            className="textarea textarea-bordered w-full"
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+              setCurrentInput(e.target.value)
+            }
             rows={4}
           />
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-gray-200 hover:bg-gray-300 flex items-center"
+            <button
+              className="btn btn-outline btn-sm flex items-center"
               onClick={() => imageInputRef.current?.click()}
             >
               <Image className="h-4 w-4 mr-2" />
               Add Image
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-gray-200 hover:bg-gray-300 flex items-center"
+            </button>
+            <button
+              className="btn btn-outline btn-sm flex items-center"
               onClick={() => {
                 if (currentInput.trim()) {
                   setContents([
@@ -212,27 +205,25 @@ export function CreatePost({
             >
               <Link className="h-4 w-4 mr-2" />
               Add Link
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-gray-200 hover:bg-gray-300 flex items-center"
+            </button>
+            <button
+              className="btn btn-outline btn-sm flex items-center"
               onClick={() => fileInputRef.current?.click()}
             >
               <FileText className="h-4 w-4 mr-2" />
               Add File
-            </Button>
+            </button>
           </div>
         </div>
 
-        <Button
+        <button
           onClick={handleSubmit}
-          className="w-full  btn-primary"
+          className="btn btn-outline w-full"
           disabled={!title.trim() && contents.length === 0}
         >
           Post
-        </Button>
+        </button>
       </div>
-    </Card>
+    </div>
   );
 }

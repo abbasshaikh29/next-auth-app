@@ -4,6 +4,8 @@ import { useParams } from "next/navigation";
 import type { ICommunity } from "@/models/Community";
 import CommunityAboutcard from "@/components/communitycommponets/CommunityAboutcard";
 import About from "@/components/communitynav/About";
+import Header from "@/components/Header";
+import CommunityNav from "@/components/communitynav/CommunityNav";
 async function getCommunity(slug: string): Promise<ICommunity | null> {
   try {
     const response = await fetch(`/api/community/${slug}`);
@@ -50,16 +52,19 @@ function Page() {
   }
 
   return (
-    <div className="p-4 flex flex-col justify-center gap-4">
-      <div className="prose flex flex-row gap-5 justify-center max-w-none">
-        <div className="w-2/4 ">
-          <About slug={slug} />
-        </div>
-        <div>
-          <CommunityAboutcard
-            title={community?.name}
-            description={community?.description}
-          />
+    <div>
+      <CommunityNav />
+      <div className="p-4 flex flex-col justify-center gap-4">
+        <div className="prose flex flex-row gap-5 justify-center max-w-none">
+          <div className="w-2/4 ">
+            <About slug={slug} />
+          </div>
+          <div>
+            <CommunityAboutcard
+              title={community?.name}
+              description={community?.description}
+            />
+          </div>
         </div>
       </div>
     </div>

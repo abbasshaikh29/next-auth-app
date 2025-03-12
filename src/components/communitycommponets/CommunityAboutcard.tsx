@@ -1,3 +1,4 @@
+import Link from "next/link";
 import React from "react";
 
 interface NewCommmunityPageProps {
@@ -6,7 +7,7 @@ interface NewCommmunityPageProps {
 }
 function CommunityAboutcard({ title, description }: NewCommmunityPageProps) {
   return (
-    <div className="card w-80 bg-blue-100 shadow-xl h-96 rounded-lg">
+    <div className="card w-80 bg-base-300 text-base-content shadow-xl h-96 rounded-lg">
       <figure className="px-4 pt-4">
         <img
           src="https://placeimg.com/400/225/arch"
@@ -22,7 +23,9 @@ function CommunityAboutcard({ title, description }: NewCommmunityPageProps) {
         </div>
 
         <div className="card-actions mt-4">
-          <button className="btn  btn-primary">SETTINGS</button>
+          <button className="btn  btn-secondary">
+            <Link href={"/communitysetting"}>Community Setting</Link>
+          </button>
         </div>
       </div>
     </div>

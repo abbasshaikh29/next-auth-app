@@ -107,7 +107,7 @@ export default function PostCard({
 
   return (
     <>
-      <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer max-w-4xl w-full mx-auto">
+      <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer  max-w-4xl w-full mx-auto">
         <CardHeader className="flex flex-row items-center justify-between py-3 px-4">
           <div className="flex items-center gap-4">
             <Avatar>
@@ -116,7 +116,7 @@ export default function PostCard({
             </Avatar>
             <div>
               <h3 className="font-semibold">{author.name}</h3>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm ">
                 {new Date(post.createdAt).toLocaleDateString()}
               </p>
             </div>
@@ -135,9 +135,7 @@ export default function PostCard({
                   (item: { type: string; content: string }, index: number) => (
                     <div key={index}>
                       {item?.type === "text" && (
-                        <p className="text-gray-600 leading-relaxed">
-                          {item.content}
-                        </p>
+                        <p className=" leading-relaxed">{item.content}</p>
                       )}
                       {item?.type === "link" &&
                         (item.content.startsWith("http") ? (
@@ -225,7 +223,7 @@ export default function PostCard({
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-6xl w-[800px] max-h-[80vh] overflow-y-auto p-4">
+        <DialogContent className="max-w-6xl w-[800px] max-h-[80vh] backdrop-filter backdrop-blur-lg bg-opacity-30 bg-white/10 overflow-y-auto p-4">
           <DialogTitle className="sr-only">Post Details</DialogTitle>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
@@ -235,7 +233,7 @@ export default function PostCard({
               </Avatar>
               <div>
                 <h3 className="font-semibold">{author.name}</h3>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm ">
                   {new Date(post.createdAt).toLocaleDateString()}
                 </p>
               </div>
