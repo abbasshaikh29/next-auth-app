@@ -1,16 +1,30 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
 import { User } from "lucide-react";
 import { useNotification } from "@/components/Notification";
 import { useSession, signOut } from "next-auth/react";
+import { fetchExternalImage } from "next/dist/server/image-optimizer";
+import { log } from "console";
 function CommunityNav() {
   const { slug } = useParams<{ slug: string }>();
   const { data: session } = useSession();
   const { showNotification } = useNotification();
+  const [Name, setName] = useState("");
+  const [comid, setcomid] = useState("");
+  const [Uname, setUname] = useState("");
+  const fetchCommunity = async () => {
+    const res = await fetch(`/api/community/${slug}`);
+    const data = await res.json();
+    setName(data.name);
+  };
+
+  useEffect(() => {
+    fetchCommunity();
+  }, [slug]);
 
   const handleSignOut = async () => {
     try {
@@ -33,7 +47,7 @@ function CommunityNav() {
                 showNotification("Welcome to TheTribelab", "success")
               }
             >
-              {slug ? slug : "TheTribelab"}
+              {Name}
             </Link>
           </div>
           <div className="flex flex-1 justify-end px-2">
@@ -54,7 +68,7 @@ function CommunityNav() {
                     <>
                       <li className="px-4 py-1">
                         <span className="text-sm opacity-70">
-                          {session.user.id.split("@")[0]}
+                          {session.user?.id}
                         </span>
                       </li>
                       <li className="divider my-1"></li>
@@ -132,6 +146,12 @@ function CommunityNav() {
           </Link>
           <Link href={`/Newcompage/${slug}`} className="btn btn-ghost">
             Community
+          </Link>
+          <Link
+            href={`/Newcompage/${slug}/communitysetting`}
+            className="btn btn-ghost"
+          >
+            Settings
           </Link>
         </div>
       </div>

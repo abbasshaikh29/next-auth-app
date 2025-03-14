@@ -29,16 +29,22 @@ export default function Communityfeed({ communitys }: CommunityfeedProps) {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {communitys.map((community) => (
         <div key={community._id?.toString()}>
-          <div className="card bg-base-100 w-96 shadow-xl h-96 overflow-hidden">
+          <div className="card bg-base-100 w-96 shadow-xl overflow-hidden flex flex-col justify-between hover:shadow-primary">
             <figure>
               <img
-                src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
-                alt="Shoes"
+                src="https://th.bing.com/th/id/OIP.3a0bROm1LmDrK6SqeFsswwHaEo?rs=1&pid=ImgDetMain"
+                alt="community banner"
+                className="w-full h-40 object-cover"
               />
             </figure>
-            <div className="card-body">
+            <div className="card-body flex flex-col min-h-[4rem]">
               <h2 className="card-title">{community.name}</h2>
-              <p>{truncateDescription(community.description)}</p>
+              <div className="flex-grow">
+                <p className="h-20 overflow-hidden">
+                  {truncateDescription(community.description)}
+                </p>
+              </div>
+
               <div className="card-actions justify-end">
                 <button
                   className="btn btn-primary"

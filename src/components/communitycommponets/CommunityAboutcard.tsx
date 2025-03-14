@@ -5,9 +5,20 @@ interface NewCommmunityPageProps {
   title: string | null | undefined;
   description: string | null | undefined;
 }
+
+function truncateDescription(description: string | undefined): string {
+  if (!description) {
+    return "";
+  }
+  const words = description.split(" ");
+  if (words.length > 20) {
+    return words.slice(0, 20).join(" ") + "...";
+  }
+  return description;
+}
 function CommunityAboutcard({ title, description }: NewCommmunityPageProps) {
   return (
-    <div className="card w-80 bg-base-300 text-base-content shadow-xl h-96 rounded-lg">
+    <div className="card w-80 bg-base-300 text-base-content shadow-xl h-96 rounded-2xl">
       <figure className="px-4 pt-4">
         <img
           src="https://placeimg.com/400/225/arch"
@@ -19,7 +30,11 @@ function CommunityAboutcard({ title, description }: NewCommmunityPageProps) {
         <h1 className="card-title">{title ? title : "NewCommmunityPage"}</h1>
 
         <div className="mt-2">
-          <p>{description ? description : "this is a community"}</p>
+          <p>
+            {truncateDescription(
+              description ? description : "this is a community"
+            )}
+          </p>
         </div>
 
         <div className="card-actions mt-4">

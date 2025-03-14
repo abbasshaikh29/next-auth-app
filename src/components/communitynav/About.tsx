@@ -8,22 +8,46 @@ interface AboutProps {
   slug: string;
 }
 
-async function getCommunity(slug: string): Promise<ICommunity | null> {
+interface ApiUserResponse {
+  user: IUser;
+}
+
+interface CommunityState {
+  community: ICommunity | null;
+  creator: IUser | null;
+}
+
+async function getCommunity(slug: string): Promise<{
+  community: ICommunity | null;
+  creatorData: { user: IUser } | null;
+}> {
   try {
-    const response = await fetch(`/api/community/${slug}`);
-    if (!response.ok) {
+    const communityResponse = await fetch(`/api/community/${slug}`);
+    if (!communityResponse.ok) {
       throw new Error("Failed to fetch community");
     }
-    return await response.json();
+    const communityData: ICommunity = await communityResponse.json();
+
+    // Fetch creator separately using createdBy ID from community data
+    const creatorResponse = await fetch(`/api/user/${communityData.createdBy}`);
+    if (!creatorResponse.ok) {
+      throw new Error("Failed to fetch creator");
+    }
+
+    const creatorData = await creatorResponse.json();
+
+    return { community: communityData, creatorData };
   } catch (error) {
-    console.error("Error fetching community:", error);
-    return null;
+    console.error("Error fetching community or creator:", error);
+    return { community: null, creatorData: null };
   }
 }
 
 function About({ slug }: AboutProps) {
-  const [community, setCommunity] = useState<ICommunity | null>(null);
-  const [creator, setCreator] = useState<IUser | null>(null);
+  const [communityData, setCommunityData] = useState<{
+    community: ICommunity | null;
+    creator: IUser | null;
+  }>({ community: null, creator: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +55,11 @@ function About({ slug }: AboutProps) {
     async function fetchData() {
       try {
         const data = await getCommunity(slug);
-        setCommunity(data);
+        console.log("Fetched Data:", data); // Log fetched data
+        setCommunityData({
+          community: data.community,
+          creator: data.creatorData ? data.creatorData.user : null,
+        });
         setLoading(false);
       } catch (err: any) {
         setError(err.message);
@@ -50,15 +78,19 @@ function About({ slug }: AboutProps) {
     return <div>Error: {error}</div>;
   }
 
-  if (!community) {
+  if (!communityData.community) {
     return <div>Community not found</div>;
   }
 
   return (
-    <div className=" m-10 flex flex-col gap-4 bg-base-300 p-4 rounded-md">
-      <h1 className="text-2xl font-bold mb-4">{community?.name}</h1>
-      <p className="text-gray-600">Created by @{creator?.slug}</p>
-      <div>about content: {community?.description}</div>
+    <div className="m-10 flex flex-col gap-4 bg-base-300 p-4 rounded-md">
+      <h1 className="text-2xl font-bold mb-4">
+        {communityData.community?.name}
+      </h1>
+      <p className="text-gray-600">
+        Created by {communityData.creator?.username || "Unknown"}
+      </p>
+      <div>about content: {communityData.community?.description}</div>
     </div>
   );
 }
