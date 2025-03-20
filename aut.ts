@@ -1,10 +1,15 @@
 import { NextAuthOptions } from "next-auth";
 import Credentialsprovider from "next-auth/providers/credentials";
-import { User } from "../models/User";
-import { dbconnect } from "./db";
+import GoogleProvider from "next-auth/providers/google";
+import { User } from "@/models/User";
+import { dbconnect } from "@/lib/db";
 import bcrypt from "bcryptjs";
 export const authoption: NextAuthOptions = {
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    }),
     Credentialsprovider({
       name: "Credentials",
       credentials: {

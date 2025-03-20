@@ -33,7 +33,7 @@ export async function PUT(request: Request) {
     console.log("Updated user password hash:", savedUser.password);
 
     // Invalidate current session
-    const { authoption } = await import("@/lib/authoptions");
+    const { authOptions } = await import("@/lib/authoptions");
     const { getToken } = await import("next-auth/jwt");
     const { NextRequest } = await import("next/server");
 
@@ -41,8 +41,8 @@ export async function PUT(request: Request) {
       req: request as unknown as Parameters<typeof getToken>[0]["req"],
     });
 
-    if (token && authoption.callbacks?.jwt) {
-      await authoption.callbacks.jwt({
+    if (token && authOptions.callbacks?.jwt) {
+      await authOptions.callbacks.jwt({
         token,
         user: {
           id: "",

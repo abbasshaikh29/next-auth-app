@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authoption } from "@/lib/authoptions";
+import { authOptions } from "@/lib/authoptions";
 import { dbconnect } from "@/lib/db";
 import { Post, IPost } from "@/models/Posts";
 import { Community } from "@/models/Community";
@@ -58,7 +58,6 @@ export async function GET(request: NextRequest) {
       return {
         ...post.toObject(),
         content: parsedContent,
-        authorName: post.createdBy ? post.createdBy.name : "Unknown Author",
       };
     });
 
@@ -74,7 +73,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authoption);
+    const session = await getServerSession(authOptions);
 
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

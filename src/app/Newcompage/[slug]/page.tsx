@@ -107,10 +107,7 @@ export default function HomeIdPage() {
                         ? post.createdAt
                         : post.createdAt.toISOString(),
                     likes: post.likes.length,
-                    author: {
-                      name: post.authorName,
-                      avatar: "",
-                    },
+                    authorName: post.authorName,
                   };
                   return (
                     <PostCard
@@ -141,6 +138,7 @@ export default function HomeIdPage() {
 
             <div className="w-1/4">
               <CommunityAboutcard
+                slug={typeof slug === "string" ? slug : null}
                 title={community?.name}
                 description={community?.description}
               />

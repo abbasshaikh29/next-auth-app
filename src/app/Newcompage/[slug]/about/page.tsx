@@ -61,6 +61,7 @@ function Page() {
           </div>
           <div>
             <CommunityAboutcard
+              slug={slug}
               title={community?.name}
               description={community?.description}
             />

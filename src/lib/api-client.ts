@@ -1,4 +1,6 @@
 import { ICommunity } from "../models/Community";
+import { ImageFormData } from "../components/ImageUploadForm";
+import { IImage } from "@/models/Image";
 
 export type CommunityFormData = Omit<ICommunity, "_id">;
 
@@ -52,6 +54,16 @@ class ApiClient {
     return this.fetch<T>(endpoint, {
       method: "POST",
       body: body,
+    });
+  }
+
+  async getImages(id: string) {
+    return this.fetch<IImage[]>(`/image/${id}`);
+  }
+  async createImage(imageData: ImageFormData) {
+    return this.fetch<IImage>("/image", {
+      method: "POST",
+      body: imageData,
     });
   }
 }

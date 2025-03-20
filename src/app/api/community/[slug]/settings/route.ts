@@ -14,7 +14,7 @@ export async function PUT(
 
     const updatedCommunity = await Community.findOneAndUpdate(
       { slug },
-      { $set: { name, description } },
+      { $set: { name, description, bannerImage } },
       { new: true }
     );
 

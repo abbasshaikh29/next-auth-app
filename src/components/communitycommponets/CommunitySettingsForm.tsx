@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { IKContext, IKUpload } from "imagekitio-react";
+import { IKUpload } from "imagekitio-next";
 
 export default function CommunitySettings() {
   const { slug } = useParams();
@@ -21,17 +21,45 @@ export default function CommunitySettings() {
     fetchCommunity();
   }, [slug]);
 
+  const [newBannerFile, setNewBannerFile] = useState<File | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
+      let bannerUrl = bannerImage;
+
+      // Upload new banner if selected
+      if (newBannerFile) {
+        const formData = new FormData();
+        formData.append("file", newBannerFile);
+        formData.append("fileType", newBannerFile.type.split("/")[0]);
+        formData.append("fileName", newBannerFile.name);
+
+        const uploadResponse = await fetch("/api/imagekit", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error("Upload failed");
+        }
+
+        const { url } = await uploadResponse.json();
+        bannerUrl = url;
+      }
+
       const response = await fetch(`/api/community/${slug}/settings`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, description }),
+        body: JSON.stringify({
+          name,
+          description,
+          bannerImage: bannerUrl,
+        }),
       });
 
       if (!response.ok) {
@@ -47,8 +75,42 @@ export default function CommunitySettings() {
     }
   };
 
+  const handleImageUpload = async (file: File): Promise<string> => {
+    try {
+      console.log("Starting image upload for file:", file.name);
+
+      // Create form data
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("fileName", file.name);
+
+      // Send to your API endpoint
+      const response = await fetch("/api/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Upload failed:", data);
+        throw new Error(data.message || "Failed to upload image");
+      }
+
+      console.log("Upload successful:", data);
+      return data.url; // Return the URL from ImageKit
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      throw error;
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="form-control space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      encType="multipart/form-data"
+      className="form-control space-y-4"
+    >
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-2">Community Banner</h2>
         <input
@@ -56,45 +118,14 @@ export default function CommunitySettings() {
           accept="image/*"
           className="border p-2 rounded w-full"
           aria-label="Community banner image upload"
-          onChange={async (e) => {
+          onChange={(e) => {
             const file = e.target.files?.[0];
-            if (!file) return;
-
-            try {
-              // Get signed URL from our API
-              const res = await fetch(
-                `/api/upload?filename=${encodeURIComponent(
-                  file.name
-                )}&filetype=${encodeURIComponent(file.type)}`
-              );
-              const { url } = await res.json();
-
-              // Upload directly to S3
-              await fetch(url, {
-                method: "PUT",
-                body: file,
-                headers: { "Content-Type": file.type },
-              });
-
-              // Get public URL
-              const publicUrl = url.split("?")[0];
-              setBannerImage(publicUrl);
-            } catch (err) {
-              console.error("Upload failed:", err);
-              alert("File upload failed");
+            if (file) {
+              setNewBannerFile(file);
+              setBannerImage(URL.createObjectURL(file)); // Show preview
             }
           }}
         />
-        {bannerImage && (
-          <div className="mt-2">
-            <span className="text-sm">Current banner:</span>
-            <img
-              src={bannerImage}
-              alt="Community banner"
-              className="mt-1 max-h-32 object-cover"
-            />
-          </div>
-        )}
       </div>
 
       <div>

@@ -1,4 +1,5 @@
 "use client";
+import { signIn } from "next-auth/react";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -50,6 +51,13 @@ export default function Register() {
       <div className="card w-full max-w-md shadow-2xl bg-base-100">
         <div className="card-body">
           <h1 className="card-title text-center text-2xl">Register</h1>
+          <button
+            className="btn btn-outline flex justify-center"
+            onClick={() => signIn("google", { callbackUrl: "/" })}
+          >
+            Sign in with Google
+          </button>
+          <li className="divider my-1">or</li>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="form-control">
               <label className="label" htmlFor="username">

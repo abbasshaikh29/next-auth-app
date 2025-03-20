@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authoption } from "@/lib/authoptions";
+import { authOptions } from "@/lib/authoptions";
 import { dbconnect } from "@/lib/db";
 import { Community, ICommunity } from "@/models/Community";
 import slugify from "slugify";
@@ -25,7 +25,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authoption);
+    const session = await getServerSession(authOptions);
 
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     // Create new community with default values
     const communityData: ICommunity = {
       ...body,
-      createdBySlug: session.user.username,
+      createdBy: session.user.username,
     };
 
     // Create document instance

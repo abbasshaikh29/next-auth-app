@@ -34,7 +34,17 @@ export default function Login() {
     <div className="flex flex-col items-center justify-center min-h-screen py-2 bg-base-200">
       <div className="card w-full max-w-md shadow-2xl bg-base-100">
         <div className="card-body">
-          <h1 className="card-title text-center text-2xl">Login</h1>
+          <h1 className="card-title text-center text-2xl flex justify-center">
+            Login
+          </h1>
+          <button
+            className="btn btn-outline flex justify-center"
+            onClick={() => signIn("google", { callbackUrl: "/" })}
+          >
+            Sign in with Google
+          </button>
+
+          <li className="divider my-1">or</li>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="form-control">
               <label className="label" htmlFor="email">
@@ -63,9 +73,11 @@ export default function Login() {
                 className="input input-bordered"
               />
             </div>
-            <button type="submit" className="btn btn-primary">
-              Login
-            </button>
+            <div className="flex justify-center">
+              <button type="submit" className="btn btn-primary ">
+                Login
+              </button>
+            </div>
             <p className="text-center">
               Don&apos;t have an account?{" "}
               <Link href="/register" className="link">

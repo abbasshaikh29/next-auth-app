@@ -16,25 +16,20 @@ export default function Settings() {
       <h1 className="text-3xl font-bold mb-6">UserSettings</h1>
       <div className="tabs tabs-boxed mb-8">
         <Link
-          href="/communitySettings?t=UserSettings"
+          href="?t=UserSettings"
           className={`tab ${t === "UserSettings" ? "tab-active" : ""}`}
         >
           Profile
         </Link>
         <Link
-          href="/communitySettings?t=Password"
+          href="?t=Password"
           className={`tab ${t === "Password" ? "tab-active" : ""}`}
         >
           Password
         </Link>
+
         <Link
-          href="/communitySettings?t=Theme"
-          className={`tab ${t === "Theme" ? "tab-active" : ""}`}
-        >
-          Theme
-        </Link>
-        <Link
-          href="/communitySettings?t=Payment"
+          href="?t=Payment"
           className={`tab ${t === "Payment" ? "tab-active" : ""}`}
         >
           Payment

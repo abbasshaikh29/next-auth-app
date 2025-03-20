@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import {
   Heart,
@@ -36,10 +35,6 @@ interface Comment {
 import { IPost } from "@/models/Posts";
 
 interface Post extends Omit<IPost, "likes" | "createdAt"> {
-  author?: {
-    name: string;
-    avatar: string;
-  };
   likes: number;
   createdAt: string | Date;
 }
@@ -99,23 +94,17 @@ export default function PostCard({
       })()
     : [];
 
-  // Ensure post.author exists
-  const author = {
-    name: post.author?.name || "Unknown",
-    avatar: post.author?.avatar || "",
-  };
-
+  // Ensure  post.authorName exist
+  const authorName = post.authorName || "Unknown Author";
+  console.log(authorName);
+  console.log(post);
   return (
     <>
       <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer  max-w-4xl w-full mx-auto">
         <CardHeader className="flex flex-row items-center justify-between py-3 px-4">
           <div className="flex items-center gap-4">
-            <Avatar>
-              <AvatarImage src={author.avatar} alt={author.name} />
-              <AvatarFallback>{author.name[0]}</AvatarFallback>
-            </Avatar>
             <div>
-              <h3 className="font-semibold">{author.name}</h3>
+              <p>{authorName}</p>
               <p className="text-sm ">
                 {new Date(post.createdAt).toLocaleDateString()}
               </p>
@@ -227,12 +216,8 @@ export default function PostCard({
           <DialogTitle className="sr-only">Post Details</DialogTitle>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
-              <Avatar>
-                <AvatarImage src={author.avatar} alt={author.name} />
-                <AvatarFallback>{author.name[0]}</AvatarFallback>
-              </Avatar>
               <div>
-                <h3 className="font-semibold">{author.name}</h3>
+                <h3 className="font-semibold">{post.authorName}</h3>
                 <p className="text-sm ">
                   {new Date(post.createdAt).toLocaleDateString()}
                 </p>

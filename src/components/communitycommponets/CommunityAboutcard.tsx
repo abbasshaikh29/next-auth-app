@@ -1,11 +1,13 @@
 import Link from "next/link";
 import React from "react";
-
+import { IKImage } from "imagekitio-next";
 interface NewCommmunityPageProps {
   title: string | null | undefined;
+  slug: string | null | undefined;
   description: string | null | undefined;
 }
 
+const urlEndpoint = process.env.NEXT_PUBLIC_URL_ENDPOINT;
 function truncateDescription(description: string | undefined): string {
   if (!description) {
     return "";
@@ -16,16 +18,22 @@ function truncateDescription(description: string | undefined): string {
   }
   return description;
 }
-function CommunityAboutcard({ title, description }: NewCommmunityPageProps) {
+function CommunityAboutcard({
+  slug,
+  title,
+  description,
+}: NewCommmunityPageProps) {
   return (
     <div className="card w-80 bg-base-300 text-base-content shadow-xl h-96 rounded-2xl">
-      <figure className="px-4 pt-4">
-        <img
-          src="https://placeimg.com/400/225/arch"
-          alt="Community Image"
-          className="rounded-xl"
+      <div className="App">
+        <IKImage
+          urlEndpoint={urlEndpoint}
+          path="default-image.jpg"
+          width={40}
+          height={40}
+          alt="community banner"
         />
-      </figure>
+      </div>
       <div className="card-body items-center text-center">
         <h1 className="card-title">{title ? title : "NewCommmunityPage"}</h1>
 
@@ -39,7 +47,9 @@ function CommunityAboutcard({ title, description }: NewCommmunityPageProps) {
 
         <div className="card-actions mt-4">
           <button className="btn  btn-secondary">
-            <Link href={"/communitysetting"}>Community Setting</Link>
+            <Link href={`/Newcompage/${slug}/communitysetting`}>
+              Community Setting
+            </Link>
           </button>
         </div>
       </div>
