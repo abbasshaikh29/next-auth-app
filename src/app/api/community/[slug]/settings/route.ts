@@ -7,14 +7,14 @@ export async function PUT(
   { params }: { params: { slug: string } }
 ) {
   try {
-    const { name, description, bannerImage } = await request.json();
+    const { name, description, bannerImageurl } = await request.json();
     const { slug } = params;
 
     await dbconnect();
 
     const updatedCommunity = await Community.findOneAndUpdate(
       { slug },
-      { $set: { name, description, bannerImage } },
+      { $set: { name, description, bannerImageurl } },
       { new: true }
     );
 
@@ -34,3 +34,4 @@ export async function PUT(
     );
   }
 }
+

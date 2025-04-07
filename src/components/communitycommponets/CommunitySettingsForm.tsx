@@ -1,14 +1,21 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { IKUpload } from "imagekitio-next";
-
+import { IKUploadResponse } from "imagekitio-next/dist/types/components/IKUpload/props";
+import { useNotification } from "@/components/Notification";
+import FileUpload from "../FileUpload";
+import { Settings2Icon } from "lucide-react";
 export default function CommunitySettings() {
   const { slug } = useParams();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [bannerImage, setBannerImage] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadResponse, setUploadResponse] = useState<IKUploadResponse | null>(
+    null
+  );
+
+  const { showNotification } = useNotification();
 
   const fetchCommunity = async () => {
     const res = await fetch(`/api/community/${slug}`);
@@ -27,30 +34,16 @@ export default function CommunitySettings() {
     e.preventDefault();
     setIsLoading(true);
 
+    if (!uploadResponse) {
+      alert("Please upload a banner image");
+      setIsLoading(false);
+      return;
+    }
+
+    console.log("Success", uploadResponse);
+    const url = uploadResponse.filePath;
     try {
-      let bannerUrl = bannerImage;
-
-      // Upload new banner if selected
-      if (newBannerFile) {
-        const formData = new FormData();
-        formData.append("file", newBannerFile);
-        formData.append("fileType", newBannerFile.type.split("/")[0]);
-        formData.append("fileName", newBannerFile.name);
-
-        const uploadResponse = await fetch("/api/imagekit", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error("Upload failed");
-        }
-
-        const { url } = await uploadResponse.json();
-        bannerUrl = url;
-      }
-
-      const response = await fetch(`/api/community/${slug}/settings`, {
+      const Response = await fetch(`/api/community/${slug}/settings`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -58,14 +51,15 @@ export default function CommunitySettings() {
         body: JSON.stringify({
           name,
           description,
-          bannerImage: bannerUrl,
+          bannerImageurl: url,
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Update failed");
+      if (!Response.ok) {
+        throw new Error("Failed to update community");
       }
       alert("Settings updated successfully!");
+      console.log(uploadResponse.filePath);
       fetchCommunity(); // Re-fetch community data after successful update
     } catch (error) {
       console.error("Error updating community:", error);
@@ -74,58 +68,22 @@ export default function CommunitySettings() {
       setIsLoading(false);
     }
   };
-
-  const handleImageUpload = async (file: File): Promise<string> => {
-    try {
-      console.log("Starting image upload for file:", file.name);
-
-      // Create form data
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("fileName", file.name);
-
-      // Send to your API endpoint
-      const response = await fetch("/api/upload-image", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        console.error("Upload failed:", data);
-        throw new Error(data.message || "Failed to upload image");
-      }
-
-      console.log("Upload successful:", data);
-      return data.url; // Return the URL from ImageKit
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      throw error;
-    }
+  const handleUploadSuccess = (response: IKUploadResponse) => {
+    console.log("Success", response);
+    setUploadResponse(response);
+    showNotification("Image uploaded successfully!", "success");
   };
 
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={(e) => handleSubmit(e)}
       encType="multipart/form-data"
       className="form-control space-y-4"
     >
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-2">Community Banner</h2>
-        <input
-          type="file"
-          accept="image/*"
-          className="border p-2 rounded w-full"
-          aria-label="Community banner image upload"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) {
-              setNewBannerFile(file);
-              setBannerImage(URL.createObjectURL(file)); // Show preview
-            }
-          }}
-        />
+
+        <FileUpload onSuccess={handleUploadSuccess} />
       </div>
 
       <div>

@@ -16,7 +16,6 @@ function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
 }
 
 export default function PasswordSettings() {
-  const { data: session } = useSession();
   const [formData, setFormData] = useState({
     currentPassword: "",
     newPassword: "",

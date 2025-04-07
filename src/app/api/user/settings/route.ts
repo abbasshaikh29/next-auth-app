@@ -11,8 +11,15 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { firstName, lastName, timezone, username, email, bio } =
-    await request.json();
+  const {
+    firstName,
+    lastName,
+    timezone,
+    username,
+    email,
+    bio,
+    profileImageUrl,
+  } = await request.json();
 
   try {
     const user = await User.findOne({ email: session.user.email });
@@ -28,6 +35,7 @@ export async function PUT(request: Request) {
     user.timezone = timezone;
     user.email = email;
     user.bio = bio;
+    user.profileImageUrl = profileImageUrl;
 
     // Validate unique username before saving
     const existingUser = await User.findOne({ username });

@@ -96,19 +96,23 @@ export default function PostCard({
 
   // Ensure  post.authorName exist
   const authorName = post.authorName || "Unknown Author";
-  console.log(authorName);
-  console.log(post);
+
   return (
     <>
       <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer  max-w-4xl w-full mx-auto">
         <CardHeader className="flex flex-row items-center justify-between py-3 px-4">
           <div className="flex items-center gap-4">
-            <div>
-              <p>{authorName}</p>
-              <p className="text-sm ">
-                {new Date(post.createdAt).toLocaleDateString()}
-              </p>
-            </div>
+            <Link
+              href={`/user/${post._id}/profile `}
+              className="flex items-center gap-4"
+            >
+              <div>
+                <p>{authorName}</p>
+                <p className="text-sm ">
+                  {new Date(post.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+            </Link>
           </div>
         </CardHeader>
 
@@ -118,7 +122,7 @@ export default function PostCard({
         >
           <div className="flex">
             <div className="w-3/4">
-              <h4 className="font-bold mb-2">{post.title}</h4>
+              <h2 className="font-bold text-2xl mb-2">{post.title}</h2>
               <div className="space-y-2">
                 {content.map(
                   (item: { type: string; content: string }, index: number) => (

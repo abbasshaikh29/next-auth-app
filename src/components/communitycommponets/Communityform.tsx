@@ -14,7 +14,10 @@ interface CommunityFormData {
   slug?: string;
   description?: string;
   createdBy: string;
-  createdAt?: Date; // Added createdAt as optional
+  createdAt?: Date;
+  admin: string;
+  adminQuestions: string[];
+  joinRequests?: any[];
 }
 
 export default function CommunityCreateForm() {
@@ -36,17 +39,20 @@ export default function CommunityCreateForm() {
       description: "",
       slug: "",
       createdBy: "",
+      adminQuestions: [
+        "Why do you want to join this community?",
+        "What can you contribute to this community?",
+        "How did you hear about us?",
+      ],
     },
   });
 
   const handleUploadProgress = (progress: number) => {
     setCreateProgress(progress);
-    // Update uploadProgress state
   };
 
   const onSubmit = async (data: CommunityFormData) => {
     if (!data.name) {
-      // Corrected the check
       showNotification("Please create community", "error");
       return;
     }
@@ -60,12 +66,14 @@ export default function CommunityCreateForm() {
       const communityData = {
         ...data,
         createdAt: new Date(),
-        createdBy: new mongoose.Types.ObjectId(session.user.id),
+        createdBy: session.user.id,
+        admin: session.user.id,
+        members: [session.user.id],
+        joinRequests: [],
       };
-      const createdCommunity = await apiClient.createCommunity(communityData); // Pass the entire data object
+      const createdCommunity = await apiClient.createCommunity(communityData);
       showNotification("community created successfully!", "success");
-      router.push(`/Newcompage/${createdCommunity.slug}`); // Redirect to the new community page
-      // Reset form after successful submission
+      router.push(`/Newcompage/${createdCommunity.slug}`);
       setValue("name", "");
       setValue("description", "");
       setValue("createdAt", undefined);
@@ -143,7 +151,7 @@ export default function CommunityCreateForm() {
             <button
               type="submit"
               className="btn btn-primary btn-block"
-              disabled={loading} // Disable if loading or no video uploaded
+              disabled={loading}
             >
               {loading ? (
                 <>

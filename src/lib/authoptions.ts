@@ -1,11 +1,16 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import { User } from "../models/User";
 import { dbconnect } from "./db";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    }),
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -53,22 +58,61 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
-        token.id = user.id;
-        token.email = user.email;
-        token.username = user.username; // Add username to the token
+        token.id = user.id || "";
+        token.email = user.email || "";
+        token.username = user.username || user.name || "";
       }
+
+      // Add account type (oauth provider info)
+      if (account) {
+        token.provider = account.provider;
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
-        session.user.username = token.username as string; // Add username to the session
+        session.user.username = token.username as string;
+        session.user.provider = token.provider as string;
       }
 
       return session;
+    },
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "google") {
+        try {
+          await dbconnect();
+
+          // Check if user already exists
+          const existingUser = await User.findOne({ email: user.email });
+
+          if (!existingUser) {
+            // Create a new user with Google OAuth data
+            const newUser = new User({
+              email: user.email,
+              username: user.name,
+              password: bcrypt.hashSync(
+                Math.random().toString(36).slice(-8),
+                10
+              ), // Generate random password
+              profileImage: user.image,
+            });
+
+            await newUser.save();
+          }
+
+          return true;
+        } catch (error) {
+          console.error("Google SignIn error:", error);
+          return false;
+        }
+      }
+
+      return true;
     },
   },
   pages: {

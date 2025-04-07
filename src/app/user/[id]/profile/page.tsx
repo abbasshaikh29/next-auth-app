@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Header from "@/components/Header";
 
+import { useParams, useRouter } from "next/navigation";
 interface ProfileFormData {
   username: string;
   email: string;
@@ -20,7 +21,6 @@ interface UserPost {
 }
 
 export default function Profile() {
-  const { data: session } = useSession();
   const [formData, setFormData] = useState<ProfileFormData>({
     username: "",
     email: "",
@@ -28,10 +28,11 @@ export default function Profile() {
   });
   const [posts, setPosts] = useState<UserPost[]>([]);
 
+  const { id } = useParams<{ id: string }>();
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch(`/api/user/${session?.user?.id}`);
+        const response = await fetch(`/api/user/${id}`);
         if (!response.ok) throw new Error("Failed to fetch user");
         const data = await response.json();
 
@@ -54,10 +55,10 @@ export default function Profile() {
       }
     };
 
-    if (session?.user?.id) {
+    if (id) {
       fetchUser();
     }
-  }, [session]);
+  }, [id]);
 
   // Function to parse post content
   const parsePostContent = (content: any) => {
@@ -85,54 +86,52 @@ export default function Profile() {
   };
 
   return (
-    <div>
+    <div className="max-w-4xl mx-auto p-4">
       <Header />
-      <div className="max-w-4xl mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-6">Profile</h1>
+      <h1 className="text-2xl font-bold mb-6">Profile</h1>
 
-        <div className="bg-white p-6 rounded-lg shadow mb-8">
-          <h2 className="text-xl font-semibold mb-4">User Information</h2>
-          <div className="space-y-2">
-            <p>
-              <span className="font-medium">Username:</span> {formData.username}
-            </p>
-            <p>
-              <span className="font-medium">Email:</span> {formData.email}
-            </p>
-            <p>
-              <span className="font-medium">Bio:</span>{" "}
-              {formData.bio || "No bio provided"}
-            </p>
-          </div>
+      <div className="bg-white p-6 rounded-lg shadow mb-8">
+        <h2 className="text-xl font-semibold mb-4">User Information</h2>
+        <div className="space-y-2">
+          <p>
+            <span className="font-medium">Username:</span> {formData.username}
+          </p>
+          <p>
+            <span className="font-medium">Email:</span> {formData.email}
+          </p>
+          <p>
+            <span className="font-medium">Bio:</span>{" "}
+            {formData.bio || "No bio provided"}
+          </p>
         </div>
+      </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Your Posts</h2>
-          {posts.length > 0 ? (
-            <div className="space-y-4">
-              {posts.map((post) => (
-                <div key={post._id} className="border p-4 rounded-lg">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-sm text-gray-600">
-                      Posted in {post.community.name}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      {new Date(post.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="text-gray-800">
-                    {renderPostContent(post.content)}
-                  </div>
+      <div className="bg-white p-6 rounded-lg shadow">
+        <h2 className="text-xl font-semibold mb-4">Your Posts</h2>
+        {posts.length > 0 ? (
+          <div className="space-y-4">
+            {posts.map((post) => (
+              <div key={post._id} className="border p-4 rounded-lg">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-sm text-gray-600">
+                    Posted in {post.community.name}
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    {new Date(post.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-600">
-              `You haven &apos t created any posts yet.`
-            </p>
-          )}
-        </div>
-      </div>{" "}
+                <div className="text-gray-800">
+                  {renderPostContent(post.content)}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-600">
+            `You haven &apos t created any posts yet.`
+          </p>
+        )}
+      </div>
     </div>
   );
 }

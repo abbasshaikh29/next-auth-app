@@ -13,7 +13,7 @@ export default function Home() {
       // body
       try {
         const data = await apiClient.getcommunities();
-        setcommunity(data);
+        -setcommunity(data);
       } catch (error) {
         console.error("Error fetching coummunites:", error);
       }

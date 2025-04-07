@@ -2,14 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authoptions";
 import { dbconnect } from "@/lib/db";
-import { Post, IPost } from "@/models/Posts";
+import { Post } from "@/models/Posts";
 import { Community } from "@/models/Community";
 import mongoose from "mongoose";
 import { User } from "@/models/User";
 
-interface PostWithAuthor extends IPost {
-  authorName: string;
-}
 export async function GET(request: NextRequest) {
   try {
     await dbconnect();
@@ -43,7 +40,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([], { status: 200 });
     }
 
-    const postsWithAuthor = posts.map((post: any) => {
+    const postsWithAuthor = posts.map((post: InstanceType<typeof Post>) => {
       let parsedContent;
       if (typeof post.content === "string") {
         try {

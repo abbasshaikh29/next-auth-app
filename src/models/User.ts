@@ -21,6 +21,7 @@ export interface IUser {
   community: mongoose.Types.ObjectId[];
   followedBy: mongoose.Types.ObjectId[];
   following: mongoose.Types.ObjectId[];
+  profileImageUrl?: string;
 }
 
 const userSchema = new mongoose.Schema<IUser>(
@@ -41,6 +42,7 @@ const userSchema = new mongoose.Schema<IUser>(
     community: [{ type: Schema.Types.ObjectId, ref: "Community" }],
     followedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
     following: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    profileImageUrl: { type: String },
   },
   {
     timestamps: true,

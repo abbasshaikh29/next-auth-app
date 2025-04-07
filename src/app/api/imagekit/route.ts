@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import ImageKit from "imagekit";
-import type { UploadResponse } from "imagekit/dist/libs/interfaces";
 
 const imagekit = new ImageKit({
   publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,

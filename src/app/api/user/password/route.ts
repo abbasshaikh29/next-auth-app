@@ -35,7 +35,6 @@ export async function PUT(request: Request) {
     // Invalidate current session
     const { authOptions } = await import("@/lib/authoptions");
     const { getToken } = await import("next-auth/jwt");
-    const { NextRequest } = await import("next/server");
 
     const token = await getToken({
       req: request as unknown as Parameters<typeof getToken>[0]["req"],

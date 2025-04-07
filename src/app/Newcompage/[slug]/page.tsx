@@ -25,7 +25,6 @@ export default function HomeIdPage() {
   const [community, setCommunity] = useState<ICommunity | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [posts, setPosts] = useState<PostWithAuthor[]>([]);
 
   useEffect(() => {
@@ -51,7 +50,7 @@ export default function HomeIdPage() {
         const postsData = await postsResponse.json();
         setPosts(postsData);
         console.log(postsData);
-      } catch (err: any) {
+      } catch (err: string | any) {
         setError(err.message || "Failed to fetch community");
       } finally {
         setLoading(false);
@@ -137,11 +136,7 @@ export default function HomeIdPage() {
             </div>
 
             <div className="w-1/4">
-              <CommunityAboutcard
-                slug={typeof slug === "string" ? slug : null}
-                title={community?.name}
-                description={community?.description}
-              />
+              <CommunityAboutcard slug={slug as string} />
             </div>
           </div>
         </div>

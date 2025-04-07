@@ -1,10 +1,8 @@
 "use client";
 
-import { Image, Link, FileText, X } from "lucide-react";
-import { useState, useRef, useInsertionEffect } from "react";
-import { apiClient } from "@/lib/api-client";
-import { log } from "console";
-
+import { Link, FileText, X } from "lucide-react";
+import { useState, useRef } from "react";
+import Image from "next/image";
 interface PostContent {
   type: "text" | "image" | "link" | "file";
   content: string;
@@ -16,14 +14,9 @@ interface CreatePostProps {
   onPostCreated?: (newPost: any) => void;
 }
 
-interface ApiResponse {
-  ok: boolean;
-  json: () => Promise<any>;
-}
-
 export function CreatePost({
   communitySlug,
-  authorId,
+
   onPostCreated,
 }: CreatePostProps) {
   const [title, setTitle] = useState("");
@@ -144,8 +137,7 @@ export function CreatePost({
           >
             {content.type === "image" ? (
               <div className="relative w-full">
-                <Image className="h-4 w-4 absolute left-2 top-2" />
-                <img
+                <Image
                   src={content.content}
                   alt=""
                   className="max-h-60 object-contain mx-auto"
@@ -188,7 +180,6 @@ export function CreatePost({
               className="btn btn-outline btn-sm flex items-center"
               onClick={() => imageInputRef.current?.click()}
             >
-              <Image className="h-4 w-4 mr-2" />
               Add Image
             </button>
             <button

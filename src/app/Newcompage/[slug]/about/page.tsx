@@ -1,11 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import type { ICommunity } from "@/models/Community";
 import CommunityAboutcard from "@/components/communitycommponets/CommunityAboutcard";
 import About from "@/components/communitynav/About";
-import Header from "@/components/Header";
 import CommunityNav from "@/components/communitynav/CommunityNav";
+import { useSession } from "next-auth/react";
 async function getCommunity(slug: string): Promise<ICommunity | null> {
   try {
     const response = await fetch(`/api/community/${slug}`);
@@ -18,12 +18,19 @@ async function getCommunity(slug: string): Promise<ICommunity | null> {
     return null;
   }
 }
-
 function Page() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const { slug } = useParams<{ slug: string }>();
   const [community, setCommunity] = useState<ICommunity | null>(null);
   const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
 
   useEffect(() => {
     if (slug) {
@@ -60,11 +67,7 @@ function Page() {
             <About slug={slug} />
           </div>
           <div>
-            <CommunityAboutcard
-              slug={slug}
-              title={community?.name}
-              description={community?.description}
-            />
+            <CommunityAboutcard slug={slug} />
           </div>
         </div>
       </div>

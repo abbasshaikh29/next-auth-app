@@ -3,7 +3,7 @@ import { useSession, signOut } from "next-auth/react";
 
 import { useNotification } from "./Notification";
 import Link from "next/link";
-import { Home, User } from "lucide-react";
+import { User } from "lucide-react";
 
 export default function Header() {
   const { data: session } = useSession();
@@ -14,6 +14,7 @@ export default function Header() {
       await signOut();
       showNotification("Sign out successful", "success");
     } catch (error) {
+      console.log(error);
       showNotification("Sign out failed", "error");
     }
   };

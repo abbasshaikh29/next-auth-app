@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-
+import Image from "next/image";
 function Hero() {
   return (
     <div className="bg-base-200 py-16">
@@ -16,7 +16,7 @@ function Hero() {
           <div className="flex flex-col items-center space-y-4 md:flex-row md:justify-center md:space-x-4 md:space-y-0">
             <div className="card card-compact bg-base-100 w-96 shadow-xl">
               <figure>
-                <img
+                <Image
                   src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
                   alt="Shoes"
                 />

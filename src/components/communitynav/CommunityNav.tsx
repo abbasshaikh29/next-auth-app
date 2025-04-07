@@ -7,15 +7,11 @@ import { useParams } from "next/navigation";
 import { User } from "lucide-react";
 import { useNotification } from "@/components/Notification";
 import { useSession, signOut } from "next-auth/react";
-import { fetchExternalImage } from "next/dist/server/image-optimizer";
-import { log } from "console";
 function CommunityNav() {
   const { slug } = useParams<{ slug: string }>();
   const { data: session } = useSession();
   const { showNotification } = useNotification();
   const [Name, setName] = useState("");
-  const [comid, setcomid] = useState("");
-  const [Uname, setUname] = useState("");
   const fetchCommunity = async () => {
     const res = await fetch(`/api/community/${slug}`);
     const data = await res.json();
@@ -35,7 +31,7 @@ function CommunityNav() {
     }
   };
   return (
-    <div className="navbar sticky top-0 bg-base-100 shadow-md z-10">
+    <div className="navbar sticky top-0 bg-base-300 shadow-md z-10">
       <div className="flex flex-col justify-center w-full">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex-1 px-2 lg:flex-none">
@@ -134,22 +130,35 @@ function CommunityNav() {
           </div>
         </div>
         <li className="divider my-1"></li>
-        <div className="flex gap-2">
-          <Link href={`/Newcompage/${slug}/about`} className="btn btn-ghost">
-            About
-          </Link>
-          <Link href={`/Newcompage/${slug}/Calander`} className="btn btn-ghost">
-            Calander
-          </Link>
-          <Link href={`/Newcompage/${slug}/Courses`} className="btn btn-ghost">
-            Courses
-          </Link>
-          <Link href={`/Newcompage/${slug}`} className="btn btn-ghost">
+        <div className="flex  gap-2">
+          <Link
+            href={`/Newcompage/${slug}`}
+            className="btn text-lg btn-ghost hover:text-primary"
+          >
             Community
           </Link>
           <Link
+            href={`/Newcompage/${slug}/Courses`}
+            className="btn text-lg btn-ghost hover:text-primary"
+          >
+            Courses
+          </Link>
+          <Link
+            href={`/Newcompage/${slug}/Calander`}
+            className="btn text-lg btn-ghost hover:text-primary"
+          >
+            Calander
+          </Link>
+          <Link
+            href={`/Newcompage/${slug}/about`}
+            className="btn text-lg btn-ghost "
+          >
+            About
+          </Link>
+
+          <Link
             href={`/Newcompage/${slug}/communitysetting`}
-            className="btn btn-ghost"
+            className="btn text-lg btn-ghost hover:text-primary"
           >
             Settings
           </Link>

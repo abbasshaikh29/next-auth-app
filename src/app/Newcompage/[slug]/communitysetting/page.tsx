@@ -12,15 +12,17 @@ function CommunitySetting() {
 
   return (
     <React.Fragment>
+      <CommunityNav />
       <div className="container mx-auto w-3/4 p-6 space-y-8 ">
-        <CommunityNav />
-        <div className=" flex flex-row gap-12 p-4   mx-auto">
-          <div className="tabs flex flex-col gap-5 p-4  h-60 tabs-boxed mb-8 ">
+        <div className=" flex flex-row gap-12  mx-auto">
+          <div className=" flex flex-col h-60 mb-8 w-64 items-start ">
             <Link
               href="?t=CommunitySettings"
               className={
-                "tab text-2xl " +
-                (t === "CommunitySettings" ? "tab-active" : "")
+                " py-2 font-bold px-4 w-full rounded-md text-xl   " +
+                (t === "CommunitySettings"
+                  ? "bg-accent text-base-content hover:none"
+                  : "")
               }
             >
               Settings
@@ -28,13 +30,14 @@ function CommunitySetting() {
             <Link
               href="?t=payments"
               className={
-                "tab text-2xl " + (t === "payments" ? "tab-active" : "")
+                "  font-bold w-full text-xl py-2 px-4 rounded-md  " +
+                (t === "payments" ? "bg-accent text-base-content" : "")
               }
             >
               Payment
             </Link>
           </div>
-          <div className=" p-3  rounded-lg w-3/4">
+          <div className=" p-3 rounded-lg w-3/4">
             {t === "CommunitySettings" && <CommunitySettings />}
             {t === "payments" && <PaymentDisplay />}
             {!t && <CommunitySettings />}

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, ChangeEvent, FormEvent } from "react";
 import { useSession } from "next-auth/react";
 
@@ -8,7 +10,6 @@ interface NotificationSettings {
 }
 
 export default function NotificationSettings() {
-  const { data: session } = useSession();
   const [settings, setSettings] = useState<NotificationSettings>({
     emailNotifications: true,
     pushNotifications: true,

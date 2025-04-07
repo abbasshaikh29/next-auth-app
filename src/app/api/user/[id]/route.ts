@@ -1,18 +1,24 @@
-import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authoptions";
 import { User } from "@/models/User";
 import { Post } from "@/models/Posts";
 import { dbconnect } from "@/lib/db";
 
+import { NextRequest, NextResponse } from "next/server";
 export async function GET(
-  request: NextRequest,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const { id } = await Promise.resolve(params);
+  console.log("params.id:", id);
   await dbconnect();
 
   try {
     // Verify authentication
+    const id = req.url.match(/\/api\/user\/([^\/]+)/)?.[1];
+    if (!id) {
+      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
+    }
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -21,18 +27,20 @@ export async function GET(
       );
     }
 
-    const userId = session.user.id;
+    const userId = id as string;
+    console.log("userId before validation:", userId);
 
     // Validate user ID format
-    if (!userId.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       return NextResponse.json(
         { error: "Invalid user ID format" },
         { status: 400 }
       );
     }
-    const user = await User.findById(userId).select("-password");
+    const user = await User.findById(id);
+    console.log("User found:", user);
     if (!user) {
-      console.log("User not found for ID:", userId);
+      console.log("User not found for ID:", id);
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 

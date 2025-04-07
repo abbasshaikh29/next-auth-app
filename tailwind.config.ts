@@ -18,6 +18,11 @@ export default {
   },
   plugins: [daisyui],
   daisyui: {
-    themes: [, "forest", "lemonade"],
+    themes: [
+      // "halloween",
+      // "pastel",
+      // "black",
+      "wireframe",
+    ],
   },
 } satisfies Config;
