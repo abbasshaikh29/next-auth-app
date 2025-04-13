@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authoptions";
+import { getServerSession } from "@/lib/auth-helpers";
 import { Community } from "@/models/Community";
 
 import { dbconnect } from "@/lib/db";
@@ -8,7 +7,7 @@ import { dbconnect } from "@/lib/db";
 // GET all pending requests for a community
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -55,7 +54,7 @@ export async function GET(req: Request) {
 // POST to approve/reject a request
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

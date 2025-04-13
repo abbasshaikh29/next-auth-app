@@ -9,9 +9,14 @@ interface NotificationSettings {
 }
 
 export interface IUser {
+  _id: mongoose.Types.ObjectId;
   username: string;
+  name?: string;
   email: string;
-  password: string;
+  password?: string;
+  provider?: string;
+  providerId?: string;
+  providerType?: string;
   slug?: string;
   createdAt: Date;
   firstName?: string;
@@ -21,14 +26,22 @@ export interface IUser {
   community: mongoose.Types.ObjectId[];
   followedBy: mongoose.Types.ObjectId[];
   following: mongoose.Types.ObjectId[];
-  profileImageUrl?: string;
+  profileImage?: string;
+  emailVerified?: boolean;
+  verificationToken?: string;
+  verificationTokenExpiry?: Date;
 }
 
 const userSchema = new mongoose.Schema<IUser>(
   {
+    _id: { type: Schema.Types.ObjectId, auto: true },
     username: { type: String, required: true, unique: true },
+    name: { type: String },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: { type: String },
+    provider: { type: String },
+    providerId: { type: String },
+    providerType: { type: String },
     slug: { type: String, unique: true, sparse: true },
     createdAt: { type: Date, default: Date.now },
     firstName: { type: String },
@@ -42,7 +55,10 @@ const userSchema = new mongoose.Schema<IUser>(
     community: [{ type: Schema.Types.ObjectId, ref: "Community" }],
     followedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
     following: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    profileImageUrl: { type: String },
+    profileImage: { type: String },
+    emailVerified: { type: Boolean, default: false },
+    verificationToken: { type: String },
+    verificationTokenExpiry: { type: Date },
   },
   {
     timestamps: true,
@@ -57,8 +73,11 @@ userSchema.pre("save", async function (next) {
 });
 
 userSchema.pre("save", async function (next) {
-  if (this.isModified("password")) {
-    console.log("Password modified - current value:", this.password);
+  if (this.isModified("password") && this.password) {
+    console.log(
+      "Password modified - current value:",
+      this.password?.substring(0, 6)
+    );
     if (!this.password.startsWith("$2b$")) {
       console.log("Hashing raw password");
       this.password = await bcrypt.hash(this.password, 10);
@@ -69,4 +88,8 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
+userSchema.index(
+  { providerId: 1, providerType: 1 },
+  { unique: true, sparse: true }
+);
 export const User = models.User || model<IUser>("User", userSchema);

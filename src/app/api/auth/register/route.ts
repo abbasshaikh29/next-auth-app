@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { User } from "@/models/User";
 import { dbconnect } from "@/lib/db";
+import { generateVerificationToken, sendVerificationEmail } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,21 +22,42 @@ export async function POST(request: NextRequest) {
         }
       );
     }
+
+    // Generate verification token
+    const verificationToken = generateVerificationToken();
+    const verificationTokenExpiry = new Date();
+    verificationTokenExpiry.setHours(verificationTokenExpiry.getHours() + 24); // Token expires in 24 hours
+
+    // Create user with verification token
     await User.create({
       email,
       password,
       username,
+      emailVerified: false,
+      verificationToken,
+      verificationTokenExpiry,
     });
+
+    // Send verification email
+    try {
+      await sendVerificationEmail(email, verificationToken, username);
+    } catch (emailError) {
+      console.error("Failed to send verification email:", emailError);
+      // Continue with registration even if email fails
+    }
+
     return NextResponse.json(
       {
-        message: "User registered successfully",
+        message:
+          "User registered successfully. Please check your email to verify your account.",
       },
       { status: 201 }
     );
   } catch (error) {
+    console.error("Registration error:", error);
     return NextResponse.json(
       {
-        error: "failed to register",
+        error: "Failed to register",
       },
       { status: 500 }
     );

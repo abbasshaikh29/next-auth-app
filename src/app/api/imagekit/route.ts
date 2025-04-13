@@ -1,17 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import ImageKit from "imagekit";
 
-const imagekit = new ImageKit({
-  publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
-  privateKey: process.env.IMAGEKIT_PRIVATE_KEY!,
-  urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
-});
+// Initialize ImageKit only if all required environment variables are present
+const initImageKit = () => {
+  if (
+    !process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY ||
+    !process.env.IMAGEKIT_PRIVATE_KEY ||
+    !process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT
+  ) {
+    console.error(
+      "Missing ImageKit configuration. Please check your environment variables."
+    );
+    return null;
+  }
+
+  return new ImageKit({
+    publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY,
+    privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+    urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT,
+  });
+};
+
+const imagekit = initImageKit();
 
 export async function POST(req: NextRequest) {
   // Verify request method
   if (req.method !== "POST") {
     return NextResponse.json({ error: "Method Not Allowed" }, { status: 405 });
   }
+
+  // Check if ImageKit is properly initialized
+  if (!imagekit) {
+    return NextResponse.json(
+      {
+        error:
+          "ImageKit is not configured properly. Please check server configuration.",
+      },
+      { status: 500 }
+    );
+  }
+
   try {
     // Remove unnecessary body parsing
     const formData = await req.formData();

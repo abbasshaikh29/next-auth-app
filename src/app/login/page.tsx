@@ -5,10 +5,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useNotification } from "@/components/Notification";
 import Link from "next/link";
+import ResendVerification from "@/components/ResendVerification";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showVerificationForm, setShowVerificationForm] = useState(false);
   const router = useRouter();
   const { showNotification } = useNotification();
 
@@ -23,7 +25,14 @@ export default function Login() {
 
     if (result?.error) {
       console.log(result);
-      showNotification(result.error, "error");
+
+      // Check if the error is related to email verification
+      if (result.error.includes("verify your email")) {
+        showNotification("Please verify your email before logging in", "error");
+        setShowVerificationForm(true);
+      } else {
+        showNotification(result.error, "error");
+      }
     } else {
       showNotification("Login successful!", "success");
       router.push("/");
@@ -85,6 +94,8 @@ export default function Login() {
               </Link>
             </p>
           </form>
+
+          {showVerificationForm && <ResendVerification />}
         </div>
       </div>
     </div>

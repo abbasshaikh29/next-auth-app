@@ -4,11 +4,12 @@ import { Community } from "@/models/Community";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  context: { params: Promise<{ slug: string }> }
 ) {
   try {
     const { name, description, bannerImageurl } = await request.json();
-    const { slug } = params;
+    const resolvedParams = await context.params;
+    const { slug } = resolvedParams;
 
     await dbconnect();
 
@@ -34,4 +35,3 @@ export async function PUT(
     );
   }
 }
-

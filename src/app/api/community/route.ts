@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authoptions";
+import { getServerSession } from "@/lib/auth-helpers";
 import { dbconnect } from "@/lib/db";
 import { Community, ICommunity } from "@/models/Community";
 import slugify from "slugify";
@@ -25,7 +24,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
+    console.log("Session:", session);
 
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

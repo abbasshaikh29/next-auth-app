@@ -1,5 +1,4 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authoptions";
+import { getServerSession } from "@/lib/auth-helpers";
 import { User } from "@/models/User";
 import { Post } from "@/models/Posts";
 import { dbconnect } from "@/lib/db";
@@ -7,9 +6,10 @@ import { dbconnect } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await Promise.resolve(params);
+  const resolvedParams = await context.params;
+  const { id } = resolvedParams;
   console.log("params.id:", id);
   await dbconnect();
 
@@ -19,7 +19,7 @@ export async function GET(
     if (!id) {
       return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
     }
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },

@@ -7,20 +7,24 @@ import { useParams } from "next/navigation";
 import { User } from "lucide-react";
 import { useNotification } from "@/components/Notification";
 import { useSession, signOut } from "next-auth/react";
+
 function CommunityNav() {
   const { slug } = useParams<{ slug: string }>();
   const { data: session } = useSession();
   const { showNotification } = useNotification();
   const [Name, setName] = useState("");
+  const [isMember, setIsMember] = useState(false);
+
   const fetchCommunity = async () => {
     const res = await fetch(`/api/community/${slug}`);
     const data = await res.json();
     setName(data.name);
+    setIsMember(data.members?.includes(session?.user?.id) || false);
   };
 
   useEffect(() => {
     fetchCommunity();
-  }, [slug]);
+  }, [slug, session?.user?.id]);
 
   const handleSignOut = async () => {
     try {
@@ -30,10 +34,11 @@ function CommunityNav() {
       showNotification("Sign out failed", "error");
     }
   };
+
   return (
     <div className="navbar sticky top-0 bg-base-300 shadow-md z-10">
       <div className="flex flex-col justify-center w-full">
-        <div className="container mx-auto flex justify-between items-center">
+        <div className="container mx-auto flex justify-between  px-16 items-center">
           <div className="flex-1 px-2 lg:flex-none">
             <Link
               href="/"
@@ -52,9 +57,11 @@ function CommunityNav() {
                 <div
                   tabIndex={0}
                   role="button"
-                  className="btn btn-ghost btn-circle"
+                  className="btn btn-ghost btn-circle avatar"
                 >
-                  <User className="w-5 h-5" />
+                  <div className="w-6 rounded-full">
+                    <User />
+                  </div>
                 </div>
                 <ul
                   tabIndex={0}
@@ -101,13 +108,13 @@ function CommunityNav() {
                           Settings
                         </Link>
                       </li>
-                      <li className="divider my-1"></li>{" "}
-                      <li className="items-center px-20">
+                      <li className="divider my-1"></li>
+                      <li>
                         <button
                           onClick={handleSignOut}
-                          className="btn btn-primary"
+                          className="px-4 py-2 hover:bg-base-200 block w-full"
                         >
-                          Log Out
+                          Sign Out
                         </button>
                       </li>
                     </>
@@ -116,9 +123,6 @@ function CommunityNav() {
                       <Link
                         href="/login"
                         className="px-4 py-2 hover:bg-base-200 block w-full"
-                        onClick={() =>
-                          showNotification("Please sign in to continue", "info")
-                        }
                       >
                         Login
                       </Link>
@@ -129,39 +133,47 @@ function CommunityNav() {
             </div>
           </div>
         </div>
-        <li className="divider my-1"></li>
-        <div className="flex  gap-2">
-          <Link
-            href={`/Newcompage/${slug}`}
-            className="btn text-lg btn-ghost hover:text-primary"
-          >
-            Community
-          </Link>
-          <Link
-            href={`/Newcompage/${slug}/Courses`}
-            className="btn text-lg btn-ghost hover:text-primary"
-          >
-            Courses
-          </Link>
-          <Link
-            href={`/Newcompage/${slug}/Calander`}
-            className="btn text-lg btn-ghost hover:text-primary"
-          >
-            Calander
-          </Link>
-          <Link
-            href={`/Newcompage/${slug}/about`}
-            className="btn text-lg btn-ghost "
-          >
-            About
-          </Link>
 
-          <Link
-            href={`/Newcompage/${slug}/communitysetting`}
-            className="btn text-lg btn-ghost hover:text-primary"
-          >
-            Settings
-          </Link>
+        <div>
+          {isMember ? (
+            <>
+              <div className="flex  gap-2">
+                <Link
+                  href={`/Newcompage/${slug}`}
+                  className="btn text-lg btn-ghost hover:text-primary"
+                >
+                  Community
+                </Link>
+                <Link
+                  href={`/Newcompage/${slug}/Courses`}
+                  className="btn text-lg btn-ghost hover:text-primary"
+                >
+                  Courses
+                </Link>
+                <Link
+                  href={`/Newcompage/${slug}/Calander`}
+                  className="btn text-lg btn-ghost hover:text-primary"
+                >
+                  Calander
+                </Link>
+                <Link
+                  href={`/Newcompage/${slug}/about`}
+                  className="btn text-lg btn-ghost "
+                >
+                  About
+                </Link>
+
+                <Link
+                  href={`/Newcompage/${slug}/communitysetting`}
+                  className="btn text-lg btn-ghost hover:text-primary"
+                >
+                  Settings
+                </Link>
+              </div>
+            </>
+          ) : (
+            <div></div>
+          )}
         </div>
       </div>
     </div>

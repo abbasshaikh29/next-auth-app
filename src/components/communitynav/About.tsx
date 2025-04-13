@@ -13,27 +13,34 @@ interface AboutProps {
 
 async function getCommunity(slug: string): Promise<{
   community: ICommunity | null;
-  creatorData: { user: IUser } | null;
+  adminData: { user: IUser } | null;
 }> {
   try {
+    // Fetch community data
     const communityResponse = await fetch(`/api/community/${slug}`);
     if (!communityResponse.ok) {
       throw new Error("Failed to fetch community");
     }
     const communityData: ICommunity = await communityResponse.json();
 
-    // Fetch creator separately using createdBy ID from community data
-    const creatorResponse = await fetch(`/api/user/${communityData.createdBy}`);
-    if (!creatorResponse.ok) {
-      throw new Error("Failed to fetch creator");
+    // Fetch admin data using the admin ID from community data
+    if (communityData.admin) {
+      try {
+        const adminResponse = await fetch(`/api/user/${communityData.admin}`);
+        if (adminResponse.ok) {
+          const adminData = await adminResponse.json();
+          return { community: communityData, adminData };
+        }
+      } catch (adminError) {
+        console.error("Error fetching admin:", adminError);
+        // Continue with community data even if admin fetch fails
+      }
     }
 
-    const creatorData = await creatorResponse.json();
-
-    return { community: communityData, creatorData };
+    return { community: communityData, adminData: null };
   } catch (error) {
-    console.error("Error fetching community or creator:", error);
-    return { community: null, creatorData: null };
+    console.error("Error fetching community:", error);
+    return { community: null, adminData: null };
   }
 }
 
@@ -41,8 +48,8 @@ function About({ slug }: AboutProps) {
   const { data: session } = useSession();
   const [communityData, setCommunityData] = useState<{
     community: ICommunity | null;
-    creator: IUser | null;
-  }>({ community: null, creator: null });
+    admin: IUser | null;
+  }>({ community: null, admin: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,7 +59,7 @@ function About({ slug }: AboutProps) {
       console.log("Fetched Data:", data); // Log fetched data
       setCommunityData({
         community: data.community,
-        creator: data.creatorData ? data.creatorData.user : null,
+        admin: data.adminData ? data.adminData.user : null,
       });
       setLoading(false);
     } catch (err: any) {
@@ -88,7 +95,10 @@ function About({ slug }: AboutProps) {
     <div className="m-10 flex flex-col gap-4 bg-base-300 p-4 rounded-md">
       <h1 className="text-2xl font-bold mb-4">{community.name}</h1>
       <p className="text-gray-600">
-        Created by {communityData.creator?.username || "Unknown"}
+        Created by{" "}
+        {communityData.admin?.username ||
+          communityData.community.createdBy ||
+          "Unknown"}
       </p>
       <div className="text-gray-600 mb-4">{community.description}</div>
 

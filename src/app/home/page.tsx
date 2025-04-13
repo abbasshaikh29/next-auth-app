@@ -13,7 +13,7 @@ export default function Home() {
       // body
       try {
         const data = await apiClient.getcommunities();
-        -setcommunity(data);
+        setcommunity(data);
       } catch (error) {
         console.error("Error fetching coummunites:", error);
       }
@@ -29,7 +29,9 @@ export default function Home() {
           <h1 className="text-6xl font-bold  ">Discover Communities</h1>
           <h1 className="text-4xl px-6 font-bold mb-8 ">or create one </h1>
           <Link href={"/communityform"}>
-            <button className="btn btn-neutral">Create Community</button>
+            <button type="button" className="btn btn-neutral">
+              Create Community
+            </button>
           </Link>
         </div>
         <div className="flex felx-col justify-center ">

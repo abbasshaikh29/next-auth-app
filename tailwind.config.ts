@@ -20,9 +20,7 @@ export default {
   daisyui: {
     themes: [
       // "halloween",
-      // "pastel",
-      // "black",
-      "wireframe",
+      "pastel",
     ],
   },
 } satisfies Config;

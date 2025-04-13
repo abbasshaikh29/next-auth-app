@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authoptions";
+import { getServerSession } from "@/lib/auth-helpers";
 import { Community } from "@/models/Community";
 
 import { dbconnect } from "@/lib/db";
@@ -14,7 +13,7 @@ interface JoinRequest {
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

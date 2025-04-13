@@ -11,6 +11,7 @@ export interface ICommunity {
   createdAt: Date;
   admin: string; // User ID of the admin
   members: string[]; // Array of user IDs who are members
+  subAdmins?: string[];
   joinRequests: {
     userId: string;
     status: "pending" | "approved" | "rejected";
@@ -29,6 +30,7 @@ const communitySchema = new Schema<ICommunity>({
   bannerImageurl: { type: String },
   admin: { type: String, ref: "User", required: true },
   members: [{ type: String, ref: "User" }],
+  subAdmins: [{ type: String }],
   joinRequests: [
     {
       userId: { type: String, ref: "User", required: true },

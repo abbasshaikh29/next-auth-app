@@ -1,16 +1,19 @@
 import mongoose from "mongoose";
-import { buffer } from "node:stream/consumers";
 
 const MONGODB_URI = process.env.MONGODB_URI!;
 
 if (!MONGODB_URI) {
   throw new Error("no uri found");
 }
-let cached = global.mongoose;
 
-if (!cached) {
-  cached = global.mongoose = { conn: null, pormise: null };
-}
+// Define a type for our cached connection
+type MongooseCache = {
+  conn: mongoose.Connection | null;
+  pormise: Promise<mongoose.Connection> | null;
+};
+
+// Use a module-level variable instead of global
+let cached: MongooseCache = { conn: null, pormise: null };
 
 export async function dbconnect() {
   if (cached.conn) {

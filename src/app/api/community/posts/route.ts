@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authoptions";
+import { getServerSession } from "@/lib/auth-helpers";
 import { dbconnect } from "@/lib/db";
 import { Post } from "@/models/Posts";
 import { Community } from "@/models/Community";
@@ -45,7 +44,7 @@ export async function GET(request: NextRequest) {
       if (typeof post.content === "string") {
         try {
           parsedContent = JSON.parse(post.content);
-        } catch (e) {
+        } catch (error) {
           console.error("Failed to parse content", post.content);
           parsedContent = [];
         }
@@ -70,7 +69,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
 
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -100,13 +99,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    let processedContent = content;
+    const processedContent = content;
     try {
       // Validate that content is valid JSON if it's a string
       if (typeof content === "string") {
         JSON.parse(content); // This will throw if invalid JSON
       }
-    } catch (e) {
+    } catch (error) {
       return NextResponse.json(
         { error: "Invalid content format" },
         { status: 400 }

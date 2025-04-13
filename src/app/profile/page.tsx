@@ -11,7 +11,7 @@ interface ProfileFormData {
 
 interface UserPost {
   _id: string;
-  content: any;
+  content: Record<string, unknown> | string | unknown[];
   createdAt: string;
   community: {
     name: string;
@@ -60,20 +60,23 @@ export default function Profile() {
   }, [session]);
 
   // Function to parse post content
-  const parsePostContent = (content: any) => {
+  const parsePostContent = (
+    content: Record<string, unknown> | string | unknown[]
+  ) => {
     try {
       if (typeof content === "string") {
         return JSON.parse(content);
       }
       return content;
     } catch (error) {
+      // Error handling for content parsing
       console.error("Failed to parse content", content);
       return [];
     }
   };
 
   // Function to render post content
-  const renderPostContent = (content: any) => {
+  const renderPostContent = (content: unknown) => {
     if (!Array.isArray(content)) return null;
 
     return content.map((item, index) => {

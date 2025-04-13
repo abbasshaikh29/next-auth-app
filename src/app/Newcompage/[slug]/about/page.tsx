@@ -19,7 +19,7 @@ async function getCommunity(slug: string): Promise<ICommunity | null> {
   }
 }
 function Page() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const { slug } = useParams<{ slug: string }>();
   const [community, setCommunity] = useState<ICommunity | null>(null);
@@ -59,15 +59,21 @@ function Page() {
   }
 
   return (
-    <div>
+    <div className=" ">
       <CommunityNav />
-      <div className="p-4 flex flex-col justify-center gap-4">
-        <div className="prose flex flex-row gap-5 justify-center max-w-none">
-          <div className="w-2/4 ">
+      <div className="p-4 flex flex-col gap-4 mt-9">
+        <div className=" flex flex-row justify-around  gap-20  ">
+          <div className="w-2/4 ml-44 ">
             <About slug={slug} />
           </div>
-          <div>
+          <div className="">
             <CommunityAboutcard slug={slug} />
+            <div className="mt-5 ml-20">
+              <h4>
+                powered by
+                <span className="text-rose-600">THETRIBELAB</span>
+              </h4>
+            </div>
           </div>
         </div>
       </div>

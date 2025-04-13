@@ -22,20 +22,22 @@ import {
 import { Textarea } from "./ui/textarea";
 import Link from "next/link";
 import { FileText } from "lucide-react";
+import { useSession } from "next-auth/react";
+import mongoose from "mongoose";
 
 interface Comment {
-  id: number;
+  _id: string;
   text: string;
-  author: string;
+  authorName: string;
   createdAt: string;
-  type: string;
-  content: string;
+  likes: mongoose.Types.ObjectId[];
+  parentCommentId: string | null;
 }
 
 import { IPost } from "@/models/Posts";
 
 interface Post extends Omit<IPost, "likes" | "createdAt"> {
-  likes: number;
+  likes: mongoose.Types.ObjectId[];
   createdAt: string | Date;
 }
 
@@ -58,10 +60,102 @@ export default function PostCard({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const { data: session } = useSession();
+
+  // Ensure post.likes is always an array
+  const likesArray = Array.isArray(post.likes) ? post.likes : [];
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // Check if user has liked the post
+    if (session?.user?.id) {
+      const userId = new mongoose.Types.ObjectId(session.user.id);
+      setIsLiked(
+        likesArray.some((likeId) => {
+          try {
+            return likeId.toString() === userId.toString();
+          } catch (error) {
+            console.error("Error comparing like IDs:", error);
+            return false;
+          }
+        })
+      );
+    }
+  }, [likesArray, session?.user?.id]);
+
+  useEffect(() => {
+    if (showComments) {
+      fetchComments();
+    }
+  }, [showComments, post._id]);
+
+  const fetchComments = async () => {
+    try {
+      const response = await fetch(`/api/comments?postId=${post._id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setComments(data);
+      }
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!newComment.trim() || !session?.user?.id) return;
+
+    try {
+      const response = await fetch("/api/comments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: newComment,
+          postId: post._id,
+          parentCommentId: replyingTo,
+        }),
+      });
+
+      if (response.ok) {
+        const newCommentData = await response.json();
+        setComments([newCommentData, ...comments]);
+        setNewComment("");
+        setReplyingTo(null);
+      }
+    } catch (error) {
+      console.error("Error adding comment:", error);
+    }
+  };
+
+  const handleLikeComment = async (commentId: string, isLiked: boolean) => {
+    if (!session?.user?.id) return;
+
+    try {
+      const response = await fetch("/api/comments", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          commentId,
+          action: isLiked ? "unlike" : "like",
+        }),
+      });
+
+      if (response.ok) {
+        const updatedComment = await response.json();
+        setComments(
+          comments.map((comment) =>
+            comment._id === commentId ? updatedComment : comment
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error liking comment:", error);
+    }
+  };
 
   const handleShare = async () => {
     try {
@@ -199,7 +293,7 @@ export default function PostCard({
                 className="h-4 w-4"
                 fill={isLiked ? "currentColor" : "none"}
               />
-              <span>{post.likes}</span>
+              <span>{likesArray.length}</span>
             </Button>
 
             <Button
@@ -314,7 +408,7 @@ export default function PostCard({
                   className="h-4 w-4"
                   fill={isLiked ? "currentColor" : "none"}
                 />
-                <span>{post.likes}</span>
+                <span>{likesArray.length}</span>
               </Button>
 
               <Button
@@ -332,29 +426,89 @@ export default function PostCard({
               <div className="mt-4 space-y-4">
                 {comments.map((comment) => (
                   <div
-                    key={comment.id}
+                    key={comment._id}
                     className="flex gap-2 p-3 bg-[#FFF5E6] rounded"
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm font-medium">
-                          {comment.author}
+                          {comment.authorName}
                         </span>
                         <span className="text-xs text-gray-500">
                           {new Date(comment.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                       <p className="text-sm">{comment.text}</p>
+                      <div className="flex items-center gap-4 mt-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            if (session?.user?.id) {
+                              const userId = new mongoose.Types.ObjectId(
+                                session.user.id
+                              );
+                              handleLikeComment(
+                                comment._id,
+                                comment.likes.some(
+                                  (likeId) =>
+                                    likeId.toString() === userId.toString()
+                                )
+                              );
+                            }
+                          }}
+                          className={`flex items-center gap-2 ${
+                            session?.user?.id &&
+                            comment.likes.some(
+                              (likeId) =>
+                                likeId.toString() ===
+                                new mongoose.Types.ObjectId(
+                                  session.user.id
+                                ).toString()
+                            )
+                              ? "text-red-500"
+                              : ""
+                          }`}
+                        >
+                          <Heart
+                            className="h-4 w-4"
+                            fill={
+                              session?.user?.id &&
+                              comment.likes.some(
+                                (likeId) =>
+                                  likeId.toString() ===
+                                  new mongoose.Types.ObjectId(
+                                    session.user.id
+                                  ).toString()
+                              )
+                                ? "currentColor"
+                                : "none"
+                            }
+                          />
+                          <span>{comment.likes.length}</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setReplyingTo(comment._id)}
+                        >
+                          Reply
+                        </Button>
+                      </div>
+                      {replyingTo === comment._id && (
+                        <div className="mt-2">
+                          <Textarea
+                            placeholder="Write a reply..."
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            className="flex-1 bg-white"
+                          />
+                          <Button onClick={handleAddComment} className="mt-2">
+                            Send Reply
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        setComments(comments.filter((c) => c.id !== comment.id))
-                      }
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
                   </div>
                 ))}
 
@@ -365,16 +519,7 @@ export default function PostCard({
                     onChange={(e) => setNewComment(e.target.value)}
                     className="flex-1 bg-white"
                   />
-                  <Button
-                    onClick={() => {
-                      if (newComment.trim()) {
-                        setComments([...comments]);
-                        setNewComment("");
-                      }
-                    }}
-                  >
-                    Send
-                  </Button>
+                  <Button onClick={handleAddComment}>Send</Button>
                 </div>
               </div>
             )}

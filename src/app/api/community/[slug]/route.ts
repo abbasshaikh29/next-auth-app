@@ -10,12 +10,14 @@ interface CommunityType {
   // Add other fields as needed
 }
 
+// In Next.js 15, the params object is a Promise
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  context: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { slug } = await params;
+    const resolvedParams = await context.params;
+    const { slug } = resolvedParams;
 
     await dbconnect();
     const community: CommunityType | null = await Community.findOne({ slug });

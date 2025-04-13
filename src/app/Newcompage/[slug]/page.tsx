@@ -10,6 +10,7 @@ import Searchs from "@/components/communitycommponets/Search";
 import { IPost } from "@/models/Posts";
 import PostCard from "@/components/Post";
 import CommunityNav from "@/components/communitynav/CommunityNav";
+import About from "@/components/communitynav/About";
 
 interface PostWithAuthor extends Omit<IPost, "likes"> {
   _id: string;
@@ -20,19 +21,20 @@ interface PostWithAuthor extends Omit<IPost, "likes"> {
 }
 
 export default function HomeIdPage() {
-  const { slug } = useParams();
+  const params = useParams();
+  const slug = params.slug as string;
   const { data: session } = useSession();
   const [community, setCommunity] = useState<ICommunity | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [posts, setPosts] = useState<PostWithAuthor[]>([]);
+  const [isMember, setIsMember] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!slug) {
         return;
       }
-      if (typeof slug !== "string") return;
       try {
         const communityResponse = await fetch(`/api/community/${slug}`);
         if (!communityResponse.ok) {
@@ -40,25 +42,31 @@ export default function HomeIdPage() {
         }
         const communityData = await communityResponse.json();
         setCommunity(communityData);
-
-        const postsResponse = await fetch(
-          `/api/community/posts?communitySlug=${slug}`
+        setIsMember(
+          communityData.members?.includes(session?.user?.id) || false
         );
-        if (!postsResponse.ok) {
-          throw new Error("Failed to fetch posts");
+
+        if (isMember) {
+          const postsResponse = await fetch(
+            `/api/community/posts?communitySlug=${slug}`
+          );
+          if (!postsResponse.ok) {
+            throw new Error("Failed to fetch posts");
+          }
+          const postsData = await postsResponse.json();
+          setPosts(postsData);
         }
-        const postsData = await postsResponse.json();
-        setPosts(postsData);
-        console.log(postsData);
-      } catch (err: string | any) {
-        setError(err.message || "Failed to fetch community");
+      } catch (err: unknown) {
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch community"
+        );
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [slug]);
+  }, [slug, session?.user?.id, isMember]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -72,76 +80,84 @@ export default function HomeIdPage() {
     return <div>Community not found.</div>;
   }
 
-  // Check if slug is available before rendering CreatePost
-  if (!slug) {
-    return <div>Loading community...</div>;
-  }
-
   return (
-    <div className=" min-h-screen bg-base-content">
+    <div>
       <CommunityNav />
-      {community ? (
-        <div className="container mx-auto mt-8">
-          <div className="flex flex-row gap-8">
-            <div className="w-3/4 flex flex-col">
-              <div className="mb-4">
+      {isMember ? (
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col gap-4 ">
+            <div className="flex flex-row justify-between ">
+              <div className="flex flex-col w-2/4 gap-3">
                 <Searchs />
+                <div>
+                  <CreatePost
+                    communitySlug={slug}
+                    authorId={session?.user?.id as string}
+                    onPostCreated={(newPost) => {
+                      setPosts((prevPosts) => [newPost, ...prevPosts]);
+                    }}
+                  />
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  {posts.map((post) => {
+                    const postData = {
+                      ...post,
+                      _id: post._id.toString(),
+                      createdAt:
+                        typeof post.createdAt === "string"
+                          ? post.createdAt
+                          : post.createdAt.toISOString(),
+                      likes: Array.isArray(post.likes) ? post.likes : [],
+                      authorName: post.authorName,
+                    };
+                    return (
+                      <PostCard
+                        key={post._id}
+                        post={postData}
+                        onLike={(liked) => {
+                          setPosts((prev) => {
+                            return prev.map((p) =>
+                              p._id === post._id
+                                ? {
+                                    ...p,
+                                    likes: liked
+                                      ? [
+                                          ...(Array.isArray(p.likes)
+                                            ? p.likes
+                                            : []),
+                                          new mongoose.Types.ObjectId(
+                                            session?.user?.id
+                                          ),
+                                        ]
+                                      : (Array.isArray(p.likes)
+                                          ? p.likes
+                                          : []
+                                        ).filter(
+                                          (id) =>
+                                            id.toString() !== session?.user?.id
+                                        ),
+                                  }
+                                : p
+                            );
+                          });
+                        }}
+                      />
+                    );
+                  })}
+                </div>
               </div>
-              <div className=" rounded-lg shadow-md p-4">
-                <CreatePost
-                  communitySlug={slug as string}
-                  authorId={session?.user?.id as string}
-                  onPostCreated={(newPost) => {
-                    setPosts((prevPosts) => [newPost, ...prevPosts]);
-                  }}
-                />
+              <div>
+                <CommunityAboutcard slug={slug} />
               </div>
-              <div className="mt-4 space-y-4">
-                {posts.map((post) => {
-                  const postData = {
-                    ...post,
-                    _id: post._id.toString(),
-                    createdAt:
-                      typeof post.createdAt === "string"
-                        ? post.createdAt
-                        : post.createdAt.toISOString(),
-                    likes: post.likes.length,
-                    authorName: post.authorName,
-                  };
-                  return (
-                    <PostCard
-                      key={post._id}
-                      post={postData}
-                      onLike={(liked) => {
-                        setPosts((prev) => {
-                          return prev.map((p) =>
-                            p._id === post._id
-                              ? {
-                                  ...p,
-                                  likes: liked
-                                    ? [
-                                        ...p.likes,
-                                        new mongoose.Types.ObjectId(),
-                                      ]
-                                    : p.likes.slice(0, -1),
-                                }
-                              : { ...p }
-                          );
-                        });
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="w-1/4">
-              <CommunityAboutcard slug={slug as string} />
             </div>
           </div>
         </div>
       ) : (
-        <p>Community not found.</p>
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col gap-4">
+            <About slug={slug} />
+          </div>
+        </div>
       )}
     </div>
   );

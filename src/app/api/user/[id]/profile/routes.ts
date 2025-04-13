@@ -13,10 +13,11 @@ interface UserType {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
+    const resolvedParams = await context.params;
+    const { id } = resolvedParams;
 
     await dbconnect();
     const user: UserType | null = await User.findById(id);
