@@ -68,21 +68,27 @@ export default function CommunityJoinForm({
         </div>
       )}
 
-      {questions.map((question, index) => (
-        <div key={index} className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            {question}
-          </label>
-          <textarea
-            value={answers[index] || ""}
-            onChange={(e) => handleAnswerChange(index, e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            rows={3}
-            required
-            placeholder={`Enter your answer for: ${question}`}
-          />
+      {questions.length === 0 ? (
+        <div className="text-gray-700 mb-4">
+          This community doesn't require any questions to be answered to join.
         </div>
-      ))}
+      ) : (
+        questions.map((question, index) => (
+          <div key={index} className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              {question}
+            </label>
+            <textarea
+              value={answers[index] || ""}
+              onChange={(e) => handleAnswerChange(index, e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              rows={3}
+              required
+              placeholder={`Enter your answer for: ${question}`}
+            />
+          </div>
+        ))
+      )}
 
       <button
         type="submit"

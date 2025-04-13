@@ -4,14 +4,8 @@ import { useParams } from "next/navigation";
 import { IKUploadResponse } from "imagekitio-next/dist/types/components/IKUpload/props";
 import { useNotification } from "@/components/Notification";
 import FileUpload from "../FileUpload";
-import { Settings2Icon, UserPlus, UserMinus } from "lucide-react";
+import { Settings2Icon } from "lucide-react";
 import { useSession } from "next-auth/react";
-
-interface Member {
-  id: string;
-  username: string;
-  isSubAdmin: boolean;
-}
 
 export default function CommunitySettings() {
   const { slug } = useParams();
@@ -23,9 +17,8 @@ export default function CommunitySettings() {
   const [uploadResponse, setUploadResponse] = useState<IKUploadResponse | null>(
     null
   );
-  const [members, setMembers] = useState<Member[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [newSubAdminId, setNewSubAdminId] = useState("");
+  const [isSubAdmin, setIsSubAdmin] = useState(false);
 
   const { showNotification } = useNotification();
 
@@ -35,21 +28,10 @@ export default function CommunitySettings() {
       const data = await res.json();
       setName(data.name);
       setDescription(data.description ?? "");
-      setIsAdmin(data.admin === session?.user?.id);
-
-      // Fetch members with their usernames
-      const membersWithUsernames = await Promise.all(
-        data.members.map(async (memberId: string) => {
-          const userRes = await fetch(`/api/user/${memberId}`);
-          const userData = await userRes.json();
-          return {
-            id: memberId,
-            username: userData.username,
-            isSubAdmin: data.subAdmins?.includes(memberId) || false,
-          };
-        })
-      );
-      setMembers(membersWithUsernames);
+      setBannerImage(data.bannerImageurl || "");
+      const userId = session?.user?.id;
+      setIsAdmin(data.admin === userId);
+      setIsSubAdmin(data.subAdmins?.includes(userId) || false);
     } catch (error) {
       console.error("Error fetching community:", error);
       showNotification("Failed to fetch community data", "error");
@@ -61,14 +43,17 @@ export default function CommunitySettings() {
   }, [slug, session?.user?.id]);
 
   const handleUpdateSettings = async () => {
-    if (!isAdmin) {
-      showNotification("Only admins can update community settings", "error");
+    if (!isAdmin && !isSubAdmin) {
+      showNotification(
+        "Only admins and sub-admins can update community settings",
+        "error"
+      );
       return;
     }
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/community/${slug}`, {
+      const response = await fetch(`/api/community/${slug}/settings`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -92,72 +77,12 @@ export default function CommunitySettings() {
     }
   };
 
-  const handleAddSubAdmin = async (memberId: string) => {
-    if (!isAdmin) {
-      showNotification("Only admins can add sub-admins", "error");
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/community/${slug}/subadmin`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ memberId }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to add sub-admin");
-      }
-
-      setMembers(
-        members.map((member) =>
-          member.id === memberId ? { ...member, isSubAdmin: true } : member
-        )
-      );
-      showNotification("Sub-admin added successfully", "success");
-    } catch (error) {
-      showNotification("Failed to add sub-admin", "error");
-    }
-  };
-
-  const handleRemoveSubAdmin = async (memberId: string) => {
-    if (!isAdmin) {
-      showNotification("Only admins can remove sub-admins", "error");
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/community/${slug}/subadmin`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ memberId }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to remove sub-admin");
-      }
-
-      setMembers(
-        members.map((member) =>
-          member.id === memberId ? { ...member, isSubAdmin: false } : member
-        )
-      );
-      showNotification("Sub-admin removed successfully", "success");
-    } catch (error) {
-      showNotification("Failed to remove sub-admin", "error");
-    }
-  };
-
-  if (!isAdmin) {
+  if (!isAdmin && !isSubAdmin) {
     return (
       <div className="p-4">
         <h2 className="text-xl font-bold mb-4">Community Settings</h2>
         <p className="text-error">
-          Only community admins can access these settings.
+          Only community admins and sub-admins can access these settings.
         </p>
       </div>
     );
@@ -207,61 +132,8 @@ export default function CommunitySettings() {
           />
         </div>
 
-        <div className="divider">Sub-Admin Management</div>
-
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Members</h3>
-          <div className="overflow-x-auto">
-            <table className="table w-full">
-              <thead>
-                <tr>
-                  <th>Username</th>
-                  <th>Role</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {members.map((member) => (
-                  <tr key={member.id}>
-                    <td>{member.username}</td>
-                    <td>
-                      {member.id === session?.user?.id
-                        ? "Admin"
-                        : member.isSubAdmin
-                        ? "Sub-Admin"
-                        : "Member"}
-                    </td>
-                    <td>
-                      {member.id !== session?.user?.id && (
-                        <div className="flex gap-2">
-                          {!member.isSubAdmin ? (
-                            <button
-                              className="btn btn-sm btn-primary"
-                              onClick={() => handleAddSubAdmin(member.id)}
-                            >
-                              <UserPlus className="w-4 h-4" />
-                              Make Sub-Admin
-                            </button>
-                          ) : (
-                            <button
-                              className="btn btn-sm btn-error"
-                              onClick={() => handleRemoveSubAdmin(member.id)}
-                            >
-                              <UserMinus className="w-4 h-4" />
-                              Remove Sub-Admin
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
         <button
+          type="button"
           className="btn btn-primary"
           onClick={handleUpdateSettings}
           disabled={isLoading}

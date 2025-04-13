@@ -1,6 +1,7 @@
 import { getServerSession } from "@/lib/auth-helpers";
 import { User } from "@/models/User";
 import { Post } from "@/models/Posts";
+import { Community } from "@/models/Community";
 import { dbconnect } from "@/lib/db";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -49,11 +50,42 @@ export async function GET(
       .populate("communityId", "name slug")
       .sort({ createdAt: -1 });
 
+    // Find communities the user is a member of
+    const communities = await Community.find({ members: id });
+
+    // Map communities with user's role in each
+    const userCommunities = communities.map((community) => {
+      let role = "member";
+      if (community.admin === id) {
+        role = "admin";
+      } else if (community.subAdmins?.includes(id)) {
+        role = "sub-admin";
+      }
+
+      return {
+        _id: community._id,
+        name: community.name,
+        slug: community.slug,
+        role,
+      };
+    });
+
     console.log("Found posts:", posts);
     return NextResponse.json({
-      user,
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        image: user.image,
+        bio: user.bio || "",
+        location: user.location || "",
+        website: user.website || "",
+        createdAt: user.createdAt,
+      },
+      communities: userCommunities,
       posts: posts.map((post) => ({
         _id: post._id,
+        title: post.title,
         content: post.content,
         createdAt: post.createdAt,
         community: {

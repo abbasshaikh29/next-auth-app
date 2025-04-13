@@ -2,6 +2,7 @@
 import CommunityNav from "@/components/communitynav/CommunityNav";
 import CommunitySettings from "@/components/communitycommponets/CommunitySettingsForm";
 import PaymentDisplay from "@/components/communitycommponets/PaymentDisplay";
+import AdminPanelSettings from "@/components/communitycommponets/AdminPanelSettings";
 import React from "react";
 
 import { useSearchParams } from "next/navigation";
@@ -36,10 +37,20 @@ function CommunitySetting() {
             >
               Payment
             </Link>
+            <Link
+              href="?t=AdminPanel"
+              className={
+                "  font-bold w-full text-xl py-2 px-4 rounded-md  " +
+                (t === "AdminPanel" ? "bg-accent text-base-content" : "")
+              }
+            >
+              Admin Panel
+            </Link>
           </div>
           <div className=" p-3 rounded-lg w-3/4">
             {t === "CommunitySettings" && <CommunitySettings />}
             {t === "payments" && <PaymentDisplay />}
+            {t === "AdminPanel" && <AdminPanelSettings />}
             {!t && <CommunitySettings />}
           </div>
         </div>

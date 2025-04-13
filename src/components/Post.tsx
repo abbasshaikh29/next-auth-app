@@ -12,6 +12,7 @@ import {
   Trash,
   X,
 } from "lucide-react";
+import { formatRelativeTime } from "@/lib/date-utils";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import {
   DropdownMenu,
@@ -202,8 +203,8 @@ export default function PostCard({
             >
               <div>
                 <p>{authorName}</p>
-                <p className="text-sm ">
-                  {new Date(post.createdAt).toLocaleDateString()}
+                <p className="text-sm text-gray-500">
+                  {formatRelativeTime(post.createdAt)}
                 </p>
               </div>
             </Link>
@@ -316,8 +317,8 @@ export default function PostCard({
             <div className="flex items-center gap-4">
               <div>
                 <h3 className="font-semibold">{post.authorName}</h3>
-                <p className="text-sm ">
-                  {new Date(post.createdAt).toLocaleDateString()}
+                <p className="text-sm text-gray-500">
+                  {formatRelativeTime(post.createdAt)}
                 </p>
               </div>
             </div>
@@ -435,7 +436,7 @@ export default function PostCard({
                           {comment.authorName}
                         </span>
                         <span className="text-xs text-gray-500">
-                          {new Date(comment.createdAt).toLocaleDateString()}
+                          {formatRelativeTime(comment.createdAt)}
                         </span>
                       </div>
                       <p className="text-sm">{comment.text}</p>

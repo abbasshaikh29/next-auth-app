@@ -86,7 +86,7 @@ function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
 
   return (
     <>
-      <div className="card bg-base-100 w-96 shadow-xl overflow-hidden flex flex-col justify-between">
+      <div className="card bg-base-100 shadow-xl overflow-hidden flex flex-col justify-between w-96">
         <div className="w-full h-52 overflow-hidden relative">
           <IKImage
             urlEndpoint={urlEndpoint}
@@ -122,7 +122,7 @@ function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
 
           {isMember ? (
             <div className="card-actions mt-4">
-              <button className="btn btn-secondary">
+              <button type="button" className="btn btn-secondary">
                 <Link href={`/Newcompage/${slug}/communitysetting`}>
                   Community Setting
                 </Link>
@@ -131,6 +131,7 @@ function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
           ) : (
             <div className="card-actions mt-4">
               <button
+                type="button"
                 className="btn btn-secondary"
                 onClick={() => setShowJoinForm(true)}
               >
@@ -148,6 +149,7 @@ function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Join Community</h2>
               <button
+                type="button"
                 className="btn btn-ghost btn-sm"
                 onClick={() => setShowJoinForm(false)}
               >

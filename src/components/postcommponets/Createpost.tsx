@@ -90,14 +90,14 @@ export function CreatePost({
   };
 
   return (
-    <div className="card bg-primary text-base-content shadow-md w-full p-4">
+    <div className="card bg-base-200 shadow-md w-full p-4">
       <h2 className="font-semibold mb-4">Create a Post</h2>
       <div className="space-y-4">
         <input
           type="text"
           placeholder="Post title"
           value={title}
-          className="input input-bordered w-full"
+          className="input input-bordered w-full bg-white"
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setTitle(e.target.value)
           }
@@ -157,6 +157,7 @@ export function CreatePost({
               <span className="flex-1">{content.content}</span>
             )}
             <button
+              type="button"
               className="btn btn-ghost btn-sm"
               onClick={() => handleRemoveContent(index)}
             >
@@ -169,7 +170,7 @@ export function CreatePost({
           <textarea
             placeholder="What's on your mind?"
             value={currentInput}
-            className="textarea textarea-bordered w-full"
+            className="textarea textarea-bordered w-full bg-white"
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
               setCurrentInput(e.target.value)
             }
@@ -177,12 +178,14 @@ export function CreatePost({
           />
           <div className="flex gap-2">
             <button
+              type="button"
               className="btn btn-outline btn-sm flex items-center"
               onClick={() => imageInputRef.current?.click()}
             >
               Add Image
             </button>
             <button
+              type="button"
               className="btn btn-outline btn-sm flex items-center"
               onClick={() => {
                 if (currentInput.trim()) {
@@ -198,6 +201,7 @@ export function CreatePost({
               Add Link
             </button>
             <button
+              type="button"
               className="btn btn-outline btn-sm flex items-center"
               onClick={() => fileInputRef.current?.click()}
             >
@@ -208,8 +212,9 @@ export function CreatePost({
         </div>
 
         <button
+          type="button"
           onClick={handleSubmit}
-          className="btn btn-outline w-full"
+          className="btn btn-outline w-full bg-base-300"
           disabled={!title.trim() && contents.length === 0}
         >
           Post

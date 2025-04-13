@@ -28,6 +28,8 @@ export default function HomeIdPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [posts, setPosts] = useState<PostWithAuthor[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<PostWithAuthor[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isMember, setIsMember] = useState(false);
 
   useEffect(() => {
@@ -55,6 +57,7 @@ export default function HomeIdPage() {
           }
           const postsData = await postsResponse.json();
           setPosts(postsData);
+          setFilteredPosts(postsData);
         }
       } catch (err: unknown) {
         setError(
@@ -67,6 +70,55 @@ export default function HomeIdPage() {
 
     fetchData();
   }, [slug, session?.user?.id, isMember]);
+
+  // Handle search functionality
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  // Effect to filter posts when search query or posts change
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      // If search query is empty, show all posts
+      setFilteredPosts(posts);
+      return;
+    }
+
+    // Filter posts based on search query
+    const filtered = posts.filter((post) => {
+      const lowerCaseQuery = searchQuery.toLowerCase();
+
+      // Search in title
+      if (post.title.toLowerCase().includes(lowerCaseQuery)) {
+        return true;
+      }
+
+      // Search in content
+      try {
+        let content;
+        if (typeof post.content === "string") {
+          content = JSON.parse(post.content);
+        } else {
+          content = post.content;
+        }
+
+        if (Array.isArray(content)) {
+          return content.some(
+            (item) =>
+              item.type === "text" &&
+              item.content.toLowerCase().includes(lowerCaseQuery)
+          );
+        }
+
+        return false;
+      } catch (e) {
+        console.error("Error parsing post content:", e);
+        return false;
+      }
+    });
+
+    setFilteredPosts(filtered);
+  }, [searchQuery, posts]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -85,21 +137,27 @@ export default function HomeIdPage() {
       <CommunityNav />
       {isMember ? (
         <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col gap-4 ">
-            <div className="flex flex-row justify-between ">
-              <div className="flex flex-col w-2/4 gap-3">
-                <Searchs />
-                <div>
-                  <CreatePost
-                    communitySlug={slug}
-                    authorId={session?.user?.id as string}
-                    onPostCreated={(newPost) => {
-                      setPosts((prevPosts) => [newPost, ...prevPosts]);
-                    }}
-                  />
-                </div>
-                <div className="grid grid-cols-1 gap-4">
-                  {posts.map((post) => {
+          <div className="flex flex-row justify-between gap-6">
+            <div className="flex flex-col w-2/3 gap-3">
+              <Searchs onSearch={handleSearch} />
+              <div>
+                <CreatePost
+                  communitySlug={slug}
+                  authorId={session?.user?.id as string}
+                  onPostCreated={(newPost) => {
+                    setPosts((prevPosts) => [newPost, ...prevPosts]);
+                  }}
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                {filteredPosts.length === 0 && searchQuery ? (
+                  <div className="text-center p-4 bg-base-200 rounded-lg">
+                    <p className="text-lg">
+                      No posts found matching "{searchQuery}"
+                    </p>
+                  </div>
+                ) : (
+                  filteredPosts.map((post) => {
                     const postData = {
                       ...post,
                       _id: post._id.toString(),
@@ -143,12 +201,12 @@ export default function HomeIdPage() {
                         }}
                       />
                     );
-                  })}
-                </div>
+                  })
+                )}
               </div>
-              <div>
-                <CommunityAboutcard slug={slug} />
-              </div>
+            </div>
+            <div className="w-1/3">
+              <CommunityAboutcard slug={slug} />
             </div>
           </div>
         </div>

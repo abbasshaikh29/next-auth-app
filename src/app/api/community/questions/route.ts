@@ -61,6 +61,9 @@ export async function POST(req: Request) {
       );
     }
 
+    // Filter out empty questions
+    const filteredQuestions = questions.filter((q) => q.trim() !== "");
+
     await dbconnect();
 
     const community = await Community.findById(communityId);
@@ -77,7 +80,7 @@ export async function POST(req: Request) {
     }
 
     // Update questions
-    community.adminQuestions = questions;
+    community.adminQuestions = filteredQuestions;
     await community.save();
 
     return NextResponse.json({

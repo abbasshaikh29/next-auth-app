@@ -1,3 +1,9 @@
+/* Import browser normalization */
+@import "../styles/browser-normalize.css";
+
+/* Import component-specific styles */
+@import "../styles/post-creation.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,4 +15,23 @@
 }*/
 .tabs {
   align-items: start;
+}
+
+/* Ensure consistent layout across browsers */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Fix for inconsistent form elements */
+input,
+textarea,
+select,
+button {
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 0.5rem;
+  font-family: inherit;
 }

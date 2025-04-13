@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 
 import { User } from "lucide-react";
 import { useNotification } from "@/components/Notification";
@@ -10,10 +10,34 @@ import { useSession, signOut } from "next-auth/react";
 
 function CommunityNav() {
   const { slug } = useParams<{ slug: string }>();
+  const pathname = usePathname();
   const { data: session } = useSession();
   const { showNotification } = useNotification();
   const [Name, setName] = useState("");
   const [isMember, setIsMember] = useState(false);
+
+  // Function to check if a link is active
+  const isLinkActive = (path: string) => {
+    // Exact match
+    if (pathname === path) return true;
+
+    // Special case for the main community page
+    if (
+      path === `/Newcompage/${slug}` &&
+      pathname.startsWith(`/Newcompage/${slug}`) &&
+      ![
+        "/Courses",
+        "/Calander",
+        "/about",
+        "/members",
+        "/communitysetting",
+      ].some((suffix) => pathname === `/Newcompage/${slug}${suffix}`)
+    ) {
+      return true;
+    }
+
+    return false;
+  };
 
   const fetchCommunity = async () => {
     const res = await fetch(`/api/community/${slug}`);
@@ -57,6 +81,8 @@ function CommunityNav() {
                 <div
                   tabIndex={0}
                   role="button"
+                  aria-label="User menu"
+                  title="User menu"
                   className="btn btn-ghost btn-circle avatar"
                 >
                   <div className="w-6 rounded-full">
@@ -111,6 +137,7 @@ function CommunityNav() {
                       <li className="divider my-1"></li>
                       <li>
                         <button
+                          type="button"
                           onClick={handleSignOut}
                           className="px-4 py-2 hover:bg-base-200 block w-full"
                         >
@@ -137,35 +164,66 @@ function CommunityNav() {
         <div>
           {isMember ? (
             <>
-              <div className="flex  gap-2">
+              <div className="flex gap-2">
                 <Link
                   href={`/Newcompage/${slug}`}
-                  className="btn text-lg btn-ghost hover:text-primary"
+                  className={`btn text-lg btn-ghost ${
+                    isLinkActive(`/Newcompage/${slug}`)
+                      ? "bg-primary text-primary-content"
+                      : "hover:text-primary"
+                  }`}
                 >
                   Community
                 </Link>
                 <Link
                   href={`/Newcompage/${slug}/Courses`}
-                  className="btn text-lg btn-ghost hover:text-primary"
+                  className={`btn text-lg btn-ghost ${
+                    isLinkActive(`/Newcompage/${slug}/Courses`)
+                      ? "bg-primary text-primary-content"
+                      : "hover:text-primary"
+                  }`}
                 >
                   Courses
                 </Link>
                 <Link
                   href={`/Newcompage/${slug}/Calander`}
-                  className="btn text-lg btn-ghost hover:text-primary"
+                  className={`btn text-lg btn-ghost ${
+                    isLinkActive(`/Newcompage/${slug}/Calander`)
+                      ? "bg-primary text-primary-content"
+                      : "hover:text-primary"
+                  }`}
                 >
                   Calander
                 </Link>
                 <Link
                   href={`/Newcompage/${slug}/about`}
-                  className="btn text-lg btn-ghost "
+                  className={`btn text-lg btn-ghost ${
+                    isLinkActive(`/Newcompage/${slug}/about`)
+                      ? "bg-primary text-primary-content"
+                      : "hover:text-primary"
+                  }`}
                 >
                   About
                 </Link>
 
                 <Link
+                  href={`/Newcompage/${slug}/members`}
+                  className={`btn text-lg btn-ghost ${
+                    isLinkActive(`/Newcompage/${slug}/members`)
+                      ? "bg-primary text-primary-content"
+                      : "hover:text-primary"
+                  }`}
+                >
+                  Members
+                </Link>
+
+                <Link
                   href={`/Newcompage/${slug}/communitysetting`}
-                  className="btn text-lg btn-ghost hover:text-primary"
+                  className={`btn text-lg btn-ghost ${
+                    isLinkActive(`/Newcompage/${slug}/communitysetting`)
+                      ? "bg-primary text-primary-content"
+                      : "hover:text-primary"
+                  }`}
                 >
                   Settings
                 </Link>

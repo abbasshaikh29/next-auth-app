@@ -5,7 +5,7 @@ import type { ICommunity } from "@/models/Community";
 import { IUser } from "@/models/User";
 import { useSession } from "next-auth/react";
 import CommunityJoinForm from "../CommunityJoinForm";
-import CommunityAdminPanel from "../CommunityAdminPanel";
+import Link from "next/link";
 
 interface AboutProps {
   slug: string;
@@ -104,8 +104,13 @@ function About({ slug }: AboutProps) {
 
       {isAdmin && (
         <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">Admin Panel</h2>
-          <CommunityAdminPanel communityId={community._id?.toString() || ""} />
+          <h2 className="text-xl font-semibold mb-4">Admin Options</h2>
+          <Link
+            href={`/Newcompage/${slug}/communitysetting?t=AdminPanel`}
+            className="btn btn-primary"
+          >
+            Go to Admin Panel
+          </Link>
         </div>
       )}
 
