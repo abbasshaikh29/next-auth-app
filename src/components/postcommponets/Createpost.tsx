@@ -90,7 +90,7 @@ export function CreatePost({
   };
 
   return (
-    <div className="card bg-base-200 shadow-md w-full p-4">
+    <div className="card bg-primary shadow-md w-full p-4">
       <h2 className="font-semibold mb-4">Create a Post</h2>
       <div className="space-y-4">
         <input

@@ -4,9 +4,9 @@ import ImageKit from "imagekit";
 // Initialize ImageKit only if all required environment variables are present
 const initImageKit = () => {
   if (
-    !process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY ||
-    !process.env.IMAGEKIT_PRIVATE_KEY ||
-    !process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT
+    !process.env.NEXT_PUBLIC_PUBLIC_KEY ||
+    !process.env.PRIVATE_KEY ||
+    !process.env.NEXT_PUBLIC_URL_ENDPOINT
   ) {
     console.error(
       "Missing ImageKit configuration. Please check your environment variables."
@@ -15,9 +15,9 @@ const initImageKit = () => {
   }
 
   return new ImageKit({
-    publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY,
-    privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
-    urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT,
+    publicKey: process.env.NEXT_PUBLIC_PUBLIC_KEY,
+    privateKey: process.env.PRIVATE_KEY,
+    urlEndpoint: process.env.NEXT_PUBLIC_URL_ENDPOINT,
   });
 };
 

@@ -18,6 +18,7 @@ interface UserData {
   _id: string;
   username: string;
   image?: string;
+  profileImage?: string;
   bio?: string;
   location?: string;
   website?: string;
@@ -144,14 +145,19 @@ export default function UserProfilePage() {
 
         <div className="p-6 relative">
           {/* Profile Picture */}
-          <div className="absolute -top-16 left-6 avatar">
-            <div className="w-24 h-24 rounded-full ring ring-base-100 ring-offset-base-100 ring-offset-2 bg-base-100">
-              {userData.image ? (
+          <div className="absolute -top-20 left-6 avatar">
+            <div className="w-32 h-32 rounded-full ring ring-base-100 ring-offset-base-100 ring-offset-2 bg-base-100">
+              {userData.profileImage ? (
+                <div
+                  className="w-full h-full rounded-full bg-center bg-cover"
+                  style={{ backgroundImage: `url(${userData.profileImage})` }}
+                />
+              ) : userData.image ? (
                 <Image
                   src={userData.image}
                   alt={userData.username}
-                  width={96}
-                  height={96}
+                  width={128}
+                  height={128}
                   className="rounded-full"
                 />
               ) : (
@@ -163,9 +169,9 @@ export default function UserProfilePage() {
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end mb-12">
+          <div className="flex justify-end mb-16">
             {isOwnProfile && (
-              <Link href="/profile/edit" className="btn btn-primary btn-sm">
+              <Link href="/UserSettings" className="btn btn-primary btn-sm">
                 Edit Profile
               </Link>
             )}

@@ -85,9 +85,20 @@ function CommunityNav() {
                   title="User menu"
                   className="btn btn-ghost btn-circle avatar"
                 >
-                  <div className="w-6 rounded-full">
-                    <User />
-                  </div>
+                  {session?.user?.profileImage ? (
+                    <div className="w-10 h-10 rounded-full overflow-hidden">
+                      <div
+                        className="w-full h-full bg-center bg-cover"
+                        style={{
+                          backgroundImage: `url(${session.user.profileImage})`,
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-6 h-6 rounded-full">
+                      <User className="w-6 h-6" />
+                    </div>
+                  )}
                 </div>
                 <ul
                   tabIndex={0}

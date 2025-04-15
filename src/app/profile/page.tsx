@@ -7,6 +7,7 @@ interface ProfileFormData {
   username: string;
   email: string;
   bio: string;
+  profileImage?: string;
 }
 
 interface UserPost {
@@ -25,6 +26,7 @@ export default function Profile() {
     username: "",
     email: "",
     bio: "",
+    profileImage: "",
   });
   const [posts, setPosts] = useState<UserPost[]>([]);
 
@@ -39,6 +41,7 @@ export default function Profile() {
           username: data.user.username,
           email: data.user.email,
           bio: data.user.bio || "",
+          profileImage: data.user.profileImage || "",
         });
 
         // Parse post content
@@ -93,23 +96,45 @@ export default function Profile() {
       <div className="max-w-4xl mx-auto p-4">
         <h1 className="text-2xl font-bold mb-6">Profile</h1>
 
-        <div className="bg-white p-6 rounded-lg shadow mb-8">
-          <h2 className="text-xl font-semibold mb-4">User Information</h2>
-          <div className="space-y-2">
-            <p>
-              <span className="font-medium">Username:</span> {formData.username}
-            </p>
-            <p>
-              <span className="font-medium">Email:</span> {formData.email}
-            </p>
-            <p>
-              <span className="font-medium">Bio:</span>{" "}
-              {formData.bio || "No bio provided"}
-            </p>
+        <div className="bg-base-300 p-6 rounded-lg shadow mb-8">
+          <div className="flex flex-col md:flex-row gap-6 items-start">
+            <div className="flex-shrink-0">
+              {formData.profileImage ? (
+                <div className="w-32 h-32 rounded-full overflow-hidden">
+                  <div
+                    className="w-full h-full bg-center bg-cover"
+                    style={{ backgroundImage: `url(${formData.profileImage})` }}
+                  />
+                </div>
+              ) : (
+                <div className="w-32 h-32 rounded-full bg-primary flex items-center justify-center text-primary-content text-4xl font-bold">
+                  {formData.username
+                    ? formData.username.charAt(0).toUpperCase()
+                    : "?"}
+                </div>
+              )}
+            </div>
+
+            <div className="flex-grow">
+              <h2 className="text-xl font-semibold mb-4">User Information</h2>
+              <div className="space-y-2">
+                <p>
+                  <span className="font-medium">Username:</span>{" "}
+                  {formData.username}
+                </p>
+                <p>
+                  <span className="font-medium">Email:</span> {formData.email}
+                </p>
+                <p>
+                  <span className="font-medium">Bio:</span>{" "}
+                  {formData.bio || "No bio provided"}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-base-200 p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Your Posts</h2>
           {posts.length > 0 ? (
             <div className="space-y-4">

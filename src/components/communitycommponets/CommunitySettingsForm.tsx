@@ -53,16 +53,18 @@ export default function CommunitySettings() {
 
     setIsLoading(true);
     try {
+      const requestBody = {
+        name,
+        description,
+        bannerImageurl: bannerImage, // Use the correct property name expected by the API
+      };
+
       const response = await fetch(`/api/community/${slug}/settings`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name,
-          description,
-          bannerImage,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -127,9 +129,39 @@ export default function CommunitySettings() {
           <FileUpload
             onSuccess={(response) => {
               setUploadResponse(response);
-              setBannerImage(response.url);
+              // Use the URL from the response
+              if (response.url) {
+                setBannerImage(response.url);
+              } else if (response.filePath) {
+                setBannerImage(response.filePath);
+              } else {
+                showNotification(
+                  "Failed to get image URL from upload",
+                  "error"
+                );
+              }
             }}
           />
+
+          {/* Show the current banner image if available */}
+          {bannerImage && (
+            <div className="mt-2">
+              <p className="text-sm mb-1">Current banner image:</p>
+              <div className="h-32 bg-gray-200 rounded overflow-hidden">
+                <div
+                  className="w-full h-full"
+                  style={{
+                    backgroundImage: `url(${bannerImage})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1 break-all">
+                {bannerImage}
+              </p>
+            </div>
+          )}
         </div>
 
         <button

@@ -77,6 +77,7 @@ export async function GET(
         username: user.username,
         email: user.email,
         image: user.image,
+        profileImage: user.profileImage,
         bio: user.bio || "",
         location: user.location || "",
         website: user.website || "",

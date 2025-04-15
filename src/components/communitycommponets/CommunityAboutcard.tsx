@@ -1,6 +1,7 @@
+"use client";
+
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
-import { IKImage } from "imagekitio-next";
 import { ICommunity } from "@/models/Community";
 import { useSession } from "next-auth/react";
 import CommunityJoinForm from "../CommunityJoinForm";
@@ -27,8 +28,6 @@ async function getCommunity(slug: string): Promise<{
 interface NewCommmunityPageProps {
   slug: string;
 }
-
-const urlEndpoint = process.env.NEXT_PUBLIC_URL_ENDPOINT;
 
 function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
   const { data: session } = useSession();
@@ -88,24 +87,24 @@ function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
     <>
       <div className="card bg-base-100 shadow-xl overflow-hidden flex flex-col justify-between w-96">
         <div className="w-full h-52 overflow-hidden relative">
-          <IKImage
-            urlEndpoint={urlEndpoint}
-            className="w-full h-full"
-            path={communityData.community?.bannerImageurl!}
-            transformation={[
-              {
-                height: 390,
-                width: 768,
-                crop: "maintain_ratio",
-                dpr: 2,
-                quality: 100,
-              },
-            ]}
-            width={384}
-            height={240}
-            style={{ imageRendering: "crisp-edges" }}
-            alt="community banner"
-          />
+          {communityData.community?.bannerImageurl ? (
+            <div
+              className="w-full h-full bg-gray-200"
+              style={{
+                backgroundImage: `url(${communityData.community.bannerImageurl})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+              }}
+              aria-label={`${
+                communityData.community.name || "Community"
+              } banner`}
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+              <span className="text-gray-400">No banner image</span>
+            </div>
+          )}
         </div>
         <div className="card-body">
           <h1 className="card-title">

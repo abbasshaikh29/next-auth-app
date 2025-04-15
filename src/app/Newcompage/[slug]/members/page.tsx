@@ -12,6 +12,7 @@ interface Member {
   _id: string;
   username: string;
   image?: string;
+  profileImage?: string;
   role: "admin" | "sub-admin" | "member";
   joinedAt: string;
 }
@@ -30,6 +31,7 @@ export default function MembersPage() {
     const fetchMembers = async () => {
       try {
         setLoading(true);
+        console.log("Fetching members for community:", slug);
         const response = await fetch(`/api/community/${slug}/members`);
 
         if (!response.ok) {
@@ -37,6 +39,7 @@ export default function MembersPage() {
         }
 
         const data = await response.json();
+        console.log("Members data received:", data);
         setMembers(data.members);
         setIsAdmin(data.isAdmin);
         setIsSubAdmin(data.isSubAdmin);
@@ -109,17 +112,24 @@ export default function MembersPage() {
               <div className="card-body">
                 <div className="flex items-center gap-4">
                   <div className="avatar">
-                    <div className="w-16 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                      {member.image ? (
+                    <div className="w-20 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+                      {member.profileImage ? (
+                        <div
+                          className="w-20 h-20 rounded-full bg-center bg-cover"
+                          style={{
+                            backgroundImage: `url(${member.profileImage})`,
+                          }}
+                        />
+                      ) : member.image ? (
                         <Image
                           src={member.image}
                           alt={member.username}
-                          width={64}
-                          height={64}
+                          width={80}
+                          height={80}
                           className="rounded-full"
                         />
                       ) : (
-                        <div className="bg-primary text-primary-content w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold">
+                        <div className="bg-primary text-primary-content w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold">
                           {member.username.charAt(0).toUpperCase()}
                         </div>
                       )}

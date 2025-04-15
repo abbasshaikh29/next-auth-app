@@ -1,13 +1,37 @@
 "use client";
 import { useSession, signOut } from "next-auth/react";
-
+import { useEffect, useState } from "react";
 import { useNotification } from "./Notification";
 import Link from "next/link";
 import { User } from "lucide-react";
+import SessionDebug from "./SessionDebug";
 
 export default function Header() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { showNotification } = useNotification();
+  const [showDebug, setShowDebug] = useState(false);
+
+  // Debug session data
+  useEffect(() => {
+    console.log("Header - Session data:", {
+      status,
+      user: session?.user,
+      profileImage: session?.user?.profileImage,
+    });
+  }, [session, status]);
+
+  // Toggle debug panel with Ctrl+D
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === "d") {
+        e.preventDefault();
+        setShowDebug((prev) => !prev);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -39,9 +63,22 @@ export default function Header() {
               <div
                 tabIndex={0}
                 role="button"
-                className="btn btn-ghost btn-circle"
+                aria-label="User menu"
+                title="User menu"
+                className="btn btn-ghost btn-circle avatar"
               >
-                <User className="w-5 h-5" />
+                {session?.user?.profileImage ? (
+                  <div className="w-10 h-10 rounded-full overflow-hidden">
+                    <div
+                      className="w-full h-full bg-center bg-cover"
+                      style={{
+                        backgroundImage: `url(${session.user.profileImage})`,
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <User className="w-5 h-5" />
+                )}
               </div>
               <ul
                 tabIndex={0}
@@ -91,6 +128,7 @@ export default function Header() {
                     <li className="divider my-1"></li>{" "}
                     <li className="items-center px-20">
                       <button
+                        type="button"
                         onClick={handleSignOut}
                         className="btn btn-primary"
                       >
@@ -116,6 +154,7 @@ export default function Header() {
           </div>
         </div>
       </div>
+      {showDebug && <SessionDebug />}
     </div>
   );
 }

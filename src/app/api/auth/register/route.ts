@@ -40,7 +40,26 @@ export async function POST(request: NextRequest) {
 
     // Send verification email
     try {
-      await sendVerificationEmail(email, verificationToken, username);
+      const emailResult = await sendVerificationEmail(
+        email,
+        verificationToken,
+        username
+      );
+      console.log("Email verification result:", emailResult);
+
+      // In development, automatically verify the email if configured
+      if (
+        process.env.NODE_ENV === "development" &&
+        process.env.AUTO_VERIFY_EMAIL === "true"
+      ) {
+        console.log("Auto-verifying email in development mode");
+        const user = await User.findOne({ email });
+        if (user) {
+          user.emailVerified = true;
+          await user.save();
+          console.log("Email auto-verified for:", email);
+        }
+      }
     } catch (emailError) {
       console.error("Failed to send verification email:", emailError);
       // Continue with registration even if email fails

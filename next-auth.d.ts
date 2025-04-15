@@ -8,11 +8,13 @@ declare module "next-auth" {
       provider?: string;
       image?: string;
       name?: string;
+      profileImage?: string;
     };
   }
   interface User {
     username: string;
     name: string;
+    profileImage?: string;
   }
 }
 
@@ -22,5 +24,6 @@ declare module "next-auth/jwt" {
     email: string;
     username: string;
     provider?: string;
+    profileImage?: string;
   }
 }

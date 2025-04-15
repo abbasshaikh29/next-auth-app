@@ -136,9 +136,9 @@ export default function HomeIdPage() {
     <div>
       <CommunityNav />
       {isMember ? (
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-row justify-between gap-6">
-            <div className="flex flex-col w-2/3 gap-3">
+        <div className="container mt-6 mx-auto px-4 py-8">
+          <div className="flex flex-row justify-between gap-4">
+            <div className="flex flex-col mt-6 w-2/4 gap-3">
               <Searchs onSearch={handleSearch} />
               <div>
                 <CreatePost
@@ -205,7 +205,7 @@ export default function HomeIdPage() {
                 )}
               </div>
             </div>
-            <div className="w-1/3">
+            <div className="w-1/4 mt-6">
               <CommunityAboutcard slug={slug} />
             </div>
           </div>

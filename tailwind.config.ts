@@ -19,8 +19,8 @@ export default {
   plugins: [daisyui],
   daisyui: {
     themes: [
-      // "halloween",
-      "pastel",
+      "halloween",
+      // "pastel",
     ],
   },
 } satisfies Config;

@@ -61,7 +61,8 @@ export async function GET(
       return {
         _id: member._id,
         username: member.username,
-        image: member.image,
+        image: member.image || member.profileImage, // Try image first, then profileImage
+        profileImage: member.profileImage, // Add profileImage field
         role,
         joinedAt: member.createdAt || new Date(),
       };

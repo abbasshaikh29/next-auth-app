@@ -22,8 +22,7 @@ function Searchs({ onSearch }: SearchProps) {
   // Call onSearch when debounced query changes
   useEffect(() => {
     onSearch(debouncedQuery);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedQuery]);
+  }, [debouncedQuery, onSearch]);
 
   // Clear search query
   const handleClearSearch = () => {

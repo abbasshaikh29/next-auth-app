@@ -2,8 +2,15 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+// Hardcoded secret from .env file for middleware
+const NEXTAUTH_SECRET =
+  "a9b7c5d3e1f02468ace0987654321fedcba8901234567890abcdef12345678";
+
 export async function middleware(req: NextRequest) {
-  const token = await getToken({ req });
+  const token = await getToken({
+    req,
+    secret: NEXTAUTH_SECRET,
+  });
   const { pathname } = req.nextUrl;
 
   // Allow all URLs if the user is logged in or if it's a public route

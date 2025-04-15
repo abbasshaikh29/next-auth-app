@@ -18,6 +18,7 @@ if (!process.env.NEXTAUTH_SECRET) {
 }
 
 export const authOptions: NextAuthConfig = {
+  trustHost: true,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
@@ -58,6 +59,7 @@ export const authOptions: NextAuthConfig = {
             username: user.username,
             name: user.name || user.username,
             image: user.profileImage,
+            profileImage: user.profileImage,
             emailVerified: user.emailVerified,
           };
         } catch (error) {
@@ -69,20 +71,59 @@ export const authOptions: NextAuthConfig = {
   ],
   callbacks: {
     async jwt({ token, user, account }) {
+      console.log("JWT callback - Input:", {
+        tokenId: token?.id,
+        userId: user?.id,
+      });
+
       if (user) {
         token.id = user.id as string;
         token.email = user.email as string;
         token.name = user.name as string;
         token.picture = user.image as string;
         token.username = user.username as string;
+
+        // Add profileImage to token
+        if (user.profileImage) {
+          console.log("Setting profileImage from user:", user.profileImage);
+          token.profileImage = user.profileImage;
+        }
       }
       if (account) {
         token.provider = account.provider;
       }
+
+      // If token already exists but we need to update the profileImage
+      if (token.id && !token.profileImage) {
+        try {
+          await dbconnect();
+          const dbUser = await User.findById(token.id);
+          if (dbUser?.profileImage) {
+            console.log(
+              "Setting profileImage from database:",
+              dbUser.profileImage
+            );
+            token.profileImage = dbUser.profileImage;
+          }
+        } catch (error) {
+          console.error("Error fetching user profile image for token:", error);
+        }
+      }
+
+      console.log("JWT callback - Output token:", {
+        id: token.id,
+        profileImage: token.profileImage,
+      });
+
       return token;
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // Using any for session type to match Auth.js v5 structure
     async session({ session, token }: { session: any; token: JWT }) {
+      console.log("Session callback - Input token:", {
+        id: token?.id,
+        profileImage: token?.profileImage,
+      });
+
       if (token && session.user) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
@@ -90,7 +131,42 @@ export const authOptions: NextAuthConfig = {
         session.user.image = token.picture as string;
         session.user.username = token.username as string;
         session.user.provider = token.provider as string;
+
+        // Add profileImage to session
+        if (token.profileImage) {
+          console.log(
+            "Setting profileImage in session from token:",
+            token.profileImage
+          );
+          session.user.profileImage = token.profileImage as string;
+        } else {
+          console.log("No profileImage found in token");
+
+          // Try to get profileImage from database as a fallback
+          try {
+            await dbconnect();
+            const dbUser = await User.findById(token.id);
+            if (dbUser?.profileImage) {
+              console.log(
+                "Setting profileImage in session from database:",
+                dbUser.profileImage
+              );
+              session.user.profileImage = dbUser.profileImage;
+            }
+          } catch (error) {
+            console.error(
+              "Error fetching user profile image for session:",
+              error
+            );
+          }
+        }
       }
+
+      console.log("Session callback - Output session:", {
+        id: session?.user?.id,
+        profileImage: session?.user?.profileImage,
+      });
+
       return session;
     },
     async signIn({ user, account }) {
@@ -151,5 +227,5 @@ export const authOptions: NextAuthConfig = {
     strategy: "jwt",
     maxAge: 24 * 60 * 60,
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: "a9b7c5d3e1f02468ace0987654321fedcba8901234567890abcdef12345678",
 };
