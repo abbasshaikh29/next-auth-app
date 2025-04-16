@@ -42,7 +42,11 @@ export async function dbconnect() {
         .connect(MONGODB_URI!, opts)
         .then(() => {
           console.log("Connected to MongoDB successfully");
-          console.log(`Database name: ${mongoose.connection.db.databaseName}`);
+          if (mongoose.connection.db) {
+            console.log(
+              `Database name: ${mongoose.connection.db.databaseName}`
+            );
+          }
           return mongoose.connection;
         })
         .catch((error) => {
