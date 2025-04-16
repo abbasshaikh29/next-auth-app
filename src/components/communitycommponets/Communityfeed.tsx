@@ -47,10 +47,10 @@ export default function Communityfeed({ communitys }: CommunityfeedProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-12">
       {communitys.map((community) => (
-        <div key={community._id?.toString()}>
-          <div className="card bg-base-100 w-96  shadow-xl overflow-hidden flex flex-col justify-between hover:shadow-neutral transition-shadow duration-300">
+        <div key={community._id?.toString()} className="flex justify-center">
+          <div className="card bg-base-100 w-full max-w-sm shadow-xl overflow-hidden flex flex-col justify-between hover:shadow-neutral transition-shadow duration-300">
             <div className="w-full h-52 overflow-hidden relative">
               {renderImage(community)}
             </div>

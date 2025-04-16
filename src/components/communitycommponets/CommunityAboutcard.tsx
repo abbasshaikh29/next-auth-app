@@ -85,7 +85,7 @@ function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
 
   return (
     <>
-      <div className="card bg-base-100 shadow-xl overflow-hidden flex flex-col justify-between w-96">
+      <div className="card bg-base-100 shadow-xl overflow-hidden flex flex-col justify-between w-full max-w-sm mx-auto">
         <div className="w-full h-52 overflow-hidden relative">
           {communityData.community?.bannerImageurl ? (
             <div

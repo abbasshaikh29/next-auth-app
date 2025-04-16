@@ -48,12 +48,19 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       <Header />
-      <div className="container mx-auto px-4 py-8">
-        <div className=" m-8 flex flex-col items-center ">
-          <h1 className="text-6xl mt-9 font-bold">Discover Communities</h1>
-          <h1 className="text-4xl px-6 font-bold mb-8">or create one</h1>
+      <div className="container mx-auto px-4 py-4 sm:py-8">
+        <div className="mx-4 sm:m-8 flex flex-col items-center text-center">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl mt-4 sm:mt-9 font-bold leading-tight">
+            Discover Communities
+          </h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl px-2 sm:px-6 font-bold mb-4 sm:mb-8">
+            or create one
+          </h1>
           <Link href={"/communityform"}>
-            <button type="button" className="btn mb-7 btn-accent">
+            <button
+              type="button"
+              className="btn mb-4 sm:mb-7 btn-accent w-full sm:w-auto"
+            >
               Create Community
             </button>
           </Link>

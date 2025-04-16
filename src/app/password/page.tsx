@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, ChangeEvent, FormEvent } from "react";
+import { Eye, EyeOff } from "lucide-react";
 // import { useSession } from "next-auth/react";
 
 interface ErrorWithMessage {
@@ -23,6 +24,9 @@ export default function PasswordSettings() {
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -84,15 +88,29 @@ export default function PasswordSettings() {
           >
             Current Password
           </label>
-          <input
-            type="password"
-            id="currentPassword"
-            name="currentPassword"
-            value={formData.currentPassword}
-            onChange={handleChange}
-            className="w-full p-2 border rounded"
-            required
-          />
+          <div className="relative">
+            <input
+              type={showCurrentPassword ? "text" : "password"}
+              id="currentPassword"
+              name="currentPassword"
+              value={formData.currentPassword}
+              onChange={handleChange}
+              className="w-full p-2 border rounded"
+              required
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+              tabIndex={-1}
+            >
+              {showCurrentPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
+            </button>
+          </div>
         </div>
         <div>
           <label
@@ -101,15 +119,29 @@ export default function PasswordSettings() {
           >
             New Password
           </label>
-          <input
-            type="password"
-            id="newPassword"
-            name="newPassword"
-            value={formData.newPassword}
-            onChange={handleChange}
-            className="w-full p-2 border rounded"
-            required
-          />
+          <div className="relative">
+            <input
+              type={showNewPassword ? "text" : "password"}
+              id="newPassword"
+              name="newPassword"
+              value={formData.newPassword}
+              onChange={handleChange}
+              className="w-full p-2 border rounded"
+              required
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              onClick={() => setShowNewPassword(!showNewPassword)}
+              tabIndex={-1}
+            >
+              {showNewPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
+            </button>
+          </div>
         </div>
         <div>
           <label
@@ -118,15 +150,29 @@ export default function PasswordSettings() {
           >
             Confirm New Password
           </label>
-          <input
-            type="password"
-            id="confirmPassword"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            className="w-full p-2 border rounded"
-            required
-          />
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              id="confirmPassword"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className="w-full p-2 border rounded"
+              required
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              tabIndex={-1}
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
+            </button>
+          </div>
         </div>
         <button
           type="submit"

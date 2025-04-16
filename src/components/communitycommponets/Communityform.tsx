@@ -90,29 +90,30 @@ export default function CommunityCreateForm() {
   };
 
   return (
-    <div className="flex flex-row gap-20 items-center justify-center min-h-screen py-2 ">
-      <div className="w-96 text-2xl font-bold  mb-4">
+    <div className="flex flex-col lg:flex-row gap-8 lg:gap-20 items-center justify-center min-h-screen py-4 px-4 sm:px-6">
+      <div className="w-full lg:w-96 text-xl sm:text-2xl font-bold mb-4 max-w-md">
         <Link href={"/"}>SKOOL</Link>
-        <h1>Everything you need to build community and make money online.</h1>
-        <div className="flex flex-col items-start gap-3 mt-4">
+        <h1 className="text-lg sm:text-2xl mt-2">
+          Everything you need to build community and make money online.
+        </h1>
+        <div className="flex flex-col items-start gap-2 sm:gap-3 mt-3 sm:mt-4 text-base sm:text-lg">
           <div>🔒 Private & Secure</div>
           <div>📈 Highly engaged</div>
           <div>❤️ Simple to setup </div>
-          <div> 🙂 Fun to use </div>
+          <div>🙂 Fun to use </div>
           <div>💰 Charge for membership</div>
           <div>📱 iOS + Android apps</div>
           <div>🌎 Millions of users daily</div>
         </div>
       </div>
-      <div className="card w-full  max-w-md shadow-lg ">
-        <div className="card-body border-2 border-gray-500 gap-6  p-12  shadow-xl bg-inherit rounded-md">
-          <h1 className="text-2xl font-bold text-center">
+      <div className="card w-full max-w-md shadow-lg">
+        <div className="card-body border-2 border-gray-500 gap-4 sm:gap-6 p-6 sm:p-8 md:p-12 shadow-xl bg-inherit rounded-md">
+          <h1 className="text-xl sm:text-2xl font-bold text-center">
             Create your Community
           </h1>
-          <p className="text-xl text-center">
-            {" "}
+          <p className="text-sm sm:text-base md:text-xl text-center">
             Free for 14 days, then $99/month. Cancel anytime. All features.
-            Unlimited everything. No hidden fees.{" "}
+            Unlimited everything. No hidden fees.
           </p>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="form-control">

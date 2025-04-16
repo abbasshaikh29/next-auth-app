@@ -126,16 +126,18 @@ export default function UserProfileForm() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">Profile Settings</h2>
+      <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
+        Profile Settings
+      </h2>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         <div className="form-control">
           <label className="label">
             <span className="label-text">Profile Picture</span>
           </label>
 
-          <div className="flex items-start space-x-4">
-            <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-4">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden bg-gray-200">
               {formData.profileImage ? (
                 <div
                   className="w-full h-full bg-center bg-cover"
@@ -152,7 +154,7 @@ export default function UserProfileForm() {
               )}
             </div>
 
-            <div className="flex-1">
+            <div className="flex-1 w-full sm:w-auto">
               <FileUpload
                 onSuccess={(response) => {
                   setUploadResponse(response);
@@ -184,7 +186,7 @@ export default function UserProfileForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div className="form-control">
             <label className="label">
               <span className="label-text">First Name</span>
@@ -267,10 +269,10 @@ export default function UserProfileForm() {
           </label>
         </div>
 
-        <div className="form-control mt-6">
+        <div className="form-control mt-4 sm:mt-6">
           <button
             type="submit"
-            className="btn btn-primary"
+            className="btn btn-primary w-full sm:w-auto"
             disabled={isLoading}
           >
             {isLoading ? "Saving..." : "Save Changes"}

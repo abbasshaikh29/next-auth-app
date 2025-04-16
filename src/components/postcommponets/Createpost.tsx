@@ -90,14 +90,16 @@ export function CreatePost({
   };
 
   return (
-    <div className="card bg-primary shadow-md w-full p-4">
-      <h2 className="font-semibold mb-4">Create a Post</h2>
-      <div className="space-y-4">
+    <div className="card bg-primary shadow-md w-full p-3 sm:p-4">
+      <h2 className="text-sm sm:text-base font-semibold mb-2 sm:mb-4">
+        Create a Post
+      </h2>
+      <div className="space-y-2 sm:space-y-4">
         <input
           type="text"
           placeholder="Post title"
           value={title}
-          className="input input-bordered w-full bg-white"
+          className="input input-bordered input-sm sm:input-md w-full bg-white text-sm sm:text-base"
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setTitle(e.target.value)
           }
@@ -133,24 +135,24 @@ export function CreatePost({
         {contents.map((content, index) => (
           <div
             key={index}
-            className="flex items-center gap-2 p-2 bg-gray-50 rounded"
+            className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2 bg-gray-50 rounded text-xs sm:text-sm"
           >
             {content.type === "image" ? (
               <div className="relative w-full">
                 <Image
                   src={content.content}
                   alt=""
-                  className="max-h-60 object-contain mx-auto"
+                  className="max-h-40 sm:max-h-60 object-contain mx-auto"
                 />
               </div>
             ) : content.type === "link" ? (
               <>
-                <Link className="h-4 w-4" />
+                <Link className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="flex-1">{content.content}</span>
               </>
             ) : content.type === "file" ? (
               <>
-                <FileText className="h-4 w-4" />
+                <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="flex-1">File uploaded</span>
               </>
             ) : (
@@ -158,10 +160,12 @@ export function CreatePost({
             )}
             <button
               type="button"
-              className="btn btn-ghost btn-sm"
+              className="btn btn-ghost btn-xs sm:btn-sm"
               onClick={() => handleRemoveContent(index)}
+              title="Remove content"
+              aria-label="Remove content"
             >
-              e<X className="h-4 w-4" />
+              <X className="h-3 w-3 sm:h-4 sm:w-4" />
             </button>
           </div>
         ))}
@@ -170,23 +174,24 @@ export function CreatePost({
           <textarea
             placeholder="What's on your mind?"
             value={currentInput}
-            className="textarea textarea-bordered w-full bg-white"
+            className="textarea textarea-bordered textarea-sm sm:textarea-md w-full bg-white text-xs sm:text-sm"
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
               setCurrentInput(e.target.value)
             }
-            rows={4}
+            rows={3}
           />
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-1 sm:gap-2">
             <button
               type="button"
-              className="btn btn-outline btn-sm flex items-center"
+              className="btn btn-outline btn-xs sm:btn-sm flex items-center"
               onClick={() => imageInputRef.current?.click()}
             >
-              Add Image
+              <span className="hidden xs:inline">Add Image</span>
+              <span className="xs:hidden">Image</span>
             </button>
             <button
               type="button"
-              className="btn btn-outline btn-sm flex items-center"
+              className="btn btn-outline btn-xs sm:btn-sm flex items-center"
               onClick={() => {
                 if (currentInput.trim()) {
                   setContents([
@@ -197,16 +202,18 @@ export function CreatePost({
                 }
               }}
             >
-              <Link className="h-4 w-4 mr-2" />
-              Add Link
+              <Link className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Add Link</span>
+              <span className="xs:hidden">Link</span>
             </button>
             <button
               type="button"
-              className="btn btn-outline btn-sm flex items-center"
+              className="btn btn-outline btn-xs sm:btn-sm flex items-center"
               onClick={() => fileInputRef.current?.click()}
             >
-              <FileText className="h-4 w-4 mr-2" />
-              Add File
+              <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Add File</span>
+              <span className="xs:hidden">File</span>
             </button>
           </div>
         </div>
@@ -214,7 +221,7 @@ export function CreatePost({
         <button
           type="button"
           onClick={handleSubmit}
-          className="btn btn-outline w-full bg-base-300"
+          className="btn btn-xs sm:btn-sm btn-outline w-full bg-base-300 text-xs sm:text-sm"
           disabled={!title.trim() && contents.length === 0}
         >
           Post

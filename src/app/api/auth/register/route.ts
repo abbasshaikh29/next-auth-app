@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { User } from "@/models/User";
 import { dbconnect } from "@/lib/db";
-import { generateVerificationToken, sendVerificationEmail } from "@/lib/email";
+// TEMPORARILY MODIFIED: Keeping only generateVerificationToken import
+import { generateVerificationToken } from "@/lib/email";
+// Will restore this when email verification is re-enabled: import { sendVerificationEmail } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,16 +31,24 @@ export async function POST(request: NextRequest) {
     verificationTokenExpiry.setHours(verificationTokenExpiry.getHours() + 24); // Token expires in 24 hours
 
     // Create user with verification token
+    // TEMPORARILY MODIFIED: Auto-verify all users
     await User.create({
       email,
       password,
       username,
-      emailVerified: false,
+      emailVerified: true, // TEMPORARILY set to true to bypass email verification
       verificationToken,
       verificationTokenExpiry,
     });
 
-    // Send verification email
+    // TEMPORARILY DISABLED: Email verification process
+    // Skip sending verification email while keeping the code for future re-enabling
+    console.log(
+      "Email verification temporarily disabled - skipping email send for:",
+      email
+    );
+
+    /* Original code - to be restored later:
     try {
       const emailResult = await sendVerificationEmail(
         email,
@@ -64,11 +74,12 @@ export async function POST(request: NextRequest) {
       console.error("Failed to send verification email:", emailError);
       // Continue with registration even if email fails
     }
+    */
 
     return NextResponse.json(
       {
         message:
-          "User registered successfully. Please check your email to verify your account.",
+          "User registered successfully. You can now log in to your account.", // TEMPORARILY modified message
       },
       { status: 201 }
     );

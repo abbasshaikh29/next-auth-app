@@ -208,20 +208,22 @@ export default function AdminPanelSettings() {
   };
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Admin Panel</h2>
+    <div className="p-3 sm:p-4">
+      <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Admin Panel</h2>
 
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <CommunityAdminPanel communityId={communityId} />
       </div>
 
-      <div className="divider">Join Questions</div>
+      <div className="divider text-sm sm:text-base">Join Questions</div>
 
-      <div className="space-y-4 mb-8">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Questions for New Members</h3>
+      <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 sm:gap-0">
+          <h3 className="text-base sm:text-lg font-semibold">
+            Questions for New Members
+          </h3>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">
+            <span className="text-xs sm:text-sm text-gray-500">
               {questions.length}/3 questions
             </span>
             {isAdmin && (
@@ -229,19 +231,20 @@ export default function AdminPanelSettings() {
                 type="button"
                 onClick={handleAddQuestion}
                 disabled={questions.length >= 3}
-                className="btn btn-sm btn-primary"
+                className="btn btn-xs sm:btn-sm btn-primary"
                 title="Add question"
               >
-                <Plus className="h-4 w-4" />
-                Add Question
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline">Add Question</span>
+                <span className="xs:hidden">Add</span>
               </button>
             )}
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {questions.length === 0 ? (
-            <div className="text-gray-500 italic">
+            <div className="text-gray-500 italic text-sm sm:text-base">
               No questions set. New members can join without answering any
               questions.
             </div>
@@ -255,7 +258,7 @@ export default function AdminPanelSettings() {
                       handleQuestionChange(index, e.target.value)
                     }
                     placeholder={`Question ${index + 1}`}
-                    className="textarea textarea-bordered w-full"
+                    className="textarea textarea-bordered w-full text-sm sm:text-base"
                     rows={2}
                     disabled={!isAdmin}
                   />
@@ -264,10 +267,10 @@ export default function AdminPanelSettings() {
                   <button
                     type="button"
                     onClick={() => handleRemoveQuestion(index)}
-                    className="btn btn-sm btn-error mt-2"
+                    className="btn btn-xs sm:btn-sm btn-error mt-2"
                     title="Remove question"
                   >
-                    <Minus className="h-4 w-4" />
+                    <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
                   </button>
                 )}
               </div>
@@ -280,7 +283,7 @@ export default function AdminPanelSettings() {
             <button
               type="button"
               onClick={handleSaveQuestions}
-              className="btn btn-primary"
+              className="btn btn-sm sm:btn-md btn-primary"
               disabled={savingQuestions}
             >
               {savingQuestions ? (
@@ -290,8 +293,9 @@ export default function AdminPanelSettings() {
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4 mr-1" />
-                  Save Questions
+                  <Save className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                  <span className="hidden xs:inline">Save Questions</span>
+                  <span className="xs:hidden">Save</span>
                 </>
               )}
             </button>
@@ -299,24 +303,24 @@ export default function AdminPanelSettings() {
         )}
       </div>
 
-      <div className="divider">Sub-Admin Management</div>
+      <div className="divider text-sm sm:text-base">Sub-Admin Management</div>
 
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Members</h3>
+      <div className="space-y-3 sm:space-y-4">
+        <h3 className="text-base sm:text-lg font-semibold">Members</h3>
         <div className="overflow-x-auto">
-          <table className="table w-full">
+          <table className="table table-sm sm:table-md w-full">
             <thead>
               <tr>
-                <th>Username</th>
-                <th>Role</th>
-                <th>Actions</th>
+                <th className="text-xs sm:text-sm">Username</th>
+                <th className="text-xs sm:text-sm">Role</th>
+                <th className="text-xs sm:text-sm">Actions</th>
               </tr>
             </thead>
             <tbody>
               {members.map((member) => (
                 <tr key={member.id}>
-                  <td>{member.username}</td>
-                  <td>
+                  <td className="text-xs sm:text-sm">{member.username}</td>
+                  <td className="text-xs sm:text-sm">
                     {member.id === session?.user?.id
                       ? "Admin"
                       : member.isSubAdmin
@@ -325,24 +329,30 @@ export default function AdminPanelSettings() {
                   </td>
                   <td>
                     {member.id !== session?.user?.id && isAdmin && (
-                      <div className="flex gap-2">
+                      <div className="flex flex-col xs:flex-row gap-1 xs:gap-2">
                         {!member.isSubAdmin ? (
                           <button
                             type="button"
-                            className="btn btn-sm btn-primary"
+                            className="btn btn-xs sm:btn-sm btn-primary"
                             onClick={() => handleAddSubAdmin(member.id)}
                           >
-                            <UserPlus className="w-4 h-4" />
-                            Make Sub-Admin
+                            <UserPlus className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <span className="hidden xs:inline">
+                              Make Sub-Admin
+                            </span>
+                            <span className="xs:hidden">Add</span>
                           </button>
                         ) : (
                           <button
                             type="button"
-                            className="btn btn-sm btn-error"
+                            className="btn btn-xs sm:btn-sm btn-error"
                             onClick={() => handleRemoveSubAdmin(member.id)}
                           >
-                            <UserMinus className="w-4 h-4" />
-                            Remove Sub-Admin
+                            <UserMinus className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <span className="hidden xs:inline">
+                              Remove Sub-Admin
+                            </span>
+                            <span className="xs:hidden">Remove</span>
                           </button>
                         )}
                       </div>

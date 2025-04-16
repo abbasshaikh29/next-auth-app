@@ -6,11 +6,13 @@ import { useRouter } from "next/navigation";
 import { useNotification } from "@/components/Notification";
 import Link from "next/link";
 import ResendVerification from "@/components/ResendVerification";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showVerificationForm, setShowVerificationForm] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const { showNotification } = useNotification();
 
@@ -73,14 +75,28 @@ export default function Login() {
               <label className="label" htmlFor="password">
                 <span className="label-text">Password</span>
               </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="input input-bordered"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="input input-bordered w-full"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
             </div>
             <div className="flex justify-center">
               <button type="submit" className="btn btn-primary ">

@@ -92,22 +92,28 @@ function About({ slug }: AboutProps) {
   const isMember = members.includes(session?.user?.id || "");
 
   return (
-    <div className="m-10 flex flex-col gap-4 bg-base-300 p-4 rounded-md">
-      <h1 className="text-2xl font-bold mb-4">{community.name}</h1>
-      <p className="text-gray-600">
+    <div className="m-3 sm:m-6 md:m-8 flex flex-col gap-3 bg-base-300 p-3 sm:p-4 rounded-md">
+      <h1 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4">
+        {community.name}
+      </h1>
+      <p className="text-sm sm:text-base text-gray-600">
         Created by{" "}
         {communityData.admin?.username ||
           communityData.community.createdBy ||
           "Unknown"}
       </p>
-      <div className="text-gray-600 mb-4">{community.description}</div>
+      <div className="text-sm sm:text-base text-gray-600 mb-3">
+        {community.description}
+      </div>
 
       {isAdmin && (
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">Admin Options</h2>
+        <div className="mt-4 sm:mt-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-4">
+            Admin Options
+          </h2>
           <Link
             href={`/Newcompage/${slug}/communitysetting?t=AdminPanel`}
-            className="btn btn-primary"
+            className="btn btn-sm sm:btn-md btn-primary"
           >
             Go to Admin Panel
           </Link>
@@ -115,8 +121,10 @@ function About({ slug }: AboutProps) {
       )}
 
       {!isMember && !isAdmin && (
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">Join Community</h2>
+        <div className="mt-4 sm:mt-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-4">
+            Join Community
+          </h2>
           <CommunityJoinForm
             communityId={community._id?.toString() || ""}
             questions={adminQuestions}
@@ -126,8 +134,10 @@ function About({ slug }: AboutProps) {
       )}
 
       {isMember && (
-        <div className="mt-4">
-          <p className="text-green-600">You are a member of this community</p>
+        <div className="mt-3 sm:mt-4">
+          <p className="text-sm sm:text-base text-green-600">
+            You are a member of this community
+          </p>
         </div>
       )}
     </div>

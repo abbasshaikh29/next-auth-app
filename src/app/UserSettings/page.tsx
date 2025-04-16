@@ -7,7 +7,6 @@ import UserSettings from "@/components/settingcommponents/UserSettings";
 import Password from "@/components/settingcommponents/Password";
 import Payment from "@/components/settingcommponents/Payment";
 import Header from "@/components/Header";
-import CommunityNav from "@/components/communitynav/CommunityNav";
 
 // Loading component for Suspense
 function SettingsContent() {
@@ -29,8 +28,8 @@ function SettingsTabs() {
   const t = searchParams.get("t"); // Get the `t` query parameter
 
   return (
-    <div className="container mx-auto mt-3 p-6 space-y-8 ">
-      <div className="tabs tabs-boxed mb-8 mt-4">
+    <div className="container mx-auto mt-2 sm:mt-3 px-4 sm:px-6 py-3 sm:py-6 space-y-4 sm:space-y-8">
+      <div className="tabs tabs-boxed mb-4 sm:mb-8 mt-2 sm:mt-4 flex overflow-x-auto">
         <Link
           href="/UserSettings"
           as="/UserSettings"
@@ -58,16 +57,22 @@ function SettingsTabs() {
 
 export default function Settings() {
   return (
-    <div className="  bg-base-100 rounded-box shadow-lg">
+    <div className="bg-base-100 rounded-box shadow-lg min-h-screen">
       <Header />
       <Suspense
-        fallback={<div className="tabs tabs-boxed mb-8">Loading tabs...</div>}
+        fallback={
+          <div className="tabs tabs-boxed mb-4 sm:mb-8 px-4">
+            Loading tabs...
+          </div>
+        }
       >
         <SettingsTabs />
       </Suspense>
-      <Suspense fallback={<div className="p-4">Loading settings...</div>}>
-        <SettingsContent />
-      </Suspense>
+      <div className="px-4 sm:px-6 md:px-8 pb-8">
+        <Suspense fallback={<div className="p-4">Loading settings...</div>}>
+          <SettingsContent />
+        </Suspense>
+      </div>
     </div>
   );
 }

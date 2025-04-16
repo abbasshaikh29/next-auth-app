@@ -48,10 +48,10 @@ export const authOptions: NextAuthConfig = {
             return null;
           }
 
-          // Check if email is verified for credential login
-          if (user.emailVerified === false && user.provider !== "google") {
-            throw new Error("Please verify your email before logging in");
-          }
+          // TEMPORARILY DISABLED: Email verification check
+          // if (user.emailVerified === false && user.provider !== "google") {
+          //   throw new Error("Please verify your email before logging in");
+          // }
 
           return {
             id: user._id.toString(),

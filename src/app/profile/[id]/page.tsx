@@ -127,7 +127,7 @@ export default function UserProfilePage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
       <div className="mb-4">
         <button
           type="button"
@@ -141,12 +141,12 @@ export default function UserProfilePage() {
 
       <div className="bg-base-200 rounded-lg shadow-xl overflow-hidden">
         {/* Profile Header */}
-        <div className="bg-primary h-32 relative"></div>
+        <div className="bg-primary h-24 sm:h-32 relative"></div>
 
-        <div className="p-6 relative">
+        <div className="p-4 sm:p-6 relative">
           {/* Profile Picture */}
-          <div className="absolute -top-20 left-6 avatar">
-            <div className="w-32 h-32 rounded-full ring ring-base-100 ring-offset-base-100 ring-offset-2 bg-base-100">
+          <div className="absolute -top-16 sm:-top-20 left-4 sm:left-6 avatar">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full ring ring-base-100 ring-offset-base-100 ring-offset-2 bg-base-100">
               {userData.profileImage ? (
                 <div
                   className="w-full h-full rounded-full bg-center bg-cover"
@@ -169,7 +169,7 @@ export default function UserProfilePage() {
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end mb-16">
+          <div className="flex justify-end mb-12 sm:mb-16">
             {isOwnProfile && (
               <Link href="/UserSettings" className="btn btn-primary btn-sm">
                 Edit Profile
@@ -179,9 +179,11 @@ export default function UserProfilePage() {
 
           {/* User Info */}
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold">{userData.username}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold">
+              {userData.username}
+            </h1>
 
-            <div className="flex flex-wrap gap-3 text-sm text-gray-500">
+            <div className="flex flex-wrap gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500">
               {userData.location && (
                 <div className="flex items-center gap-1">
                   <MapPin size={16} />
@@ -224,9 +226,9 @@ export default function UserProfilePage() {
 
       {/* Communities Section */}
       {communities.length > 0 && (
-        <div className="mt-8">
-          <h2 className="text-xl font-bold mb-4">Communities</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="mt-6 sm:mt-8">
+          <h2 className="text-xl font-bold mb-3 sm:mb-4">Communities</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {communities.map((community) => (
               <Link
                 key={community._id}
@@ -251,9 +253,9 @@ export default function UserProfilePage() {
 
       {/* Posts Section */}
       {posts.length > 0 && (
-        <div className="mt-8">
-          <h2 className="text-xl font-bold mb-4">Recent Posts</h2>
-          <div className="space-y-4">
+        <div className="mt-6 sm:mt-8">
+          <h2 className="text-xl font-bold mb-3 sm:mb-4">Recent Posts</h2>
+          <div className="space-y-3 sm:space-y-4">
             {posts.map((post) => (
               <div
                 key={post._id}

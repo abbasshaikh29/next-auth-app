@@ -59,19 +59,19 @@ function Page() {
   }
 
   return (
-    <div className=" ">
+    <div>
       <CommunityNav />
-      <div className="p-4 flex flex-col gap-4 mt-9">
-        <div className=" flex flex-row justify-around  gap-20  ">
-          <div className="w-2/4 ml-44 ">
+      <div className="p-3 sm:p-4 flex flex-col gap-3 sm:gap-4 mt-3 sm:mt-6">
+        <div className="flex flex-col lg:flex-row justify-center gap-4 lg:gap-12">
+          <div className="w-full lg:w-1/2 lg:max-w-xl">
             <About slug={slug} />
           </div>
-          <div className="">
+          <div className="w-full lg:w-1/3 mt-4 lg:mt-0">
             <CommunityAboutcard slug={slug} />
-            <div className="mt-5 ml-20">
-              <h4>
+            <div className="mt-3 sm:mt-4 text-center lg:text-left">
+              <h4 className="text-sm sm:text-base">
                 powered by
-                <span className="text-rose-600">THETRIBELAB</span>
+                <span className="text-rose-600 ml-1">THETRIBELAB</span>
               </h4>
             </div>
           </div>

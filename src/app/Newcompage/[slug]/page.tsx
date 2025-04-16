@@ -137,9 +137,12 @@ export default function HomeIdPage() {
       <CommunityNav />
       {isMember ? (
         <div className="container mt-6 mx-auto px-4 py-8">
-          <div className="flex flex-row justify-between gap-4">
-            <div className="flex flex-col mt-6 w-2/4 gap-3">
-              <Searchs onSearch={handleSearch} />
+          <div className="flex flex-col lg:flex-row justify-between gap-4">
+            {/* Main content - Posts */}
+            <div className="flex flex-col mt-6 w-full lg:w-2/3 gap-3">
+              <div className="mb-4">
+                <Searchs onSearch={handleSearch} />
+              </div>
               <div>
                 <CreatePost
                   communitySlug={slug}
@@ -205,8 +208,42 @@ export default function HomeIdPage() {
                 )}
               </div>
             </div>
-            <div className="w-1/4 mt-6">
+
+            {/* About card - Hidden on mobile, visible on large screens */}
+            <div className="hidden lg:block lg:w-1/3 mt-6">
               <CommunityAboutcard slug={slug} />
+            </div>
+
+            {/* Mobile-only about button that opens a modal */}
+            <div className="lg:hidden w-full mt-4 mb-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const modal = document.getElementById(
+                    "community-about-modal"
+                  ) as HTMLDialogElement;
+                  if (modal) modal.showModal();
+                }}
+                className="btn btn-outline w-full"
+              >
+                About This Community
+              </button>
+
+              <dialog
+                id="community-about-modal"
+                className="modal modal-bottom sm:modal-middle"
+              >
+                <div className="modal-box">
+                  <CommunityAboutcard slug={slug} />
+                  <div className="modal-action">
+                    <form method="dialog">
+                      <button type="submit" className="btn">
+                        Close
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </dialog>
             </div>
           </div>
         </div>

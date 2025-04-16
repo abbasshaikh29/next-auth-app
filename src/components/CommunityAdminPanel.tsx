@@ -79,43 +79,45 @@ export default function CommunityAdminPanel({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-8">
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 sm:px-4 sm:py-3 rounded text-sm sm:text-base">
           {error}
         </div>
       )}
 
       {/* Join Requests Section */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Join Requests</h2>
+      <div className="space-y-3 sm:space-y-4">
+        <h2 className="text-lg sm:text-xl font-semibold">Join Requests</h2>
         {requests.length === 0 ? (
-          <p>No pending requests</p>
+          <p className="text-sm sm:text-base">No pending requests</p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {requests.map((request) => (
               <div
                 key={request.userId}
-                className="p-4 border border-gray-200 rounded-md"
+                className="p-3 sm:p-4 border border-gray-200 rounded-md"
               >
                 <div className="space-y-2">
-                  <p className="font-medium">User ID: {request.userId}</p>
+                  <p className="text-sm sm:text-base font-medium">
+                    User ID: {request.userId}
+                  </p>
                   {request.answers.map((answer, index) => (
                     <div key={index}>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-xs sm:text-sm text-gray-600">
                         Q: Question {index + 1}
                       </p>
-                      <p className="text-sm">A: {answer}</p>
+                      <p className="text-xs sm:text-sm">A: {answer}</p>
                     </div>
                   ))}
-                  <div className="flex space-x-2">
+                  <div className="flex space-x-2 mt-2">
                     <button
                       type="button"
                       onClick={() =>
                         handleRequestAction(request.userId, "approve")
                       }
                       disabled={loading}
-                      className="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                      className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
                     >
                       Approve
                     </button>
@@ -125,7 +127,7 @@ export default function CommunityAdminPanel({
                         handleRequestAction(request.userId, "reject")
                       }
                       disabled={loading}
-                      className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                      className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
                     >
                       Reject
                     </button>
