@@ -5,7 +5,7 @@ import { User } from "@/models/User";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession();
@@ -14,14 +14,14 @@ export async function GET(
     }
 
     await dbconnect();
-    const user = await User.findById(params.id);
+    const user = await User.findById(context.params.id);
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Only allow users to access their own profile
-    if (session.user.id !== params.id) {
+    if (session.user.id !== context.params.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -45,7 +45,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession();
@@ -54,7 +54,7 @@ export async function PUT(
     }
 
     // Only allow users to update their own profile
-    if (session.user.id !== params.id) {
+    if (session.user.id !== context.params.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -68,7 +68,7 @@ export async function PUT(
 
     // Find the user and update their profile
     const updatedUser = await User.findByIdAndUpdate(
-      params.id,
+      context.params.id,
       {
         $set: {
           firstName,
