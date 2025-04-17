@@ -10,6 +10,13 @@ const nextConfig = {
       },
     ],
   },
+  // Middleware configuration
+  experimental: {
+    middleware: {
+      // Set the runtime for middleware to nodejs
+      runtime: "nodejs",
+    },
+  },
 };
 
 export default nextConfig;
