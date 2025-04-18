@@ -43,8 +43,30 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Add debug logging for session state
+  useEffect(() => {
+    console.log("Provider mounted - checking for session cookie");
+    const cookies = document.cookie.split(";");
+    const sessionCookies = cookies.filter(
+      (cookie) =>
+        cookie.trim().startsWith("next-auth.session-token=") ||
+        cookie.trim().startsWith("__Secure-next-auth.session-token=") ||
+        cookie.trim().startsWith("__Host-next-auth.session-token=")
+    );
+
+    if (sessionCookies.length > 0) {
+      console.log("Session cookie found in browser");
+    } else {
+      console.log("No session cookie found in browser");
+    }
+  }, []);
+
   return (
-    <SessionProvider refetchInterval={5 * 60} refetchOnWindowFocus={true}>
+    <SessionProvider
+      refetchInterval={5 * 60}
+      refetchOnWindowFocus={true}
+      refetchWhenOffline={false}
+    >
       <NotificationProvider>
         {ikConfig.urlEndpoint && ikConfig.publicKey ? (
           <ImageKitProvider

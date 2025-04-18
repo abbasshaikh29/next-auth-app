@@ -2,15 +2,35 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-// Hardcoded secret from .env file for middleware
-const NEXTAUTH_SECRET =
-  "a9b7c5d3e1f02468ace0987654321fedcba8901234567890abcdef12345678";
+// Use environment variable for secret
+const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET;
 
 export async function middleware(req: NextRequest) {
-  const token = await getToken({
-    req,
-    secret: NEXTAUTH_SECRET,
-  });
+  // First try to get token using getToken
+  let token;
+  try {
+    token = await getToken({
+      req,
+      secret: NEXTAUTH_SECRET,
+    });
+  } catch (error) {
+    console.error("Error getting token:", error);
+    token = null;
+  }
+
+  // If token method fails, check for cookies directly
+  if (!token) {
+    const authCookie =
+      req.cookies.get("next-auth.session-token") ||
+      req.cookies.get("__Secure-next-auth.session-token") ||
+      req.cookies.get("__Host-next-auth.session-token");
+
+    if (authCookie) {
+      console.log("Found auth cookie, allowing access");
+      return NextResponse.next();
+    }
+  }
+
   const { pathname } = req.nextUrl;
 
   // Allow all URLs if the user is logged in or if it's a public route
@@ -31,6 +51,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // Redirect to login if not authenticated and not a public route
+  console.log("Redirecting to login from path:", pathname);
   return NextResponse.redirect(new URL("/login", req.url));
 }
 export const config = {

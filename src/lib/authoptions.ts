@@ -227,5 +227,20 @@ export const authOptions: NextAuthConfig = {
     strategy: "jwt",
     maxAge: 24 * 60 * 60,
   },
-  secret: "a9b7c5d3e1f02468ace0987654321fedcba8901234567890abcdef12345678",
+  cookies: {
+    sessionToken: {
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-next-auth.session-token"
+          : "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
+  debug: process.env.NODE_ENV !== "production",
+  secret: process.env.NEXTAUTH_SECRET,
 };
