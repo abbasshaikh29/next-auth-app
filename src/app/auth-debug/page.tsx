@@ -3,53 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-interface DebugInfo {
-  environment: string;
-  baseUrl: string;
-  expectedCallbackUrls: string[];
-  configuredNextAuthUrl: string;
-  googleClientId: string;
-  googleClientIdConfigured: boolean;
-  googleClientSecretConfigured: boolean;
-  nextAuthSecretConfigured: boolean;
-  message: string;
-}
-
 export default function AuthDebugPage() {
-  const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  const [baseUrl, setBaseUrl] = useState("");
+  
   useEffect(() => {
-    async function fetchDebugInfo() {
-      try {
-        const response = await fetch("/api/auth/debug");
-        if (!response.ok) {
-          throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-        const data = await response.json();
-        setDebugInfo(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchDebugInfo();
+    // Get the base URL from the browser
+    setBaseUrl(window.location.origin);
   }, []);
-
-  if (loading) {
-    return <div className="container mx-auto p-8">Loading debug information...</div>;
-  }
-
-  if (error) {
-    return <div className="container mx-auto p-8 text-red-500">Error: {error}</div>;
-  }
-
-  if (!debugInfo) {
-    return <div className="container mx-auto p-8">No debug information available</div>;
-  }
 
   return (
     <div className="container mx-auto p-8">
@@ -57,31 +17,7 @@ export default function AuthDebugPage() {
       
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
         <h2 className="text-xl font-semibold mb-4">Environment Information</h2>
-        <p className="mb-2"><span className="font-medium">Environment:</span> {debugInfo.environment}</p>
-        <p className="mb-2"><span className="font-medium">Base URL:</span> {debugInfo.baseUrl}</p>
-        <p className="mb-2"><span className="font-medium">Configured NEXTAUTH_URL:</span> {debugInfo.configuredNextAuthUrl}</p>
-      </div>
-      
-      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-        <h2 className="text-xl font-semibold mb-4">Google OAuth Configuration</h2>
-        <p className="mb-2">
-          <span className="font-medium">Google Client ID:</span>{" "}
-          <span className={debugInfo.googleClientIdConfigured ? "text-green-600" : "text-red-600"}>
-            {debugInfo.googleClientId}
-          </span>
-        </p>
-        <p className="mb-2">
-          <span className="font-medium">Google Client Secret:</span>{" "}
-          <span className={debugInfo.googleClientSecretConfigured ? "text-green-600" : "text-red-600"}>
-            {debugInfo.googleClientSecretConfigured ? "Configured" : "Not configured"}
-          </span>
-        </p>
-        <p className="mb-2">
-          <span className="font-medium">NextAuth Secret:</span>{" "}
-          <span className={debugInfo.nextAuthSecretConfigured ? "text-green-600" : "text-red-600"}>
-            {debugInfo.nextAuthSecretConfigured ? "Configured" : "Not configured"}
-          </span>
-        </p>
+        <p className="mb-2"><span className="font-medium">Base URL:</span> {baseUrl}</p>
       </div>
       
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -90,11 +26,12 @@ export default function AuthDebugPage() {
           Add these URLs to your Google OAuth configuration in Google Cloud Console:
         </p>
         <ul className="bg-gray-100 p-4 rounded">
-          {debugInfo.expectedCallbackUrls.map((url, index) => (
-            <li key={index} className="mb-2 break-all font-mono text-sm">
-              {url}
-            </li>
-          ))}
+          <li className="mb-2 break-all font-mono text-sm">
+            {baseUrl}/api/auth/callback/google
+          </li>
+          <li className="mb-2 break-all font-mono text-sm">
+            {baseUrl}/api/auth/callback/credentials
+          </li>
         </ul>
       </div>
       
