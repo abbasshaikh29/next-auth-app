@@ -3,10 +3,17 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-
-import { User } from "lucide-react";
+import { User, ChevronDown, Compass, Plus } from "lucide-react";
 import { useNotification } from "@/components/Notification";
 import { useSession, signOut } from "next-auth/react";
+import CommunityIcon from "./CommunityIcon";
+interface Community {
+  _id: string;
+  name: string;
+  slug: string;
+  iconImageUrl?: string;
+  role: string;
+}
 
 function CommunityNav() {
   const { slug } = useParams<{ slug: string }>();
@@ -15,6 +22,8 @@ function CommunityNav() {
   const { showNotification } = useNotification();
   const [Name, setName] = useState("");
   const [isMember, setIsMember] = useState(false);
+  const [iconImage, setIconImage] = useState("");
+  const [userCommunities, setUserCommunities] = useState<Community[]>([]);
 
   // Function to check if a link is active
   const isLinkActive = (path: string) => {
@@ -40,15 +49,115 @@ function CommunityNav() {
   };
 
   const fetchCommunity = async () => {
-    const res = await fetch(`/api/community/${slug}`);
-    const data = await res.json();
-    setName(data.name);
-    setIsMember(data.members?.includes(session?.user?.id) || false);
+    try {
+      // First try to get the community data from the main API
+      const res = await fetch(`/api/community/${slug}`, {
+        cache: "no-store", // Prevent caching
+      });
+      const data = await res.json();
+      setName(data.name);
+
+      // Set the icon image URL, ensuring it's a string
+      let iconUrl = data.iconImageUrl || "";
+
+      // If the icon URL is missing or empty, try to get it from the validation API
+      if (!iconUrl || iconUrl.trim() === "") {
+        try {
+          const validateRes = await fetch(
+            `/api/community/${slug}/validate-icon`,
+            {
+              method: "GET",
+              cache: "no-store", // Prevent caching
+            }
+          );
+
+          if (validateRes.ok) {
+            const validateData = await validateRes.json();
+            if (validateData.isValid && validateData.iconImageUrl) {
+              iconUrl = validateData.iconImageUrl;
+            }
+          }
+        } catch (validateError) {
+          // Error handling silently
+        }
+      }
+
+      // If still no icon URL, try the dedicated icon API as a fallback
+      if (!iconUrl || iconUrl.trim() === "") {
+        try {
+          const iconRes = await fetch(`/api/community/${slug}/icon`, {
+            method: "GET",
+            cache: "no-store", // Prevent caching
+          });
+
+          if (iconRes.ok) {
+            const iconData = await iconRes.json();
+            if (iconData.iconImageUrl) {
+              iconUrl = iconData.iconImageUrl;
+            }
+          }
+        } catch (iconError) {
+          // Error handling silently
+        }
+      }
+
+      // Directly set the icon image URL
+      setIconImage(iconUrl && iconUrl.trim() !== "" ? iconUrl : "");
+
+      setIsMember(data.members?.includes(session?.user?.id) || false);
+    } catch (error) {
+      // Error handling silently
+    }
   };
 
   useEffect(() => {
+    // Fetch community data when component mounts or slug changes
     fetchCommunity();
+
+    // Set up an interval to periodically check for updates
+    const intervalId = setInterval(() => {
+      fetchCommunity();
+    }, 10000); // Check every 10 seconds
+
+    // Clean up the interval when the component unmounts
+    return () => clearInterval(intervalId);
   }, [slug, session?.user?.id]);
+
+  // Fetch user communities
+  // Function to preload community icons
+  const preloadCommunityIcons = (communities: Community[]) => {
+    communities.forEach((community) => {
+      if (community.iconImageUrl && community.iconImageUrl.trim() !== "") {
+        const img = new Image();
+        img.src = community.iconImageUrl;
+      }
+    });
+  };
+
+  useEffect(() => {
+    const fetchUserCommunities = async () => {
+      if (session?.user) {
+        try {
+          const response = await fetch("/api/user/communities");
+          if (response.ok) {
+            const data = await response.json();
+            // Filter out the current community from the dropdown
+            const filteredCommunities = data.filter(
+              (community: Community) => community.slug !== slug
+            );
+            setUserCommunities(filteredCommunities);
+
+            // Preload all community icons
+            preloadCommunityIcons(filteredCommunities);
+          }
+        } catch (error) {
+          // Error handling silently
+        }
+      }
+    };
+
+    fetchUserCommunities();
+  }, [session, slug]);
 
   const handleSignOut = async () => {
     try {
@@ -63,17 +172,106 @@ function CommunityNav() {
     <div className="navbar sticky top-0 bg-base-300 shadow-md z-10">
       <div className="flex flex-col justify-center w-full">
         <div className="container mx-auto flex justify-between px-4 sm:px-8 md:px-16 items-center">
-          <div className="flex-1 px-2 lg:flex-none">
-            <Link
-              href="/"
-              className="btn btn-ghost text-sm sm:text-lg md:text-xl gap-1 sm:gap-2 normal-case font-bold"
-              prefetch={true}
-              onClick={() =>
-                showNotification("Welcome to TheTribelab", "success")
-              }
-            >
-              {Name}
-            </Link>
+          <div className="flex-1 px-2 lg:flex-none flex items-center gap-2">
+            <div className="flex items-center">
+              <div className="mr-2 flex-shrink-0">
+                <CommunityIcon
+                  iconUrl={iconImage}
+                  name={Name}
+                  size="md"
+                  className="hover:scale-105 transition-transform duration-200"
+                />
+              </div>
+              <div className="flex flex-col">
+                <Link
+                  href={`/Newcompage/${slug}`}
+                  className="btn btn-ghost text-sm sm:text-lg md:text-xl gap-1 sm:gap-2 normal-case font-bold p-0 h-auto min-h-0"
+                  prefetch={true}
+                  onClick={() =>
+                    showNotification("Welcome to TheTribelab", "success")
+                  }
+                >
+                  <span className="truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">
+                    {Name}
+                  </span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Communities Dropdown */}
+            {session && (
+              <div className="dropdown dropdown-bottom">
+                <div
+                  tabIndex={0}
+                  role="button"
+                  aria-label="Switch community"
+                  title="Switch community"
+                  className="btn btn-ghost btn-sm normal-case flex items-center gap-1 hover:bg-base-200 rounded-full"
+                >
+                  <ChevronDown size={20} className="text-primary" />
+                </div>
+                <ul
+                  tabIndex={0}
+                  className="dropdown-content z-[1] text-lg menu p-2 shadow-lg bg-base-100 rounded-box w-72 max-h-96 overflow-y-auto border border-base-300"
+                >
+                  <li className="mt-2">
+                    <Link
+                      href="/"
+                      className="flex items-center gap-2 hover:bg-base-200 rounded-lg py-2"
+                    >
+                      <div
+                        className={` rounded-md overflow-hidden w-8 h-8 sm:w-10 sm:h-10 min-w-8 min-h-8 sm:min-w-10 sm:min-h-10 flex-shrink-0 hover:scale-105 transition-transform duration-200  flex items-center justify-center`}
+                        title="compass"
+                      >
+                        <Compass size={25} className="text-primary" />
+                      </div>
+                      <span className="font-medium">Discover Communities</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/communityform"
+                      className="flex items-center gap-2 hover:bg-base-200 rounded-lg py-2"
+                    >
+                      <div
+                        className={` rounded-md overflow-hidden w-8 h-8 sm:w-10 sm:h-10 min-w-8 min-h-8 sm:min-w-10 sm:min-h-10 flex-shrink-0 hover:scale-105 transition-transform duration-200  flex items-center justify-center`}
+                        title="compass"
+                      >
+                        <Plus size={25} className="text-primary" />
+                      </div>
+                      <span className="font-medium">Create Community</span>
+                    </Link>
+                  </li>
+                  {userCommunities.length > 0 ? (
+                    userCommunities.map((community) => (
+                      <li key={community._id}>
+                        <Link
+                          href={`/Newcompage/${community.slug}`}
+                          className="flex justify-between hover:bg-base-200 rounded-lg py-2"
+                        >
+                          <div className="flex items-center gap-3">
+                            <CommunityIcon
+                              iconUrl={community.iconImageUrl}
+                              name={community.name}
+                              size="md"
+                              className="hover:scale-105 transition-transform duration-200"
+                              priority={true}
+                            />
+                            <span className="truncate font-medium">
+                              {community.name}
+                            </span>
+                          </div>
+                        </Link>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="px-4 py-2 text-sm text-gray-500">
+                      You haven't joined any other communities
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
           </div>
           <div className="flex flex-1 justify-end px-2">
             <div className="flex items-stretch gap-2">
