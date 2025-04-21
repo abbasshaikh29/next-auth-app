@@ -68,10 +68,10 @@ function Page() {
           </div>
           <div className="w-full lg:w-1/3 mt-4 lg:mt-0">
             <CommunityAboutcard slug={slug} />
-            <div className="mt-3 sm:mt-4 text-center lg:text-left">
-              <h4 className="text-sm sm:text-base">
+            <div className="mt-3 sm:mt-4 justify-center flex lg:text-left">
+              <h4 className="text-sm sm:text-base  ">
                 powered by
-                <span className="text-rose-600 ml-1">THETRIBELAB</span>
+                <span className="text-rose-600 ml-2">THETRIBELAB</span>
               </h4>
             </div>
           </div>

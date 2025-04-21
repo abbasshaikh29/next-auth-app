@@ -50,7 +50,7 @@ export default function Home() {
       <Header />
       <div className="container mx-auto px-4 py-4 sm:py-8">
         <div className="mx-4 sm:m-8 flex flex-col items-center text-center">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl mt-4 sm:mt-9 font-bold leading-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl mt-2 sm:mt-9 font-bold leading-tight">
             Discover Communities
           </h1>
           <h1 className="text-2xl sm:text-3xl md:text-4xl px-2 sm:px-6 font-bold mb-4 sm:mb-8">
