@@ -15,10 +15,6 @@ export default function RootLayout({
   useEffect(() => {
     // Check if we're in production environment
     setIsProduction(window.location.hostname !== "localhost");
-    console.log(
-      "Environment:",
-      window.location.hostname !== "localhost" ? "production" : "development"
-    );
   }, []);
 
   return (

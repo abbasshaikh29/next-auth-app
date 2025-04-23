@@ -11,28 +11,60 @@ export async function GET(
   try {
     const resolvedParams = await context.params;
     const { slug } = resolvedParams;
+    console.log("Icon API: Fetching icon for slug:", slug);
+
+    // Add cache control headers to prevent caching
+    const headers = new Headers({
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
+    });
 
     await dbconnect();
 
-    // Find the community
-    const community = await Community.findOne({ slug });
+    // Find the community with a fresh query
+    const community = await Community.findOne({ slug }).lean();
 
     if (!community) {
+      console.log("Icon API: Community not found for slug:", slug);
       return NextResponse.json(
         { error: "Community not found" },
-        { status: 404 }
+        { status: 404, headers }
       );
     }
 
-    console.log("Community found in icon GET API:", community);
-    console.log("Icon image URL in GET API:", community.iconImageUrl);
-
-    return NextResponse.json({
-      success: true,
-      iconImageUrl: community.iconImageUrl || "",
+    console.log("Icon API: Community found:", {
+      id: community._id,
+      name: community.name,
+      iconImageUrl: community.iconImageUrl || "<empty>",
     });
+
+    // Try to validate the icon URL
+    let iconUrl = community.iconImageUrl || "";
+    let isValid = false;
+
+    if (iconUrl && iconUrl.trim() !== "") {
+      try {
+        // Validate URL format
+        new URL(iconUrl);
+        isValid = true;
+      } catch (e) {
+        console.error("Icon API: Invalid URL format:", iconUrl, e);
+        iconUrl = "";
+      }
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        iconImageUrl: iconUrl,
+        isValid,
+        timestamp: Date.now(),
+      },
+      { headers }
+    );
   } catch (error) {
-    console.error("Error fetching community icon:", error);
+    // Error handling
     return NextResponse.json(
       { error: "Failed to fetch community icon" },
       { status: 500 }
@@ -51,11 +83,22 @@ export async function PUT(
     }
 
     const { iconImageUrl } = await request.json();
-    console.log("Icon image URL in direct update API:", iconImageUrl);
+    console.log("Icon API PUT: Received icon URL:", iconImageUrl);
 
     if (!iconImageUrl) {
       return NextResponse.json(
         { error: "Icon image URL is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate URL format
+    try {
+      new URL(iconImageUrl);
+    } catch (e) {
+      console.error("Icon API PUT: Invalid URL format:", iconImageUrl, e);
+      return NextResponse.json(
+        { error: "Invalid icon image URL format" },
         { status: 400 }
       );
     }
@@ -87,35 +130,29 @@ export async function PUT(
       );
     }
 
-    console.log("Community found:", community);
-    console.log("Community ID:", community._id);
-
     // Try multiple approaches to update the icon image URL
     let updatedCommunity = null;
 
     // Approach 1: Use findOneAndUpdate with the slug
     try {
+      console.log("Icon API PUT: Attempting update with findOneAndUpdate");
       updatedCommunity = await Community.findOneAndUpdate(
         { slug },
         { $set: { iconImageUrl } },
         { new: true }
       );
 
-      console.log("Update result (approach 1):", updatedCommunity);
-      console.log(
-        "Icon image URL after update (approach 1):",
-        updatedCommunity?.iconImageUrl
-      );
+      console.log("Icon API PUT: Update result:", {
+        success: !!updatedCommunity,
+        iconImageUrl: updatedCommunity?.iconImageUrl || "<not set>",
+      });
+      // Approach 1 completed
     } catch (error) {
-      console.error("Error in update approach 1:", error);
+      console.error("Icon API PUT: Error in approach 1:", error);
     }
 
     // Approach 2: If the first approach didn't work, try updating by ID
     if (!updatedCommunity || !updatedCommunity.iconImageUrl) {
-      console.log(
-        "First update approach didn't save icon image URL, trying by ID"
-      );
-
       try {
         updatedCommunity = await Community.findByIdAndUpdate(
           community._id,
@@ -123,22 +160,14 @@ export async function PUT(
           { new: true }
         );
 
-        console.log("Update result (approach 2):", updatedCommunity);
-        console.log(
-          "Icon image URL after update (approach 2):",
-          updatedCommunity?.iconImageUrl
-        );
+        // Approach 2 completed
       } catch (error) {
-        console.error("Error in update approach 2:", error);
+        // Error in approach 2
       }
     }
 
     // Approach 3: If the previous approaches didn't work, try using the raw MongoDB driver
     if (!updatedCommunity || !updatedCommunity.iconImageUrl) {
-      console.log(
-        "Previous update approaches didn't save icon image URL, trying raw MongoDB driver"
-      );
-
       try {
         const result = await mongoose.connection.db
           .collection("communities")
@@ -152,30 +181,31 @@ export async function PUT(
           updatedCommunity = await Community.findById(community._id);
         }
 
-        console.log("Update result (approach 3):", updatedCommunity);
-        console.log(
-          "Icon image URL after update (approach 3):",
-          updatedCommunity?.iconImageUrl
-        );
+        // Approach 3 completed
       } catch (error) {
-        console.error("Error in update approach 3:", error);
+        // Error in approach 3
       }
     }
 
     if (!updatedCommunity) {
+      console.error("Icon API PUT: All update approaches failed");
       return NextResponse.json(
         { error: "Failed to update community icon" },
         { status: 500 }
       );
     }
 
+    console.log(
+      "Icon API PUT: Successfully updated icon URL:",
+      updatedCommunity.iconImageUrl
+    );
     return NextResponse.json({
       success: true,
       community: updatedCommunity,
       iconImageUrl: updatedCommunity.iconImageUrl,
     });
   } catch (error) {
-    console.error("Error updating community icon:", error);
+    // Error handling
     return NextResponse.json(
       { error: "Failed to update community icon" },
       { status: 500 }

@@ -32,6 +32,25 @@ export default function HomeIdPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isMember, setIsMember] = useState(false);
 
+  // Function to fetch posts
+  const fetchPosts = async () => {
+    if (!slug || !isMember) return;
+
+    try {
+      const postsResponse = await fetch(
+        `/api/community/posts?communitySlug=${slug}`
+      );
+      if (!postsResponse.ok) {
+        throw new Error("Failed to fetch posts");
+      }
+      const postsData = await postsResponse.json();
+      setPosts(postsData);
+      setFilteredPosts(searchQuery ? filteredPosts : postsData);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       if (!slug) {
@@ -49,15 +68,7 @@ export default function HomeIdPage() {
         );
 
         if (isMember) {
-          const postsResponse = await fetch(
-            `/api/community/posts?communitySlug=${slug}`
-          );
-          if (!postsResponse.ok) {
-            throw new Error("Failed to fetch posts");
-          }
-          const postsData = await postsResponse.json();
-          setPosts(postsData);
-          setFilteredPosts(postsData);
+          await fetchPosts();
         }
       } catch (err: unknown) {
         setError(
@@ -69,6 +80,16 @@ export default function HomeIdPage() {
     };
 
     fetchData();
+
+    // Set up interval to refresh posts periodically
+    const refreshInterval = setInterval(() => {
+      if (isMember) {
+        fetchPosts();
+      }
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(refreshInterval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, session?.user?.id, isMember]);
 
   // Handle search functionality
@@ -176,6 +197,7 @@ export default function HomeIdPage() {
                         key={post._id}
                         post={postData}
                         onLike={(liked) => {
+                          // The Post component will handle the API call
                           setPosts((prev) => {
                             return prev.map((p) =>
                               p._id === post._id

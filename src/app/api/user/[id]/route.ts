@@ -11,7 +11,7 @@ export async function GET(
 ) {
   const resolvedParams = await context.params;
   const { id } = resolvedParams;
-  console.log("params.id:", id);
+
   await dbconnect();
 
   try {
@@ -29,7 +29,6 @@ export async function GET(
     }
 
     const userId = id as string;
-    console.log("userId before validation:", userId);
 
     // Validate user ID format
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
@@ -39,9 +38,7 @@ export async function GET(
       );
     }
     const user = await User.findById(id);
-    console.log("User found:", user);
     if (!user) {
-      console.log("User not found for ID:", id);
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
@@ -70,7 +67,6 @@ export async function GET(
       };
     });
 
-    console.log("Found posts:", posts);
     return NextResponse.json({
       user: {
         _id: user._id,
@@ -96,7 +92,7 @@ export async function GET(
       })),
     });
   } catch (error) {
-    console.error(error);
+    // Error handling
     return NextResponse.json(
       { error: "Failed to fetch user" },
       { status: 500 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dbconnect } from "@/lib/db";
 import { Community } from "@/models/Community";
+import mongoose from "mongoose";
 
 interface CommunityType {
   _id: string;
@@ -20,40 +21,93 @@ export async function GET(
   try {
     const resolvedParams = await context.params;
     const { slug } = resolvedParams;
+    console.log("Main Community API: Fetching community for slug:", slug);
 
-    await dbconnect();
-    const community: CommunityType | null = await Community.findOne({ slug });
+    // Add cache control headers to prevent caching
+    const headers = new Headers({
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
+    });
 
-    if (!community) {
+    if (!slug) {
       return NextResponse.json(
-        { error: "Community not found" },
-        { status: 404 }
+        { error: "Invalid slug parameter" },
+        { status: 400, headers }
       );
     }
 
-    console.log("Community data from API:", community);
-    console.log("Icon image URL:", community.iconImageUrl);
-    console.log("Community data keys:", Object.keys(community));
-    console.log("Community data type:", typeof community);
+    await dbconnect();
 
-    // Convert to plain object and ensure iconImageUrl is included
-    const communityObj = community.toJSON ? community.toJSON() : community;
+    // Check database connection
+    if (mongoose.connection.readyState !== 1) {
+      return NextResponse.json(
+        {
+          error: "Database connection not ready",
+          details: { readyState: mongoose.connection.readyState },
+        },
+        { status: 500, headers }
+      );
+    }
+
+    // Use lean() to get a plain JavaScript object instead of a Mongoose document
+    const community: CommunityType | null = await Community.findOne({
+      slug,
+    }).lean();
+
+    if (!community) {
+      // Try to find if any communities exist
+      const communityCount = await Community.countDocuments({});
+
+      return NextResponse.json(
+        {
+          error: "Community not found",
+          details: {
+            slug,
+            communityCount,
+            databaseName: mongoose.connection.db?.databaseName || "unknown",
+          },
+        },
+        { status: 404, headers }
+      );
+    }
+
+    console.log("Main Community API: Community found:", {
+      id: community._id,
+      name: community.name,
+      iconImageUrl: community.iconImageUrl || "<empty>",
+    });
+
+    // Validate the icon URL
+    let iconImageUrl = community.iconImageUrl || "";
+    if (iconImageUrl && iconImageUrl.trim() !== "") {
+      try {
+        // Validate URL format
+        new URL(iconImageUrl);
+      } catch (e) {
+        console.error(
+          "Main Community API: Invalid URL format:",
+          iconImageUrl,
+          e
+        );
+        iconImageUrl = "";
+      }
+    }
 
     // Make sure iconImageUrl is explicitly set
     const responseData = {
-      ...communityObj,
-      iconImageUrl: community.iconImageUrl || "",
+      ...community,
+      iconImageUrl,
+      timestamp: Date.now(),
     };
 
-    console.log("Response data:", responseData);
-    console.log("Response data keys:", Object.keys(responseData));
-    console.log("Final icon image URL in response:", responseData.iconImageUrl);
-
-    return NextResponse.json(responseData);
+    return NextResponse.json(responseData, { headers });
   } catch (error) {
-    console.error("Error fetching community:", error);
     return NextResponse.json(
-      { error: "Failed to fetch community" },
+      {
+        error: "Failed to fetch community",
+        message: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

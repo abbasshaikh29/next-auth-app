@@ -3,13 +3,9 @@ import mongoose from "mongoose";
 // Get the MongoDB URI from environment variables
 const MONGODB_URI = process.env.MONGODB_URI;
 
-// Log which environment we're in
 const isDevelopment = process.env.NODE_ENV === "development";
-console.log(`Running in ${isDevelopment ? "development" : "production"} mode`);
-console.log(`Using database: ${MONGODB_URI?.split("/").pop()}`);
 
 if (!MONGODB_URI) {
-  console.error("MongoDB URI is not defined in environment variables");
   throw new Error("MongoDB URI is not defined");
 }
 
@@ -41,25 +37,16 @@ export async function dbconnect() {
       cached.promise = mongoose
         .connect(MONGODB_URI!, opts)
         .then(() => {
-          console.log("Connected to MongoDB successfully");
-          if (mongoose.connection.db) {
-            console.log(
-              `Database name: ${mongoose.connection.db.databaseName}`
-            );
-          }
+          // Connection successful
           return mongoose.connection;
         })
         .catch((error) => {
-          console.error("Error connecting to MongoDB:", error);
-          console.error(
-            "Connection string:",
-            MONGODB_URI?.replace(/:[^:]*@/, ":****@")
-          );
+          // Error handling
           cached.promise = null;
           throw new Error(`Failed to connect to MongoDB: ${error.message}`);
         });
     } catch (error: any) {
-      console.error("Error in mongoose.connect:", error);
+      // Error in mongoose.connect
       cached.promise = null;
       throw new Error(`Failed to connect to MongoDB: ${error.message}`);
     }
@@ -68,7 +55,7 @@ export async function dbconnect() {
   try {
     cached.conn = await cached.promise;
   } catch (error) {
-    console.error("Error resolving MongoDB connection:", error);
+    // Error resolving MongoDB connection
     cached.promise = null;
     throw new Error(`Failed to resolve MongoDB connection: ${error}`);
   }

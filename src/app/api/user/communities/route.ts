@@ -24,12 +24,6 @@ export async function GET(request: NextRequest) {
         role = "sub-admin";
       }
 
-      console.log("Community in user communities API:", community);
-      console.log(
-        "Community icon URL in user communities API:",
-        community.iconImageUrl
-      );
-
       return {
         _id: community._id,
         name: community.name,
@@ -39,11 +33,9 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    console.log("User communities response:", userCommunities);
-
     return NextResponse.json(userCommunities);
   } catch (error) {
-    console.error("Error fetching user communities:", error);
+    // Error handling
     return NextResponse.json(
       { error: "Failed to fetch user communities" },
       { status: 500 }

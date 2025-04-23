@@ -101,6 +101,8 @@ export default function CommunitySettings() {
       return;
     }
 
+    console.log("Updating community settings with icon image:", iconImage);
+
     setIsLoading(true);
     try {
       // Debug icon image
@@ -128,11 +130,15 @@ export default function CommunitySettings() {
         testImg.src = iconImageUrl;
       }
 
+      // Make sure we're using the correct icon URL
+      const formattedIconUrl =
+        iconImage && iconImage.trim() !== "" ? iconImage : "";
+
       const requestBody = {
         name,
         description,
         bannerImageurl: bannerImage, // Use the correct property name expected by the API
-        iconImageUrl, // Add icon image URL
+        iconImageUrl: formattedIconUrl, // Add icon image URL
       };
 
       console.log("Full request body:", JSON.stringify(requestBody));
@@ -156,7 +162,7 @@ export default function CommunitySettings() {
       console.log("Icon image URL in response:", result.iconImageUrl);
 
       // Always try a direct update to save the icon image URL to ensure it's saved correctly
-      if (iconImageUrl) {
+      if (formattedIconUrl) {
         console.log(
           "Ensuring icon image URL is saved correctly with direct update"
         );
@@ -169,8 +175,9 @@ export default function CommunitySettings() {
               method: "PUT",
               headers: {
                 "Content-Type": "application/json",
+                "Cache-Control": "no-cache",
               },
-              body: JSON.stringify({ iconImageUrl }),
+              body: JSON.stringify({ iconImageUrl: formattedIconUrl }),
             }
           );
 
@@ -381,8 +388,9 @@ export default function CommunitySettings() {
                 <div className="flex items-center gap-2">
                   <div className="w-16 h-16 bg-gray-200 rounded-full overflow-hidden">
                     {/* Use img tag for better debugging */}
+                    {/* Add cache-busting parameter to prevent caching */}
                     <img
-                      src={iconImage}
+                      src={`${iconImage}?t=${Date.now()}`}
                       alt="Community icon"
                       className="w-full h-full object-cover"
                       onError={(e) => {

@@ -9,31 +9,62 @@ export async function GET(
   try {
     const resolvedParams = await context.params;
     const { slug } = resolvedParams;
+    console.log("Validate-icon API: Fetching icon for slug:", slug);
+
+    // Add cache control headers to prevent caching
+    const headers = new Headers({
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
+    });
 
     await dbconnect();
 
-    // Find the community
-    const community = await Community.findOne({ slug });
+    // Find the community with a fresh query
+    const community = await Community.findOne({ slug }).lean();
 
     if (!community) {
+      console.log("Validate-icon API: Community not found for slug:", slug);
       return NextResponse.json(
         { error: "Community not found" },
-        { status: 404 }
+        { status: 404, headers }
       );
     }
 
-    console.log("Community found in validate-icon API:", community);
-    console.log("Icon image URL in validate-icon API:", community.iconImageUrl);
-
-    // Check if the icon image URL exists
-    const iconImageUrl = community.iconImageUrl || "";
-    const isValid = iconImageUrl.trim() !== "";
-
-    return NextResponse.json({
-      success: true,
-      iconImageUrl,
-      isValid,
+    console.log("Validate-icon API: Community found:", {
+      id: community._id,
+      name: community.name,
+      iconImageUrl: community.iconImageUrl || "<empty>",
     });
+
+    // Check if the icon image URL exists and is valid
+    let iconImageUrl = community.iconImageUrl || "";
+    let isValid = false;
+
+    if (iconImageUrl && iconImageUrl.trim() !== "") {
+      try {
+        // Validate URL format
+        new URL(iconImageUrl);
+        isValid = true;
+      } catch (e) {
+        console.error(
+          "Validate-icon API: Invalid URL format:",
+          iconImageUrl,
+          e
+        );
+        iconImageUrl = "";
+      }
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        iconImageUrl,
+        isValid,
+        timestamp: Date.now(),
+      },
+      { headers }
+    );
   } catch (error) {
     console.error("Error validating community icon:", error);
     return NextResponse.json(

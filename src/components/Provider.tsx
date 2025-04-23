@@ -21,9 +21,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         urlEndpoint,
         publicKey,
       });
-      console.log("ImageKit config loaded", { urlEndpoint });
-    } else {
-      console.error("Missing ImageKit configuration in environment variables");
     }
   }, []);
 
@@ -35,31 +32,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         throw new Error(`Failed to authenticate: ${res.status} ${errorText}`);
       }
       const data = await res.json();
-      console.log("ImageKit authentication successful");
       return data;
     } catch (error) {
-      console.error("ImageKit authentication error:", error);
       throw error;
     }
   };
-
-  // Add debug logging for session state
-  useEffect(() => {
-    console.log("Provider mounted - checking for session cookie");
-    const cookies = document.cookie.split(";");
-    const sessionCookies = cookies.filter(
-      (cookie) =>
-        cookie.trim().startsWith("next-auth.session-token=") ||
-        cookie.trim().startsWith("__Secure-next-auth.session-token=") ||
-        cookie.trim().startsWith("__Host-next-auth.session-token=")
-    );
-
-    if (sessionCookies.length > 0) {
-      console.log("Session cookie found in browser");
-    } else {
-      console.log("No session cookie found in browser");
-    }
-  }, []);
 
   return (
     <SessionProvider

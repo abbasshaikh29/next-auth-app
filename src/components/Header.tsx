@@ -7,6 +7,7 @@ import { User, ChevronDown, Compass, Plus, Home } from "lucide-react";
 import SessionDebug from "./SessionDebug";
 import CommunityIcon from "./communitynav/CommunityIcon";
 import { usePathname } from "next/navigation";
+import MessageIcon from "./messages/MessageIcon";
 
 interface Community {
   _id: string;
@@ -224,6 +225,8 @@ export default function Header() {
         </div>
         <div className="flex flex-1 justify-end px-2">
           <div className="flex items-stretch gap-2">
+            {/* Message Icon */}
+            {session && <MessageIcon />}
             <div className="dropdown dropdown-end">
               <div
                 tabIndex={0}

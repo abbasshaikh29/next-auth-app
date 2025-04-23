@@ -14,7 +14,7 @@ export async function GET() {
 
     return NextResponse.json(Communitys);
   } catch (error) {
-    console.error("Error fetching community:", error);
+    // Error handling
     return NextResponse.json(
       { error: "Failed to fetch community" },
       { status: 500 }
@@ -25,7 +25,6 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession();
-    console.log("Session:", session);
 
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -41,7 +40,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    console.log(session);
+
     // Create new community with default values
     const communityData: ICommunity = {
       ...body,
@@ -62,7 +61,7 @@ export async function POST(request: NextRequest) {
     await newCommunity.save();
     return NextResponse.json(newCommunity);
   } catch (error) {
-    console.error("Error creating video:", error);
+    // Error handling
     return NextResponse.json(
       { error: "Failed to create video" },
       { status: 500 }

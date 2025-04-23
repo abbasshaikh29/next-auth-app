@@ -1,8 +1,10 @@
 "use client";
 
-import { Link, FileText, X } from "lucide-react";
-import { useState, useRef } from "react";
+import { Link, FileText, X, Smile } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
+import { parseTextWithLinks } from "@/lib/url-utils";
+import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 interface PostContent {
   type: "text" | "image" | "link" | "file";
   content: string;
@@ -22,9 +24,12 @@ export function CreatePost({
   const [title, setTitle] = useState("");
   const [contents, setContents] = useState<PostContent[]>([]);
   const [currentInput, setCurrentInput] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleFileUpload = (file: File, type: "image" | "file") => {
     const reader = new FileReader();
@@ -46,6 +51,48 @@ export function CreatePost({
     setContents(contents.filter((_, i) => i !== index));
   };
 
+  // Handle emoji selection
+  const handleEmojiClick = (emojiData: EmojiClickData) => {
+    const emoji = emojiData.emoji;
+    const textarea = textareaRef.current;
+
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newText =
+        currentInput.substring(0, start) + emoji + currentInput.substring(end);
+      setCurrentInput(newText);
+
+      // Set cursor position after the inserted emoji
+      setTimeout(() => {
+        textarea.selectionStart = start + emoji.length;
+        textarea.selectionEnd = start + emoji.length;
+        textarea.focus();
+      }, 0);
+    } else {
+      setCurrentInput(currentInput + emoji);
+    }
+
+    // Keep emoji picker open for multiple selections
+  };
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const handleSubmit = async () => {
     if (!title.trim()) return;
 
@@ -53,7 +100,9 @@ export function CreatePost({
 
     // Add current text input if it exists
     if (currentInput.trim()) {
-      finalContents.push({ type: "text", content: currentInput });
+      // Parse text for URLs and convert them to clickable links
+      const parsedContent = parseTextWithLinks(currentInput);
+      finalContents.push(...parsedContent);
     }
 
     try {
@@ -171,15 +220,31 @@ export function CreatePost({
         ))}
 
         <div className="space-y-2">
-          <textarea
-            placeholder="What's on your mind?"
-            value={currentInput}
-            className="textarea textarea-bordered textarea-sm sm:textarea-md w-full bg-white text-xs sm:text-sm"
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-              setCurrentInput(e.target.value)
-            }
-            rows={3}
-          />
+          <div className="relative">
+            <textarea
+              ref={textareaRef}
+              placeholder="What's on your mind?"
+              value={currentInput}
+              className="textarea textarea-bordered textarea-sm sm:textarea-md w-full bg-white text-xs sm:text-sm"
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setCurrentInput(e.target.value)
+              }
+              rows={3}
+            />
+            {showEmojiPicker && (
+              <div
+                className="absolute z-10 bottom-0 right-0 mb-16"
+                ref={emojiPickerRef}
+              >
+                <EmojiPicker
+                  onEmojiClick={handleEmojiClick}
+                  width={280}
+                  height={350}
+                  previewConfig={{ showPreview: false }}
+                />
+              </div>
+            )}
+          </div>
           <div className="flex flex-wrap gap-1 sm:gap-2">
             <button
               type="button"
@@ -188,6 +253,17 @@ export function CreatePost({
             >
               <span className="hidden xs:inline">Add Image</span>
               <span className="xs:hidden">Image</span>
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline btn-xs sm:btn-sm flex items-center"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              title="Add emoji"
+              aria-label="Add emoji"
+            >
+              <Smile className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Add Emoji</span>
+              <span className="xs:hidden">Emoji</span>
             </button>
             <button
               type="button"

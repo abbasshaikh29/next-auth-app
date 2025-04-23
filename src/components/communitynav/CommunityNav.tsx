@@ -7,6 +7,7 @@ import { User, ChevronDown, Compass, Plus } from "lucide-react";
 import { useNotification } from "@/components/Notification";
 import { useSession, signOut } from "next-auth/react";
 import CommunityIcon from "./CommunityIcon";
+import MessageIcon from "../messages/MessageIcon";
 interface Community {
   _id: string;
   name: string;
@@ -50,63 +51,117 @@ function CommunityNav() {
 
   const fetchCommunity = async () => {
     try {
-      // First try to get the community data from the main API
-      const res = await fetch(`/api/community/${slug}`, {
+      console.log("CommunityNav: Fetching community data for slug:", slug);
+
+      // Add a timestamp to prevent caching
+      const timestamp = Date.now();
+
+      // First try to get the community data from the main API with cache busting
+      const res = await fetch(`/api/community/${slug}?t=${timestamp}`, {
         cache: "no-store", // Prevent caching
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
       });
+
       const data = await res.json();
+      console.log("CommunityNav: Community data received:", data);
       setName(data.name);
 
       // Set the icon image URL, ensuring it's a string
       let iconUrl = data.iconImageUrl || "";
+      console.log("CommunityNav: Initial icon URL from main API:", iconUrl);
 
-      // If the icon URL is missing or empty, try to get it from the validation API
+      // Try all three approaches in parallel for faster response
+      const fetchPromises = [];
+
+      // 1. Try the validation API
       if (!iconUrl || iconUrl.trim() === "") {
-        try {
-          const validateRes = await fetch(
-            `/api/community/${slug}/validate-icon`,
-            {
-              method: "GET",
-              cache: "no-store", // Prevent caching
-            }
-          );
-
-          if (validateRes.ok) {
-            const validateData = await validateRes.json();
-            if (validateData.isValid && validateData.iconImageUrl) {
-              iconUrl = validateData.iconImageUrl;
-            }
-          }
-        } catch (validateError) {
-          // Error handling silently
-        }
-      }
-
-      // If still no icon URL, try the dedicated icon API as a fallback
-      if (!iconUrl || iconUrl.trim() === "") {
-        try {
-          const iconRes = await fetch(`/api/community/${slug}/icon`, {
+        fetchPromises.push(
+          fetch(`/api/community/${slug}/validate-icon?t=${timestamp}`, {
             method: "GET",
-            cache: "no-store", // Prevent caching
-          });
-
-          if (iconRes.ok) {
-            const iconData = await iconRes.json();
-            if (iconData.iconImageUrl) {
-              iconUrl = iconData.iconImageUrl;
-            }
-          }
-        } catch (iconError) {
-          // Error handling silently
-        }
+            cache: "no-store",
+            headers: {
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              Pragma: "no-cache",
+              Expires: "0",
+            },
+          })
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+              if (data?.isValid && data?.iconImageUrl) {
+                console.log(
+                  "CommunityNav: Got icon from validate API:",
+                  data.iconImageUrl
+                );
+                return data.iconImageUrl;
+              }
+              return null;
+            })
+            .catch(() => null)
+        );
       }
 
-      // Directly set the icon image URL
-      setIconImage(iconUrl && iconUrl.trim() !== "" ? iconUrl : "");
+      // 2. Try the dedicated icon API
+      fetchPromises.push(
+        fetch(`/api/community/${slug}/icon?t=${timestamp}`, {
+          method: "GET",
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+            Expires: "0",
+          },
+        })
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data) => {
+            if (data?.iconImageUrl) {
+              console.log(
+                "CommunityNav: Got icon from icon API:",
+                data.iconImageUrl
+              );
+              return data.iconImageUrl;
+            }
+            return null;
+          })
+          .catch(() => null)
+      );
+
+      // Wait for all fetch attempts and use the first valid result
+      const results = await Promise.all(fetchPromises);
+      const validResults = results.filter((result) => result !== null);
+
+      if (validResults.length > 0 && !iconUrl) {
+        iconUrl = validResults[0];
+        console.log(
+          "CommunityNav: Using icon URL from parallel fetch:",
+          iconUrl
+        );
+      }
+
+      // Directly set the icon image URL with a cache-busting parameter
+      let finalIconUrl = "";
+      if (iconUrl && iconUrl.trim() !== "") {
+        // Add cache busting parameter if needed
+        finalIconUrl = iconUrl.includes("?")
+          ? `${iconUrl}&t=${timestamp}`
+          : `${iconUrl}?t=${timestamp}`;
+      }
+
+      console.log("CommunityNav: Final icon URL being set:", finalIconUrl);
+      setIconImage(finalIconUrl);
 
       setIsMember(data.members?.includes(session?.user?.id) || false);
+
+      // Preload the image
+      if (finalIconUrl) {
+        const img = new Image();
+        img.src = finalIconUrl;
+      }
     } catch (error) {
-      // Error handling silently
+      console.error("CommunityNav: Error fetching community data:", error);
     }
   };
 
@@ -275,6 +330,8 @@ function CommunityNav() {
           </div>
           <div className="flex flex-1 justify-end px-2">
             <div className="flex items-stretch gap-2">
+              {/* Message Icon */}
+              {session && <MessageIcon />}
               <div className="dropdown dropdown-end">
                 <div
                   tabIndex={0}

@@ -11,7 +11,6 @@ export default function AuthDebug() {
   useEffect(() => {
     // Get all cookies
     const allCookies = document.cookie.split(";");
-    console.log("All cookies:", allCookies);
 
     // Filter for auth-related cookies
     const authCookies = allCookies.filter(
@@ -22,11 +21,6 @@ export default function AuthDebug() {
     );
 
     setCookies(authCookies);
-
-    // Log authentication status
-    console.log("Auth Debug - Session status:", status);
-    console.log("Auth Debug - Session data:", session);
-    console.log("Auth Debug - Auth cookies:", authCookies);
   }, [session, status]);
 
   if (!showDetails) {

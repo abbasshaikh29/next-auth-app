@@ -5,23 +5,56 @@ import React, { useState, useEffect } from "react";
 import { ICommunity } from "@/models/Community";
 import { useSession } from "next-auth/react";
 import CommunityJoinForm from "../CommunityJoinForm";
+import { Users, Link as LinkIcon, Copy, Check } from "lucide-react";
 
 async function getCommunity(slug: string): Promise<{
   community: ICommunity | null;
+  error?: string;
 }> {
   try {
+    // First try to fetch with the normal endpoint
     const communityResponse = await fetch(`/api/community/${slug}`);
-    if (!communityResponse.ok) {
-      throw new Error("Failed to fetch community");
-    }
-    const communityData: ICommunity = await communityResponse.json();
 
-    return {
-      community: communityData,
-    };
+    if (communityResponse.ok) {
+      const communityData: ICommunity = await communityResponse.json();
+      return { community: communityData };
+    }
+
+    // If that fails, try the debug endpoint to get more information
+    const debugResponse = await fetch(
+      `/api/community/check?slug=${encodeURIComponent(slug)}`
+    );
+    const debugData = await debugResponse.json();
+
+    if (debugData.communityFound && debugData.communityData) {
+      // Community exists but there was an error fetching it
+      return {
+        community: null,
+        error: `Community exists but couldn't be fetched properly. Database status: ${JSON.stringify(
+          debugData.dbStatus
+        )}`,
+      };
+    } else if (debugData.totalCommunities > 0) {
+      // Other communities exist but not this one
+      return {
+        community: null,
+        error: `Community with slug "${slug}" not found. ${debugData.totalCommunities} other communities exist.`,
+      };
+    } else {
+      // No communities exist at all
+      return {
+        community: null,
+        error:
+          "No communities found in the database. Database may be empty or not properly connected.",
+      };
+    }
   } catch (error) {
-    console.error("Error fetching community:", error);
-    return { community: null };
+    return {
+      community: null,
+      error: `Error fetching community: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    };
   }
 }
 
@@ -38,17 +71,27 @@ function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [isMember, setIsMember] = useState(false);
   const [showJoinForm, setShowJoinForm] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
       try {
         const data = await getCommunity(slug);
-        setCommunityData({
-          community: data.community,
-        });
-        setIsMember(
-          data.community?.members?.includes(session?.user?.id!) || false
-        );
+
+        if (data.community) {
+          setCommunityData({
+            community: data.community,
+          });
+          setIsMember(
+            data.community?.members?.includes(session?.user?.id!) || false
+          );
+        } else if (data.error) {
+          setError(data.error);
+        } else {
+          setError("Community not found");
+        }
+
         setLoading(false);
       } catch (err: any) {
         setError(err.message);
@@ -56,7 +99,12 @@ function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
       }
     }
 
-    fetchData();
+    if (slug) {
+      fetchData();
+    } else {
+      setError("Invalid community slug");
+      setLoading(false);
+    }
   }, [slug, session?.user?.id]);
 
   if (loading) {
@@ -64,7 +112,23 @@ function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return (
+      <div className="card bg-base-100 shadow-xl">
+        <div className="card-body">
+          <h2 className="card-title text-error">Error</h2>
+          <p>{error}</p>
+          <div className="card-actions justify-end mt-4">
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => (window.location.href = "/")}
+            >
+              Go Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!communityData.community) {
@@ -81,6 +145,23 @@ function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
   const handleJoinSuccess = () => {
     setShowJoinForm(false);
     setIsMember(true);
+  };
+
+  const getInviteLink = () => {
+    // Create the invite link to the about page
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/Newcompage/${slug}/about`;
+  };
+
+  const handleCopyInviteLink = async () => {
+    const inviteLink = getInviteLink();
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reset copied state after 2 seconds
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
   };
 
   return (
@@ -119,12 +200,44 @@ function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
             </p>
           </div>
 
+          {/* Display member and admin counts */}
+          <div className="flex items-center gap-3 mt-2">
+            <div className="badge badge-primary  py-3  text-sm rounded-md">
+              <div className="mr-2">
+                <Users size={16} />
+              </div>
+
+              <span>
+                {communityData.community?.members?.length || 0} members
+              </span>
+            </div>
+            <div className="badge badge-primary gap-2 py-3 px-4 text-sm rounded-md">
+              <span>
+                {communityData.community?.admin ? 1 : 0}
+                {communityData.community?.subAdmins?.length
+                  ? ` + ${communityData.community.subAdmins.length}`
+                  : ""}{" "}
+                admin
+                {(communityData.community?.subAdmins?.length || 0) > 0
+                  ? "s"
+                  : ""}
+              </span>
+            </div>
+          </div>
           {isMember ? (
-            <div className="card-actions mt-4">
-              <button type="button" className="btn btn-secondary">
+            <div className="card-actions mt-4 flex-col w-full gap-2">
+              <button type="button" className="btn btn-secondary w-full">
                 <Link href={`/Newcompage/${slug}/communitysetting`}>
                   Community Setting
                 </Link>
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary w-full flex items-center gap-2"
+                onClick={() => setShowInviteModal(true)}
+              >
+                <LinkIcon size={16} />
+                Invite Members
               </button>
             </div>
           ) : (
@@ -160,6 +273,64 @@ function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
               questions={communityData.community?.adminQuestions || []}
               onSuccess={handleJoinSuccess}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Invite Members Modal */}
+      {showInviteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-base-100 p-6 rounded-lg shadow-xl w-96">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Invite Members</h2>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setShowInviteModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="mb-4">
+              <p className="text-sm mb-2">
+                Share this link with people you want to invite to this
+                community:
+              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <div className="input-group w-full">
+                  <input
+                    type="text"
+                    value={getInviteLink()}
+                    readOnly
+                    className="input input-bordered w-full text-sm"
+                    aria-label="Invite link"
+                    placeholder="Invite link"
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-square btn-primary"
+                    onClick={handleCopyInviteLink}
+                    aria-label="Copy invite link"
+                  >
+                    {copied ? <Check size={18} /> : <Copy size={18} />}
+                  </button>
+                </div>
+              </div>
+              {copied && (
+                <p className="text-xs text-success mt-2">
+                  Link copied to clipboard!
+                </p>
+              )}
+            </div>
+            <div className="mt-4">
+              <button
+                type="button"
+                className="btn btn-primary w-full"
+                onClick={() => setShowInviteModal(false)}
+              >
+                Done
+              </button>
+            </div>
           </div>
         </div>
       )}

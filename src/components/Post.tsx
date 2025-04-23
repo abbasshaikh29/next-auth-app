@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
 import { Button } from "./ui/button";
 import {
   Heart,
   MessageCircle,
   Share2,
+  Smile,
   MoreVertical,
   Edit,
   Trash,
@@ -25,6 +26,8 @@ import Link from "next/link";
 import { FileText } from "lucide-react";
 import { useSession } from "next-auth/react";
 import mongoose from "mongoose";
+import { normalizeUrl, parseTextWithLinks } from "@/lib/url-utils";
+import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 
 interface Comment {
   _id: string;
@@ -62,10 +65,30 @@ export default function PostCard({
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showReplyEmojiPicker, setShowReplyEmojiPicker] = useState(false);
   const { data: session } = useSession();
+
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const replyEmojiPickerRef = useRef<HTMLDivElement>(null);
+  const commentTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const replyTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Ensure post.likes is always an array
   const likesArray = Array.isArray(post.likes) ? post.likes : [];
+
+  // Define fetchComments before using it in useEffect
+  const fetchComments = async () => {
+    try {
+      const response = await fetch(`/api/comments?postId=${post._id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setComments(data);
+      }
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -83,23 +106,81 @@ export default function PostCard({
         })
       );
     }
-  }, [likesArray, session?.user?.id]);
 
+    // Fetch comments when component mounts
+    fetchComments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [likesArray, session?.user?.id, post._id]);
+
+  // We don't need a separate useEffect for post._id changes anymore
+
+  // Close emoji pickers when clicking outside
   useEffect(() => {
-    if (showComments) {
-      fetchComments();
-    }
-  }, [showComments, post._id]);
-
-  const fetchComments = async () => {
-    try {
-      const response = await fetch(`/api/comments?postId=${post._id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setComments(data);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node)
+      ) {
+        setShowEmojiPicker(false);
       }
-    } catch (error) {
-      console.error("Error fetching comments:", error);
+
+      if (
+        replyEmojiPickerRef.current &&
+        !replyEmojiPickerRef.current.contains(event.target as Node)
+      ) {
+        setShowReplyEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Handle emoji selection for main comment
+  const handleEmojiClick = (emojiData: EmojiClickData) => {
+    const emoji = emojiData.emoji;
+    const textarea = commentTextareaRef.current;
+
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newText =
+        newComment.substring(0, start) + emoji + newComment.substring(end);
+      setNewComment(newText);
+
+      // Set cursor position after the inserted emoji
+      setTimeout(() => {
+        textarea.selectionStart = start + emoji.length;
+        textarea.selectionEnd = start + emoji.length;
+        textarea.focus();
+      }, 0);
+    } else {
+      setNewComment(newComment + emoji);
+    }
+  };
+
+  // Handle emoji selection for reply
+  const handleReplyEmojiClick = (emojiData: EmojiClickData) => {
+    const emoji = emojiData.emoji;
+    const textarea = replyTextareaRef.current;
+
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newText =
+        newComment.substring(0, start) + emoji + newComment.substring(end);
+      setNewComment(newText);
+
+      // Set cursor position after the inserted emoji
+      setTimeout(() => {
+        textarea.selectionStart = start + emoji.length;
+        textarea.selectionEnd = start + emoji.length;
+        textarea.focus();
+      }, 0);
+    } else {
+      setNewComment(newComment + emoji);
     }
   };
 
@@ -120,13 +201,58 @@ export default function PostCard({
       });
 
       if (response.ok) {
-        const newCommentData = await response.json();
-        setComments([newCommentData, ...comments]);
+        // Refresh all comments to ensure we have the latest data
+        fetchComments();
         setNewComment("");
         setReplyingTo(null);
+        setShowEmojiPicker(false);
+        setShowReplyEmojiPicker(false);
       }
     } catch (error) {
       console.error("Error adding comment:", error);
+    }
+  };
+
+  const handleLikePost = async () => {
+    if (!session?.user?.id) return;
+
+    try {
+      // Toggle the like state immediately for better UX
+      const newLikedState = !isLiked;
+      setIsLiked(newLikedState);
+
+      // Update likes array locally for immediate feedback
+      const userId = new mongoose.Types.ObjectId(session.user.id);
+      const updatedLikes = newLikedState
+        ? [...likesArray, userId]
+        : likesArray.filter((id) => id.toString() !== userId.toString());
+
+      // Call the parent component's onLike function to update the state
+      onLike(newLikedState);
+
+      // Send the request to the server
+      const response = await fetch("/api/posts/like", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          postId: post._id,
+          action: newLikedState ? "like" : "unlike",
+        }),
+      });
+
+      if (!response.ok) {
+        // If the request fails, revert the like state
+        setIsLiked(!newLikedState);
+        onLike(!newLikedState);
+        console.error("Failed to update like status");
+      }
+    } catch (error) {
+      console.error("Error liking post:", error);
+      // Revert the like state on error
+      setIsLiked(!isLiked);
+      onLike(!isLiked);
     }
   };
 
@@ -146,12 +272,8 @@ export default function PostCard({
       });
 
       if (response.ok) {
-        const updatedComment = await response.json();
-        setComments(
-          comments.map((comment) =>
-            comment._id === commentId ? updatedComment : comment
-          )
-        );
+        // Refresh all comments to ensure we have the latest data
+        fetchComments();
       }
     } catch (error) {
       console.error("Error liking comment:", error);
@@ -223,7 +345,28 @@ export default function PostCard({
                   (item: { type: string; content: string }, index: number) => (
                     <div key={index}>
                       {item?.type === "text" && (
-                        <p className=" leading-relaxed">{item.content}</p>
+                        <p className="leading-relaxed">
+                          {item.content
+                            .split(/(https?:\/\/[^\s]+|www\.[^\s]+)/g)
+                            .map((part, i) => {
+                              if (part.match(/^(https?:\/\/|www\.)/)) {
+                                const url = normalizeUrl(part);
+                                return (
+                                  <a
+                                    key={i}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-500 hover:underline"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {part}
+                                  </a>
+                                );
+                              }
+                              return part;
+                            })}
+                        </p>
                       )}
                       {item?.type === "link" &&
                         (item.content.startsWith("http") ? (
@@ -282,10 +425,7 @@ export default function PostCard({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => {
-                onLike(!isLiked);
-                setIsLiked(!isLiked);
-              }}
+              onClick={() => handleLikePost()}
               className={`flex items-center gap-2 ${
                 isLiked ? "text-red-500" : ""
               }`}
@@ -304,7 +444,7 @@ export default function PostCard({
               className="flex items-center gap-2"
             >
               <MessageCircle className="h-4 w-4" />
-              <span>{comments.length} Comments</span>
+              <span>{comments.length || 0} Comments</span>
             </Button>
           </div>
         </CardFooter>
@@ -354,7 +494,27 @@ export default function PostCard({
               (item: { type: string; content: string }, index: number) => (
                 <div key={index}>
                   {item.type === "text" && (
-                    <p className="text-gray-600">{item.content}</p>
+                    <p className="text-gray-600">
+                      {item.content
+                        .split(/(https?:\/\/[^\s]+|www\.[^\s]+)/g)
+                        .map((part, i) => {
+                          if (part.match(/^(https?:\/\/|www\.)/)) {
+                            const url = normalizeUrl(part);
+                            return (
+                              <a
+                                key={i}
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 hover:underline"
+                              >
+                                {part}
+                              </a>
+                            );
+                          }
+                          return part;
+                        })}
+                    </p>
                   )}
                   {item.type === "link" && (
                     <a
@@ -397,10 +557,7 @@ export default function PostCard({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => {
-                  onLike(!isLiked);
-                  setIsLiked(!isLiked);
-                }}
+                onClick={() => handleLikePost()}
                 className={`flex items-center gap-2 ${
                   isLiked ? "text-red-500" : ""
                 }`}
@@ -419,7 +576,7 @@ export default function PostCard({
                 className="flex items-center gap-2"
               >
                 <MessageCircle className="h-4 w-4" />
-                <span>{comments.length} Comments</span>
+                <span>{comments.length || 0} Comments</span>
               </Button>
             </div>
 
@@ -439,7 +596,27 @@ export default function PostCard({
                           {formatRelativeTime(comment.createdAt)}
                         </span>
                       </div>
-                      <p className="text-sm">{comment.text}</p>
+                      <p className="text-sm">
+                        {comment.text
+                          .split(/(https?:\/\/[^\s]+|www\.[^\s]+)/g)
+                          .map((part, i) => {
+                            if (part.match(/^(https?:\/\/|www\.)/)) {
+                              const url = normalizeUrl(part);
+                              return (
+                                <a
+                                  key={i}
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-500 hover:underline"
+                                >
+                                  {part}
+                                </a>
+                              );
+                            }
+                            return part;
+                          })}
+                      </p>
                       <div className="flex items-center gap-4 mt-2">
                         <Button
                           variant="ghost"
@@ -498,29 +675,86 @@ export default function PostCard({
                       </div>
                       {replyingTo === comment._id && (
                         <div className="mt-2">
-                          <Textarea
-                            placeholder="Write a reply..."
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                            className="flex-1 bg-white"
-                          />
-                          <Button onClick={handleAddComment} className="mt-2">
-                            Send Reply
-                          </Button>
+                          <div className="relative">
+                            <Textarea
+                              ref={replyTextareaRef}
+                              placeholder="Write a reply..."
+                              value={newComment}
+                              onChange={(e) => setNewComment(e.target.value)}
+                              className="flex-1 bg-white"
+                            />
+                            {showReplyEmojiPicker && (
+                              <div
+                                className="absolute z-10 bottom-0 right-0 mb-16"
+                                ref={replyEmojiPickerRef}
+                              >
+                                <EmojiPicker
+                                  onEmojiClick={handleReplyEmojiClick}
+                                  width={280}
+                                  height={350}
+                                  previewConfig={{ showPreview: false }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex gap-2 mt-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                setShowReplyEmojiPicker(!showReplyEmojiPicker)
+                              }
+                              title="Add emoji"
+                              className="flex items-center gap-1"
+                            >
+                              <Smile className="h-4 w-4" />
+                              <span>Emoji</span>
+                            </Button>
+                            <Button onClick={handleAddComment}>
+                              Send Reply
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>
                   </div>
                 ))}
 
-                <div className="flex gap-2">
-                  <Textarea
-                    placeholder="Write a comment..."
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    className="flex-1 bg-white"
-                  />
-                  <Button onClick={handleAddComment}>Send</Button>
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Textarea
+                      ref={commentTextareaRef}
+                      placeholder="Write a comment..."
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      className="flex-1 bg-white"
+                    />
+                    {showEmojiPicker && (
+                      <div
+                        className="absolute z-10 bottom-0 right-0 mb-16"
+                        ref={emojiPickerRef}
+                      >
+                        <EmojiPicker
+                          onEmojiClick={handleEmojiClick}
+                          width={280}
+                          height={350}
+                          previewConfig={{ showPreview: false }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      title="Add emoji"
+                      className="flex items-center gap-1"
+                    >
+                      <Smile className="h-4 w-4" />
+                      <span>Emoji</span>
+                    </Button>
+                    <Button onClick={handleAddComment}>Send</Button>
+                  </div>
                 </div>
               </div>
             )}

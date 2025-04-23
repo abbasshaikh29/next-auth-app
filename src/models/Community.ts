@@ -55,17 +55,10 @@ function generateSlug(name: string): string {
 
 // Pre-save hook to automatically generate slug for new documents
 communitySchema.pre("save", async function (next) {
-  console.log("Pre-save hook triggered");
-  console.log("Document is new:", this.isNew);
-  console.log("Document name:", this.name);
-  console.log("Document slug:", this.slug);
-  console.log("Is name modified:", this.isModified("name"));
-
   // For new documents or when name is modified, generate a slug
   if (this.isNew || this.isModified("name")) {
     const oldSlug = this.slug;
     this.slug = generateSlug(this.name);
-    console.log("Slug updated from", oldSlug, "to", this.slug);
   }
 
   next();

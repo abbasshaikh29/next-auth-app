@@ -24,6 +24,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^16.4.7",
+    "emoji-picker-react": "^4.12.2",
     "express": "^4.21.2",
     "googleapis": "^146.0.0",
     "imagekit": "^6.0.0",

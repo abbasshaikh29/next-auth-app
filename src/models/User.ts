@@ -74,15 +74,8 @@ userSchema.pre("save", async function (next) {
 
 userSchema.pre("save", async function (next) {
   if (this.isModified("password") && this.password) {
-    console.log(
-      "Password modified - current value:",
-      this.password?.substring(0, 6)
-    );
     if (!this.password.startsWith("$2b$")) {
-      console.log("Hashing raw password");
       this.password = await bcrypt.hash(this.password, 10);
-    } else {
-      console.log("Password already hashed - skipping rehash");
     }
   }
   next();
