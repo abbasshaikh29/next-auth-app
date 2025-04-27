@@ -7,6 +7,15 @@ import { generateVerificationToken } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if we're in the build phase
+    if (process.env.NEXT_PHASE === "phase-production-build") {
+      console.log("Build phase detected - skipping database operations");
+      return NextResponse.json(
+        { message: "Build phase - operation skipped" },
+        { status: 200 }
+      );
+    }
+
     const { email, password, username } = await request.json();
     if (!email || !password || !username) {
       return NextResponse.json(
@@ -14,7 +23,25 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    await dbconnect();
+
+    // Check if MongoDB URI is available
+    if (!process.env.MONGODB_URI) {
+      return NextResponse.json(
+        { error: "Database connection not available" },
+        { status: 503 }
+      );
+    }
+
+    try {
+      await dbconnect();
+    } catch (dbError) {
+      console.error("Database connection error:", dbError);
+      return NextResponse.json(
+        { error: "Failed to connect to database" },
+        { status: 503 }
+      );
+    }
+
     const existinguser = await User.findOne({ email });
     if (existinguser) {
       return NextResponse.json(
