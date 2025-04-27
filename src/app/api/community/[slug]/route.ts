@@ -10,7 +10,10 @@ interface CommunityType {
   slug: string;
   bannerImageurl?: string;
   iconImageUrl?: string;
-  // Add other fields as needed
+  members: string[];
+  admin: string;
+  subAdmins?: string[];
+  adminQuestions?: string[];
 }
 
 // In Next.js 15, the params object is a Promise
@@ -64,6 +67,10 @@ export async function GET(
           description: communityDoc.description,
           bannerImageurl: communityDoc.bannerImageurl,
           iconImageUrl: communityDoc.iconImageUrl,
+          members: communityDoc.members || [],
+          admin: communityDoc.admin || "",
+          subAdmins: communityDoc.subAdmins || [],
+          adminQuestions: communityDoc.adminQuestions || [],
         }
       : null;
 
@@ -88,6 +95,9 @@ export async function GET(
       id: community._id,
       name: community.name,
       iconImageUrl: community.iconImageUrl || "<empty>",
+      membersCount: community.members?.length || 0,
+      hasMembers: !!community.members,
+      firstFewMembers: community.members?.slice(0, 3) || [],
     });
 
     // Validate the icon URL

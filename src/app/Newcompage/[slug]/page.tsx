@@ -69,11 +69,22 @@ export default function HomeIdPage() {
         }
         const communityData = await communityResponse.json();
         setCommunity(communityData);
-        setIsMember(
-          communityData.members?.includes(session?.user?.id) || false
-        );
 
-        if (isMember) {
+        // Debug membership check
+        console.log("Community data:", {
+          communityId: communityData._id,
+          name: communityData.name,
+          hasMembers: !!communityData.members,
+          membersLength: communityData.members?.length || 0,
+          userId: session?.user?.id,
+          isMember: communityData.members?.includes(session?.user?.id) || false,
+        });
+
+        const membershipStatus =
+          communityData.members?.includes(session?.user?.id) || false;
+        setIsMember(membershipStatus);
+
+        if (membershipStatus) {
           await fetchPosts();
         }
       } catch (err: unknown) {
