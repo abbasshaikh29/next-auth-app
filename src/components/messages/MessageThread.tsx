@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useNotification } from "../Notification";
-import { ArrowLeft, Send, Image, Loader2, Smile } from "lucide-react";
+import { ArrowLeft, Send, ImageIcon, Loader2, Smile } from "lucide-react";
 import { formatRelativeTime } from "@/lib/date-utils";
 import { IKUpload } from "imagekitio-next";
 import { IKUploadResponse } from "imagekitio-next/dist/types/components/IKUpload/props";
@@ -348,10 +348,10 @@ export default function MessageThread({
                 <img
                   src={user.profileImage}
                   alt={user.username}
-                  className="object-cover"
+                  className="object-cover w-full h-full rounded-full chat-avatar-img"
                 />
               ) : (
-                <div className="bg-primary text-primary-content flex items-center justify-center">
+                <div className="bg-primary text-primary-content flex items-center justify-center w-full h-full rounded-full">
                   {user?.username?.charAt(0).toUpperCase() || "?"}
                 </div>
               )}
@@ -361,11 +361,7 @@ export default function MessageThread({
         </div>
       </div>
 
-      <div
-        className={`flex-1 overflow-y-auto p-3 ${
-          isModal ? "max-h-[450px] sm:max-h-[450px]" : "max-h-[300px]"
-        }`}
-      >
+      <div className="flex-1 p-3">
         {loading ? (
           <div className="flex justify-center items-center h-full">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -398,10 +394,10 @@ export default function MessageThread({
                           <img
                             src={message.senderId.profileImage}
                             alt={message.senderId.username}
-                            className="object-cover"
+                            className="object-cover w-full h-full rounded-full chat-avatar-img"
                           />
                         ) : (
-                          <div className="bg-primary text-primary-content flex items-center justify-center">
+                          <div className="bg-primary text-primary-content flex items-center justify-center w-full h-full rounded-full">
                             {message.senderId.username.charAt(0).toUpperCase()}
                           </div>
                         )}
@@ -506,7 +502,7 @@ export default function MessageThread({
             {uploading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <Image size={18} />
+              <ImageIcon size={18} aria-hidden="true" />
             )}
           </button>
 
@@ -517,7 +513,7 @@ export default function MessageThread({
             title="Add emoji"
             aria-label="Add emoji"
           >
-            <Smile size={18} />
+            <Smile size={18} aria-hidden="true" />
           </button>
 
           <input
@@ -554,7 +550,7 @@ export default function MessageThread({
             {sending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <Send size={16} />
+              <Send size={16} aria-hidden="true" />
             )}
           </button>
         </div>

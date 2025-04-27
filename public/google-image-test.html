@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Image Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .test-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    
+    .test-row {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+    
+    .test-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .avatar {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+    
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .avatar-bg {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background-size: cover;
+      background-position: center;
+    }
+    
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 20px;
+    }
+    
+    button {
+      padding: 8px 16px;
+      background-color: #4285F4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    button:hover {
+      background-color: #3367D6;
+    }
+    
+    .success {
+      color: green;
+    }
+    
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Google Profile Image Test</h1>
+  
+  <div>
+    <label for="imageUrl">Google Profile Image URL:</label>
+    <input type="text" id="imageUrl" placeholder="Enter Google profile image URL" value="https://lh3.googleusercontent.com/a/ACg8ocLvbdSzu-bibdcM2AnJgreZfcE0a3jgnVbfK2B9wY8YnL1W9tLF=s96-c">
+    <button onclick="testImage()">Test Image</button>
+  </div>
+  
+  <div class="test-container">
+    <h2>Test Results</h2>
+    
+    <div class="test-row">
+      <div class="test-item">
+        <h3>Regular IMG Tag</h3>
+        <div class="avatar" id="regular-img">
+          <img src="" alt="Google profile">
+        </div>
+        <div id="regular-result"></div>
+      </div>
+      
+      <div class="test-item">
+        <h3>IMG with no-referrer</h3>
+        <div class="avatar" id="no-referrer-img">
+          <img src="" alt="Google profile" referrerpolicy="no-referrer">
+        </div>
+        <div id="no-referrer-result"></div>
+      </div>
+      
+      <div class="test-item">
+        <h3>IMG with crossOrigin</h3>
+        <div class="avatar" id="cross-origin-img">
+          <img src="" alt="Google profile" crossorigin="anonymous">
+        </div>
+        <div id="cross-origin-result"></div>
+      </div>
+      
+      <div class="test-item">
+        <h3>Background Image</h3>
+        <div class="avatar-bg" id="bg-img"></div>
+        <div id="bg-result"></div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    function testImage() {
+      const imageUrl = document.getElementById('imageUrl').value;
+      if (!imageUrl) {
+        alert('Please enter a Google profile image URL');
+        return;
+      }
+      
+      // Regular IMG
+      const regularImg = document.querySelector('#regular-img img');
+      regularImg.src = imageUrl;
+      regularImg.onload = () => {
+        document.getElementById('regular-result').innerHTML = '<span class="success">Success!</span>';
+      };
+      regularImg.onerror = () => {
+        document.getElementById('regular-result').innerHTML = '<span class="error">Failed to load</span>';
+      };
+      
+      // No-referrer IMG
+      const noReferrerImg = document.querySelector('#no-referrer-img img');
+      noReferrerImg.src = imageUrl;
+      noReferrerImg.onload = () => {
+        document.getElementById('no-referrer-result').innerHTML = '<span class="success">Success!</span>';
+      };
+      noReferrerImg.onerror = () => {
+        document.getElementById('no-referrer-result').innerHTML = '<span class="error">Failed to load</span>';
+      };
+      
+      // Cross-origin IMG
+      const crossOriginImg = document.querySelector('#cross-origin-img img');
+      crossOriginImg.src = imageUrl;
+      crossOriginImg.onload = () => {
+        document.getElementById('cross-origin-result').innerHTML = '<span class="success">Success!</span>';
+      };
+      crossOriginImg.onerror = () => {
+        document.getElementById('cross-origin-result').innerHTML = '<span class="error">Failed to load</span>';
+      };
+      
+      // Background Image
+      const bgImg = document.getElementById('bg-img');
+      bgImg.style.backgroundImage = `url(${imageUrl})`;
+      
+      // We can't easily detect if a background image loaded successfully
+      // So we'll use a timeout to check if the computed style has a background image
+      setTimeout(() => {
+        const computedStyle = window.getComputedStyle(bgImg);
+        if (computedStyle.backgroundImage !== 'none' && computedStyle.backgroundImage.includes('url')) {
+          document.getElementById('bg-result').innerHTML = '<span class="success">Appears to have loaded</span>';
+        } else {
+          document.getElementById('bg-result').innerHTML = '<span class="error">May have failed</span>';
+        }
+      }, 1000);
+    }
+    
+    // Run the test on page load
+    window.onload = testImage;
+  </script>
+</body>
+</html>

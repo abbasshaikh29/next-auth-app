@@ -21,9 +21,9 @@ export async function GET(
     await dbconnect();
 
     // Find the community with a fresh query
-    const community = await Community.findOne({ slug }).lean();
+    const communityDoc = await Community.findOne({ slug });
 
-    if (!community) {
+    if (!communityDoc) {
       console.log("Validate-icon API: Community not found for slug:", slug);
       return NextResponse.json(
         { error: "Community not found" },
@@ -31,8 +31,11 @@ export async function GET(
       );
     }
 
+    // Convert to plain object for safe access
+    const community = communityDoc.toObject();
+
     console.log("Validate-icon API: Community found:", {
-      id: community._id,
+      id: community._id.toString(),
       name: community.name,
       iconImageUrl: community.iconImageUrl || "<empty>",
     });

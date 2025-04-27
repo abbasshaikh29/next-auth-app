@@ -62,6 +62,8 @@ export default function NewMessage({
           type="button"
           onClick={onBack}
           className="btn btn-ghost btn-sm btn-circle mr-2"
+          title="Go back"
+          aria-label="Go back"
         >
           <ArrowLeft size={18} />
         </button>
@@ -84,7 +86,7 @@ export default function NewMessage({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto max-h-[300px]">
+      <div className="flex-1">
         {loading ? (
           <div className="flex justify-center items-center p-8">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -107,10 +109,10 @@ export default function NewMessage({
                       <img
                         src={user.profileImage}
                         alt={user.username}
-                        className="object-cover"
+                        className="object-cover w-full h-full rounded-full"
                       />
                     ) : (
-                      <div className="bg-primary text-primary-content flex items-center justify-center">
+                      <div className="bg-primary text-primary-content flex items-center justify-center w-full h-full rounded-full">
                         {user.username.charAt(0).toUpperCase()}
                       </div>
                     )}

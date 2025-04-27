@@ -8,6 +8,7 @@ import { useNotification } from "@/components/Notification";
 import { useSession, signOut } from "next-auth/react";
 import CommunityIcon from "./CommunityIcon";
 import MessageIcon from "../messages/MessageIcon";
+import ProfileAvatar from "../ProfileAvatar";
 interface Community {
   _id: string;
   name: string;
@@ -157,7 +158,7 @@ function CommunityNav() {
 
       // Preload the image
       if (finalIconUrl) {
-        const img = new Image();
+        const img = new window.Image();
         img.src = finalIconUrl;
       }
     } catch (error) {
@@ -183,7 +184,7 @@ function CommunityNav() {
   const preloadCommunityIcons = (communities: Community[]) => {
     communities.forEach((community) => {
       if (community.iconImageUrl && community.iconImageUrl.trim() !== "") {
-        const img = new Image();
+        const img = new window.Image();
         img.src = community.iconImageUrl;
       }
     });
@@ -267,7 +268,7 @@ function CommunityNav() {
                 </div>
                 <ul
                   tabIndex={0}
-                  className="dropdown-content z-[1] text-lg menu p-2 shadow-lg bg-base-100 rounded-box w-72 max-h-96 overflow-y-auto border border-base-300"
+                  className="dropdown-content z-[1] text-lg menu p-2 shadow-lg bg-base-100 rounded-box w-72 border border-base-300"
                 >
                   <li className="mt-2">
                     <Link
@@ -340,14 +341,13 @@ function CommunityNav() {
                   title="User menu"
                   className="btn btn-ghost btn-circle avatar"
                 >
-                  {session?.user?.profileImage ? (
-                    <div className="w-10 h-10 rounded-full overflow-hidden">
-                      <img
-                        src={session.user.profileImage}
-                        alt="User profile"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+                  {session?.user ? (
+                    <ProfileAvatar
+                      imageUrl={session.user.profileImage}
+                      name={session.user.name}
+                      email={session.user.email}
+                      size="md"
+                    />
                   ) : (
                     <div className="w-6 h-6 rounded-full">
                       <User className="w-6 h-6" />

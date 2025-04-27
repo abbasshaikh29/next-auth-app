@@ -96,13 +96,14 @@ export function CreatePost({
   const handleSubmit = async () => {
     if (!title.trim()) return;
 
-    const finalContents = [...contents];
+    const finalContents: PostContent[] = [...contents];
 
     // Add current text input if it exists
     if (currentInput.trim()) {
       // Parse text for URLs and convert them to clickable links
       const parsedContent = parseTextWithLinks(currentInput);
-      finalContents.push(...parsedContent);
+      // Type assertion to ensure compatibility
+      finalContents.push(...(parsedContent as PostContent[]));
     }
 
     try {
@@ -139,8 +140,11 @@ export function CreatePost({
   };
 
   return (
-    <div className="card bg-primary shadow-md w-full p-3 sm:p-4">
-      <h2 className="text-sm sm:text-base font-semibold mb-2 sm:mb-4">
+    <div className="bg-amber-50/70 rounded-xl shadow-lg w-full p-4 sm:p-6 border border-amber-200/50 hover:shadow-xl transition-shadow duration-300">
+      <h2 className="text-sm sm:text-lg font-semibold mb-3 sm:mb-4 text-amber-800 flex items-center">
+        <span className="bg-gradient-to-r from-amber-400 to-amber-600 text-white p-1 rounded-md mr-2 text-xs">
+          ✏️
+        </span>
         Create a Post
       </h2>
       <div className="space-y-2 sm:space-y-4">
@@ -148,7 +152,7 @@ export function CreatePost({
           type="text"
           placeholder="Post title"
           value={title}
-          className="input input-bordered input-sm sm:input-md w-full bg-white text-sm sm:text-base"
+          className="w-full px-4 py-2 text-sm sm:text-base bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400 transition-all duration-200 placeholder-amber-300"
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setTitle(e.target.value)
           }
@@ -184,7 +188,7 @@ export function CreatePost({
         {contents.map((content, index) => (
           <div
             key={index}
-            className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2 bg-gray-50 rounded text-xs sm:text-sm"
+            className="flex items-center gap-1 sm:gap-2 p-2 sm:p-3 bg-white rounded-lg border border-amber-200 text-xs sm:text-sm shadow-sm"
           >
             {content.type === "image" ? (
               <div className="relative w-full">
@@ -209,7 +213,7 @@ export function CreatePost({
             )}
             <button
               type="button"
-              className="btn btn-ghost btn-xs sm:btn-sm"
+              className="p-1 rounded-full hover:bg-amber-100 text-amber-400 hover:text-amber-600 transition-colors duration-200"
               onClick={() => handleRemoveContent(index)}
               title="Remove content"
               aria-label="Remove content"
@@ -225,7 +229,7 @@ export function CreatePost({
               ref={textareaRef}
               placeholder="What's on your mind?"
               value={currentInput}
-              className="textarea textarea-bordered textarea-sm sm:textarea-md w-full bg-white text-xs sm:text-sm"
+              className="w-full px-4 py-3 text-xs sm:text-sm bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400 transition-all duration-200 resize-none placeholder-amber-300"
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                 setCurrentInput(e.target.value)
               }
@@ -245,29 +249,43 @@ export function CreatePost({
               </div>
             )}
           </div>
-          <div className="flex flex-wrap gap-1 sm:gap-2">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <button
               type="button"
-              className="btn btn-outline btn-xs sm:btn-sm flex items-center"
+              className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-full text-xs sm:text-sm flex items-center gap-1.5 transition-colors duration-200 border border-amber-200"
               onClick={() => imageInputRef.current?.click()}
             >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-3.5 w-3.5 sm:h-4 sm:w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+              </svg>
               <span className="hidden xs:inline">Add Image</span>
               <span className="xs:hidden">Image</span>
             </button>
             <button
               type="button"
-              className="btn btn-outline btn-xs sm:btn-sm flex items-center"
+              className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-full text-xs sm:text-sm flex items-center gap-1.5 transition-colors duration-200 border border-amber-200"
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
               title="Add emoji"
               aria-label="Add emoji"
             >
-              <Smile className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <Smile className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden xs:inline">Add Emoji</span>
               <span className="xs:hidden">Emoji</span>
             </button>
             <button
               type="button"
-              className="btn btn-outline btn-xs sm:btn-sm flex items-center"
+              className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-full text-xs sm:text-sm flex items-center gap-1.5 transition-colors duration-200 border border-amber-200"
               onClick={() => {
                 if (currentInput.trim()) {
                   setContents([
@@ -278,16 +296,16 @@ export function CreatePost({
                 }
               }}
             >
-              <Link className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <Link className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden xs:inline">Add Link</span>
               <span className="xs:hidden">Link</span>
             </button>
             <button
               type="button"
-              className="btn btn-outline btn-xs sm:btn-sm flex items-center"
+              className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-full text-xs sm:text-sm flex items-center gap-1.5 transition-colors duration-200 border border-amber-200"
               onClick={() => fileInputRef.current?.click()}
             >
-              <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden xs:inline">Add File</span>
               <span className="xs:hidden">File</span>
             </button>
@@ -297,7 +315,7 @@ export function CreatePost({
         <button
           type="button"
           onClick={handleSubmit}
-          className="btn btn-xs sm:btn-sm btn-outline w-full bg-base-300 text-xs sm:text-sm"
+          className="w-full py-2 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg text-xs sm:text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 mt-2"
           disabled={!title.trim() && contents.length === 0}
         >
           Post

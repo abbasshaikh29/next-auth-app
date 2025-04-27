@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { addCacheBusting, preloadImage } from "@/utils/crossBrowserImageUtils";
 
 interface CommunityIconProps {
   iconUrl?: string;
@@ -20,82 +21,13 @@ const CommunityIcon: React.FC<CommunityIconProps> = ({
 }) => {
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const imgRef = useRef<HTMLImageElement>(null);
 
-  // Reset error state if iconUrl changes
+  // Preload the image - moved to top to follow React Hooks rules
   useEffect(() => {
-    setImageError(false);
-    setIsLoading(true);
-    console.log("CommunityIcon: iconUrl changed:", iconUrl);
-
-    // Attempt to preload the image
-    if (iconUrl && iconUrl.trim() !== "") {
-      const img = new Image();
-      // Add cache-busting parameter to force a fresh load
-      const cacheBustUrl = iconUrl.includes("?")
-        ? `${iconUrl}&t=${Date.now()}`
-        : `${iconUrl}?t=${Date.now()}`;
-      img.src = cacheBustUrl;
-      img.onload = () => {
-        console.log(
-          "CommunityIcon: Image preloaded successfully:",
-          cacheBustUrl
-        );
-        setIsLoading(false);
-      };
-      img.onerror = (e) => {
-        console.error("CommunityIcon: Image preload error:", cacheBustUrl, e);
-        // Don't set error state yet, the actual img tag will try again
-      };
+    if (iconUrl) {
+      preloadImage(iconUrl);
     }
   }, [iconUrl]);
-
-  // Check if image is already cached
-  useEffect(() => {
-    if (iconUrl && iconUrl.trim() !== "" && imgRef.current) {
-      if (imgRef.current.complete) {
-        setIsLoading(false);
-      }
-    }
-  }, [iconUrl]);
-
-  // Preload image with priority
-  useEffect(() => {
-    if (iconUrl && iconUrl.trim() !== "" && priority) {
-      const img = new Image();
-      // Add cache-busting parameter for priority loads
-      const cacheBustUrl = iconUrl.includes("?")
-        ? `${iconUrl}&t=${Date.now()}`
-        : `${iconUrl}?t=${Date.now()}`;
-      img.src = cacheBustUrl;
-      img.onload = () => {
-        console.log(
-          "CommunityIcon: Priority image loaded successfully:",
-          cacheBustUrl
-        );
-        setIsLoading(false);
-      };
-      img.onerror = (e) => {
-        console.error(
-          "CommunityIcon: Priority image load error:",
-          cacheBustUrl,
-          e
-        );
-        // Try one more time without cache busting
-        const retryImg = new Image();
-        retryImg.src = iconUrl;
-        retryImg.onload = () => {
-          console.log("CommunityIcon: Retry successful:", iconUrl);
-          setIsLoading(false);
-        };
-        retryImg.onerror = () => {
-          console.error("CommunityIcon: Retry failed:", iconUrl);
-          setImageError(true);
-          setIsLoading(false);
-        };
-      };
-    }
-  }, [iconUrl, priority]);
 
   // Size classes
   const sizeClasses = {
@@ -118,77 +50,20 @@ const CommunityIcon: React.FC<CommunityIconProps> = ({
   const shadowClasses =
     "shadow-sm hover:shadow-md transition-shadow duration-200";
 
-  // If we have a valid icon URL and no error loading it
-  if (iconUrl && iconUrl.trim() !== "" && !imageError) {
-    // Try to validate the URL format
-    let isValidUrl = false;
-    try {
-      new URL(iconUrl); // This will throw if the URL is invalid
-      isValidUrl = true;
-    } catch (e) {
-      console.error("CommunityIcon: Invalid URL format:", iconUrl, e);
-      // Don't set imageError here, still try to load it
-    }
+  // Handle image load
+  const handleImageLoad = () => {
+    setIsLoading(false);
+  };
 
-    return (
-      <div
-        className={`${sizeClasses[size]} rounded-md overflow-hidden ${borderClasses} ${shadowClasses} flex-shrink-0 ${className}`}
-        title={name}
-      >
-        {isLoading && (
-          <div className="w-full h-full flex items-center justify-center bg-base-200">
-            <Loader2 className="w-4 h-4 animate-spin text-primary" />
-          </div>
-        )}
-        <img
-          ref={imgRef}
-          src={iconUrl}
-          alt={`${name} icon`}
-          className={`w-full h-full object-cover ${isLoading ? "hidden" : ""}`}
-          loading={priority ? "eager" : "lazy"}
-          decoding={priority ? "sync" : "async"}
-          onError={(e) => {
-            console.error("CommunityIcon: Image load error:", iconUrl, e);
-            // Try with a cache-busting parameter if it's a valid URL
-            if (isValidUrl) {
-              console.log(
-                "CommunityIcon: Retrying with cache-busting parameter"
-              );
-              const imgElement = e.target as HTMLImageElement;
-              // Always add a fresh timestamp, even if URL already has parameters
-              const cacheBustUrl = iconUrl.includes("?")
-                ? `${iconUrl}&t=${Date.now()}`
-                : `${iconUrl}?t=${Date.now()}`;
-              imgElement.src = cacheBustUrl;
+  // Handle image error
+  const handleImageError = () => {
+    console.error("Failed to load community icon:", iconUrl);
+    setImageError(true);
+    setIsLoading(false);
+  };
 
-              // Set a timeout to handle the case where the retry also fails
-              setTimeout(() => {
-                if (imgRef.current && !imgRef.current.complete) {
-                  console.error(
-                    "CommunityIcon: Retry timed out:",
-                    cacheBustUrl
-                  );
-                  setImageError(true);
-                  setIsLoading(false);
-                }
-              }, 5000); // 5 second timeout
-
-              return; // Don't set error state yet, give it another chance
-            }
-            setImageError(true);
-            setIsLoading(false);
-          }}
-          onLoad={() => {
-            console.log("CommunityIcon: Image loaded successfully:", iconUrl);
-            setIsLoading(false);
-          }}
-        />
-      </div>
-    );
-  }
-
-  // Fallback to first letter of community name
-  return (
+  // Fallback component
+  const renderFallback = () => (
     <div
       className={`${sizeClasses[size]} rounded-md overflow-hidden ${borderClasses} ${shadowClasses} flex-shrink-0 bg-primary/20 flex items-center justify-center ${className}`}
       title={name}
@@ -196,6 +71,35 @@ const CommunityIcon: React.FC<CommunityIconProps> = ({
       <span className={`${fontSizeClasses[size]} font-bold text-primary`}>
         {name ? name.charAt(0).toUpperCase() : "C"}
       </span>
+    </div>
+  );
+
+  // If we don't have a valid icon URL, show fallback
+  if (!iconUrl || iconUrl.trim() === "" || imageError) {
+    return renderFallback();
+  }
+
+  // Use utility function to add cache busting
+  const processedSrc = addCacheBusting(iconUrl);
+
+  return (
+    <div
+      className={`${sizeClasses[size]} rounded-md overflow-hidden ${borderClasses} ${shadowClasses} flex-shrink-0 ${className}`}
+      title={name}
+    >
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-50 z-10">
+          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+        </div>
+      )}
+      <img
+        src={processedSrc}
+        alt={`${name} icon`}
+        className="w-full h-full object-cover"
+        loading={priority ? "eager" : "lazy"}
+        onLoad={handleImageLoad}
+        onError={handleImageError}
+      />
     </div>
   );
 };

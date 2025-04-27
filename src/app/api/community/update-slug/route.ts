@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { communityId, newName } = await request.json();
-    
+
     if (!communityId || !newName) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -47,18 +47,29 @@ export async function POST(request: NextRequest) {
     // Generate new slug
     const oldSlug = community.slug;
     const newSlug = generateSlug(newName);
-    
+
     console.log("Old slug:", oldSlug);
     console.log("New slug:", newSlug);
 
     // Update the community with the new name and slug
-    // Use updateOne with raw MongoDB driver for more direct control
-    const result = await mongoose.connection.db
-      .collection("communities")
-      .updateOne(
-        { _id: new mongoose.Types.ObjectId(communityId) },
+    let result;
+
+    // Check if mongoose connection is available
+    if (mongoose.connection && mongoose.connection.db) {
+      // Use updateOne with raw MongoDB driver for more direct control
+      result = await mongoose.connection.db
+        .collection("communities")
+        .updateOne(
+          { _id: new mongoose.Types.ObjectId(communityId) },
+          { $set: { name: newName, slug: newSlug } }
+        );
+    } else {
+      // Fallback to using Mongoose model
+      result = await Community.updateOne(
+        { _id: communityId },
         { $set: { name: newName, slug: newSlug } }
       );
+    }
 
     console.log("Update result:", result);
 
@@ -77,7 +88,7 @@ export async function POST(request: NextRequest) {
       success: true,
       oldSlug,
       newSlug,
-      community: updatedCommunity
+      community: updatedCommunity,
     });
   } catch (error) {
     console.error("Error updating slug:", error);

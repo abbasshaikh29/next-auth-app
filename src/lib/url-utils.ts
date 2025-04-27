@@ -15,8 +15,8 @@ const URL_REGEX = /(https?:\/\/|www\.)[^\s]+(\.[^\s]+)+/g;
  */
 export const isValidUrl = (str: string): boolean => {
   try {
-    if (str.startsWith('www.')) {
-      str = 'http://' + str;
+    if (str.startsWith("www.")) {
+      str = "http://" + str;
     }
     new URL(str);
     return true;
@@ -31,11 +31,11 @@ export const isValidUrl = (str: string): boolean => {
  * @returns string - The normalized URL with protocol
  */
 export const normalizeUrl = (url: string): string => {
-  if (url.startsWith('www.')) {
-    return 'https://' + url;
+  if (url.startsWith("www.")) {
+    return "https://" + url;
   }
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    return 'https://' + url;
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    return "https://" + url;
   }
   return url;
 };
@@ -45,48 +45,53 @@ export const normalizeUrl = (url: string): string => {
  * @param text - The text containing URLs
  * @returns React elements array with clickable links
  */
-export const parseTextWithLinks = (text: string): { type: string; content: string }[] => {
+export const parseTextWithLinks = (
+  text: string
+): { type: "text" | "link" | "image" | "file"; content: string }[] => {
   if (!text) return [];
-  
+
   // Find all URLs in the text
   const matches = text.match(URL_REGEX);
-  
+
   if (!matches || matches.length === 0) {
     // No URLs found, return as regular text
-    return [{ type: 'text', content: text }];
+    return [{ type: "text" as const, content: text }];
   }
-  
+
   // Split the text by URLs and create an array of text and link elements
-  const result: { type: string; content: string }[] = [];
+  const result: {
+    type: "text" | "link" | "image" | "file";
+    content: string;
+  }[] = [];
   let lastIndex = 0;
-  
-  matches.forEach(match => {
+
+  matches.forEach((match) => {
     const matchIndex = text.indexOf(match, lastIndex);
-    
+
     // Add text before the URL
     if (matchIndex > lastIndex) {
-      result.push({ 
-        type: 'text', 
-        content: text.substring(lastIndex, matchIndex) 
+      result.push({
+        type: "text" as const,
+        content: text.substring(lastIndex, matchIndex),
       });
     }
-    
+
     // Add the URL as a link
-    result.push({ 
-      type: 'link', 
-      content: match 
+    result.push({
+      type: "link" as const,
+      content: match,
     });
-    
+
     lastIndex = matchIndex + match.length;
   });
-  
+
   // Add any remaining text after the last URL
   if (lastIndex < text.length) {
-    result.push({ 
-      type: 'text', 
-      content: text.substring(lastIndex) 
+    result.push({
+      type: "text" as const,
+      content: text.substring(lastIndex),
     });
   }
-  
+
   return result;
 };

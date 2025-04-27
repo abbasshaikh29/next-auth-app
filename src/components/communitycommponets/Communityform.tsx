@@ -112,7 +112,7 @@ export default function CommunityCreateForm() {
             Create your Community
           </h1>
           <p className="text-sm sm:text-base md:text-xl text-center">
-            Free for 14 days, then $99/month. Cancel anytime. All features.
+            Free for 14 days, then $39/month. Cancel anytime. All features.
             Unlimited everything. No hidden fees.
           </p>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

@@ -29,11 +29,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Modify the query to filter by community ID
-    const posts = await Post.find({ communityId: community._id }).populate(
-      "createdBy",
-      "name"
-    );
+    // Modify the query to filter by community ID and sort by createdAt in descending order (newest first)
+    const posts = await Post.find({ communityId: community._id })
+      .sort({ createdAt: -1 })
+      .populate("createdBy", "name profileImage");
 
     if (!posts || posts.length === 0) {
       return NextResponse.json([], { status: 200 });
@@ -51,9 +50,19 @@ export async function GET(request: NextRequest) {
       } else {
         parsedContent = post.content;
       }
+
+      // Get the profile image from the populated createdBy field
+      const profileImage =
+        post.createdBy &&
+        typeof post.createdBy === "object" &&
+        "profileImage" in post.createdBy
+          ? post.createdBy.profileImage
+          : undefined;
+
       return {
         ...post.toObject(),
         content: parsedContent,
+        profileImage: profileImage,
       };
     });
 
@@ -129,8 +138,14 @@ export async function POST(request: NextRequest) {
       communityId: community._id,
     };
 
+    // Create the post
     const newPost = await Post.create(postData);
-    return NextResponse.json(newPost);
+
+    // Return the post with profile image
+    return NextResponse.json({
+      ...newPost.toObject(),
+      profileImage: user.profileImage,
+    });
   } catch (error: any) {
     console.error("Error creating post:", error);
     return NextResponse.json(

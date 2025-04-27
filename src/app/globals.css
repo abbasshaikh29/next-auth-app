@@ -3,16 +3,45 @@
 
 /* Import component-specific styles */
 @import "../styles/post-creation.css";
+@import "../styles/halloween-theme.css";
+@import "../styles/skool-theme.css";
+@import "../styles/chat-modal.css";
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/*body {
-   color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}*/
+:root {
+  /* Halloween Theme Variables */
+  --halloween-orange: #ff7518;
+  --halloween-purple: #6b21a8;
+  --halloween-green: #15803d;
+  --halloween-black: #1e1b4b;
+
+  /* Skool Theme Variables */
+  --skool-primary: #5046e5;
+  --skool-secondary: #f0f4f9;
+  --skool-accent: #ff6b6b;
+  --skool-text: #1a1a2e;
+  --skool-light-text: #4a5568;
+  --skool-border: #e2e8f0;
+  --skool-card-bg: #ffffff;
+  --skool-hover: #eef2ff;
+}
+
+body {
+  font-family: var(--font-poppins), Arial, Helvetica, sans-serif;
+}
+
+body[data-theme="whiteHalloween"] {
+  background-color: white;
+  background-image: url("/halloween-pattern.svg");
+  background-attachment: fixed;
+}
+
+body[data-theme="skoolTheme"] {
+  background-color: white;
+}
 .tabs {
   align-items: start;
 }

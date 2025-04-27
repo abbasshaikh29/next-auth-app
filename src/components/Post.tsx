@@ -11,7 +11,6 @@ import {
   MoreVertical,
   Edit,
   Trash,
-  X,
 } from "lucide-react";
 import { formatRelativeTime } from "@/lib/date-utils";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
@@ -26,8 +25,10 @@ import Link from "next/link";
 import { FileText } from "lucide-react";
 import { useSession } from "next-auth/react";
 import mongoose from "mongoose";
-import { normalizeUrl, parseTextWithLinks } from "@/lib/url-utils";
+import { normalizeUrl } from "@/lib/url-utils";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
+
+import ProfileAvatar from "./ProfileAvatar";
 
 interface Comment {
   _id: string;
@@ -40,9 +41,11 @@ interface Comment {
 
 import { IPost } from "@/models/Posts";
 
-interface Post extends Omit<IPost, "likes" | "createdAt"> {
+interface Post extends Omit<IPost, "likes" | "createdAt" | "createdBy"> {
   likes: mongoose.Types.ObjectId[];
   createdAt: string | Date;
+  profileImage?: string;
+  createdBy: mongoose.Types.ObjectId | string;
 }
 
 interface CommunityCardProps {
@@ -109,7 +112,6 @@ export default function PostCard({
 
     // Fetch comments when component mounts
     fetchComments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [likesArray, session?.user?.id, post._id]);
 
   // We don't need a separate useEffect for post._id changes anymore
@@ -221,11 +223,7 @@ export default function PostCard({
       const newLikedState = !isLiked;
       setIsLiked(newLikedState);
 
-      // Update likes array locally for immediate feedback
-      const userId = new mongoose.Types.ObjectId(session.user.id);
-      const updatedLikes = newLikedState
-        ? [...likesArray, userId]
-        : likesArray.filter((id) => id.toString() !== userId.toString());
+      // User is authenticated, proceed with like action
 
       // Call the parent component's onLike function to update the state
       onLike(newLikedState);
@@ -319,17 +317,20 @@ export default function PostCard({
       <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer  max-w-4xl w-full mx-auto">
         <CardHeader className="flex flex-row items-center justify-between py-3 px-4">
           <div className="flex items-center gap-4">
-            <Link
-              href={`/user/${post._id}/profile `}
-              className="flex items-center gap-4"
-            >
+            <div className="flex items-center gap-4">
+              <ProfileAvatar
+                imageUrl={post.profileImage}
+                name={authorName}
+                size="md"
+                className="flex-shrink-0"
+              />
               <div>
-                <p>{authorName}</p>
+                <p className="font-medium">{authorName}</p>
                 <p className="text-sm text-gray-500">
                   {formatRelativeTime(post.createdAt)}
                 </p>
               </div>
-            </Link>
+            </div>
           </div>
         </CardHeader>
 
@@ -455,6 +456,12 @@ export default function PostCard({
           <DialogTitle className="sr-only">Post Details</DialogTitle>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
+              <ProfileAvatar
+                imageUrl={post.profileImage}
+                name={authorName}
+                size="md"
+                className="flex-shrink-0"
+              />
               <div>
                 <h3 className="font-semibold">{post.authorName}</h3>
                 <p className="text-sm text-gray-500">
@@ -469,20 +476,25 @@ export default function PostCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onEdit?.(post._id)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </DropdownMenuItem>
+                {session?.user?.id &&
+                post.createdBy.toString() === session.user.id ? (
+                  <>
+                    <DropdownMenuItem onClick={() => onEdit?.(post._id)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onDelete?.(post._id)}
+                      className="text-red-600"
+                    >
+                      <Trash className="h-4 w-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </>
+                ) : null}
                 <DropdownMenuItem onClick={handleShare}>
                   <Share2 className="h-4 w-4 mr-2" />
                   Share
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => onDelete?.(post._id)}
-                  className="text-red-600"
-                >
-                  <Trash className="h-4 w-4 mr-2" />
-                  Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -46,7 +46,7 @@ export default function MessageModal({
       >
         {/* Modal content */}
         <div
-          className="bg-base-100 rounded-lg shadow-xl w-full max-w-2xl h-[600px] flex flex-col message-modal"
+          className="bg-base-100 rounded-lg shadow-xl w-full max-w-2xl h-[600px] flex flex-col message-modal chat-modal"
           onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
         >
           {/* Close button */}

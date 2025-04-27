@@ -51,9 +51,21 @@ export async function GET(
     }
 
     // Use lean() to get a plain JavaScript object instead of a Mongoose document
-    const community: CommunityType | null = await Community.findOne({
+    const communityDoc = await Community.findOne({
       slug,
-    }).lean();
+    });
+
+    // Convert to plain object and cast to our type
+    const community: CommunityType | null = communityDoc
+      ? {
+          _id: communityDoc._id.toString(),
+          name: communityDoc.name,
+          slug: communityDoc.slug || "",
+          description: communityDoc.description,
+          bannerImageurl: communityDoc.bannerImageurl,
+          iconImageUrl: communityDoc.iconImageUrl,
+        }
+      : null;
 
     if (!community) {
       // Try to find if any communities exist

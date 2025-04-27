@@ -23,7 +23,7 @@ export async function GET(
     await dbconnect();
 
     // Find the community with a fresh query
-    const community = await Community.findOne({ slug }).lean();
+    const community = await Community.findOne({ slug });
 
     if (!community) {
       console.log("Icon API: Community not found for slug:", slug);
@@ -33,10 +33,13 @@ export async function GET(
       );
     }
 
+    // Convert to plain object for logging
+    const communityObj = community.toObject();
+
     console.log("Icon API: Community found:", {
-      id: community._id,
-      name: community.name,
-      iconImageUrl: community.iconImageUrl || "<empty>",
+      id: communityObj._id.toString(),
+      name: communityObj.name,
+      iconImageUrl: communityObj.iconImageUrl || "<empty>",
     });
 
     // Try to validate the icon URL
@@ -169,21 +172,28 @@ export async function PUT(
     // Approach 3: If the previous approaches didn't work, try using the raw MongoDB driver
     if (!updatedCommunity || !updatedCommunity.iconImageUrl) {
       try {
-        const result = await mongoose.connection.db
-          .collection("communities")
-          .findOneAndUpdate(
-            { _id: new mongoose.Types.ObjectId(community._id.toString()) },
-            { $set: { iconImageUrl } },
-            { returnDocument: "after" }
-          );
+        // Check if the connection and db are available
+        if (mongoose.connection && mongoose.connection.db) {
+          const result = await mongoose.connection.db
+            .collection("communities")
+            .findOneAndUpdate(
+              { _id: new mongoose.Types.ObjectId(community._id.toString()) },
+              { $set: { iconImageUrl } },
+              { returnDocument: "after" }
+            );
 
-        if (result.value) {
-          updatedCommunity = await Community.findById(community._id);
+          if (result && result.value) {
+            updatedCommunity = await Community.findById(community._id);
+          }
+        } else {
+          console.error(
+            "Icon API PUT: MongoDB connection not available for approach 3"
+          );
         }
 
         // Approach 3 completed
       } catch (error) {
-        // Error in approach 3
+        console.error("Icon API PUT: Error in approach 3:", error);
       }
     }
 

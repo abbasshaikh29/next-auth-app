@@ -14,7 +14,12 @@ export async function GET(
     await dbconnect();
 
     // Find the community using multiple methods
-    const results = {
+    const results: {
+      bySlug: any;
+      bySlugRaw: any;
+      byId: any;
+      allCommunities: any[];
+    } = {
       bySlug: null,
       bySlugRaw: null,
       byId: null,
@@ -31,16 +36,18 @@ export async function GET(
         iconImageUrl: communityBySlug.iconImageUrl || "",
         hasIconImageUrl: !!communityBySlug.iconImageUrl,
         iconImageUrlType: typeof communityBySlug.iconImageUrl,
-        keys: Object.keys(communityBySlug.toJSON ? communityBySlug.toJSON() : communityBySlug),
+        keys: Object.keys(
+          communityBySlug.toJSON ? communityBySlug.toJSON() : communityBySlug
+        ),
       };
     }
 
     // Method 2: Find by slug using raw MongoDB driver
-    if (mongoose.connection.db) {
+    if (mongoose.connection && mongoose.connection.db) {
       const communityBySlugRaw = await mongoose.connection.db
         .collection("communities")
         .findOne({ slug });
-      
+
       if (communityBySlugRaw) {
         results.bySlugRaw = {
           _id: communityBySlugRaw._id.toString(),
@@ -64,14 +71,16 @@ export async function GET(
             iconImageUrl: communityById.iconImageUrl || "",
             hasIconImageUrl: !!communityById.iconImageUrl,
             iconImageUrlType: typeof communityById.iconImageUrl,
-            keys: Object.keys(communityById.toJSON ? communityById.toJSON() : communityById),
+            keys: Object.keys(
+              communityById.toJSON ? communityById.toJSON() : communityById
+            ),
           };
         }
       }
 
       // Method 4: Get all communities to check if the community exists
       const allCommunities = await Community.find({}).limit(10);
-      results.allCommunities = allCommunities.map(community => ({
+      results.allCommunities = allCommunities.map((community) => ({
         _id: community._id.toString(),
         name: community.name,
         slug: community.slug,

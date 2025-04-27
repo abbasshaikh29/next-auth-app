@@ -73,7 +73,7 @@ export async function PUT(
         );
 
         // Get the updated document
-        if (result.value) {
+        if (result && result.value) {
           updatedCommunity = await Community.findById(result.value._id);
         }
 
@@ -106,7 +106,12 @@ export async function PUT(
       // Approach 3: If the previous approaches didn't work, try using the raw MongoDB driver with ID
       if (!updatedCommunity || !updatedCommunity.iconImageUrl) {
         try {
-          if (community && community._id) {
+          if (
+            community &&
+            community._id &&
+            mongoose.connection &&
+            mongoose.connection.db
+          ) {
             const result = await mongoose.connection.db
               .collection("communities")
               .findOneAndUpdate(
@@ -115,7 +120,7 @@ export async function PUT(
                 { returnDocument: "after" }
               );
 
-            if (result.value) {
+            if (result && result.value) {
               updatedCommunity = await Community.findById(community._id);
             }
 
@@ -138,7 +143,11 @@ export async function PUT(
           );
 
           // Approach 2: Using mongoose connection directly
-          if (directResult.modifiedCount === 0) {
+          if (
+            directResult.modifiedCount === 0 &&
+            mongoose.connection &&
+            mongoose.connection.db
+          ) {
             const directResult2 = await mongoose.connection.db
               .collection("communities")
               .updateOne({ slug: slug }, { $set: { slug: newSlug } });
@@ -228,16 +237,21 @@ export async function PUT(
 
       // Approach 3: If the previous approaches didn't work, try using the raw MongoDB driver
       if (!updatedCommunity || !updatedCommunity.iconImageUrl) {
-        if (community && community._id) {
+        if (
+          community &&
+          community._id &&
+          mongoose.connection &&
+          mongoose.connection.db
+        ) {
           const result = await mongoose.connection.db
             .collection("communities")
             .findOneAndUpdate(
-              { _id: new mongoose.Types.ObjectId(community._id) },
+              { _id: new mongoose.Types.ObjectId(community._id.toString()) },
               { $set: updateObj },
               { returnDocument: "after" }
             );
 
-          if (result.value) {
+          if (result && result.value) {
             updatedCommunity = await Community.findById(community._id);
           }
         }

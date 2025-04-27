@@ -49,7 +49,7 @@ export default function ConversationList({
   }
 
   return (
-    <div className="overflow-y-auto max-h-[400px]">
+    <div>
       {conversations.map((conversation) => {
         const otherUser = conversation.participants[0]; // The first participant is the other user
         if (!otherUser) return null;
@@ -66,10 +66,10 @@ export default function ConversationList({
                   <img
                     src={otherUser.profileImage}
                     alt={otherUser.username}
-                    className="object-cover"
+                    className="object-cover w-full h-full rounded-full"
                   />
                 ) : (
-                  <div className="bg-primary text-primary-content flex items-center justify-center">
+                  <div className="bg-primary text-primary-content flex items-center justify-center w-full h-full rounded-full">
                     {otherUser.username.charAt(0).toUpperCase()}
                   </div>
                 )}

@@ -10,7 +10,11 @@ const typingUsers = new Map<string, { userId: string; timestamp: number }[]>();
 // Clean up typing indicators older than 10 seconds
 const cleanupTypingIndicators = () => {
   const now = Date.now();
-  for (const [conversationId, users] of typingUsers.entries()) {
+
+  // Convert to array to avoid iterator issues in different environments
+  const entries = Array.from(typingUsers.entries());
+
+  entries.forEach(([conversationId, users]) => {
     const activeUsers = users.filter(
       (user) => now - user.timestamp < 10000 // 10 seconds
     );
@@ -19,7 +23,7 @@ const cleanupTypingIndicators = () => {
     } else {
       typingUsers.set(conversationId, activeUsers);
     }
-  }
+  });
 };
 
 // Set typing indicator
@@ -41,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     const senderId = session.user.id;
-    
+
     // Create a unique conversation ID (sorted user IDs joined with a dash)
     const userIds = [senderId, receiverId].sort();
     const conversationId = userIds.join("-");
@@ -54,19 +58,19 @@ export async function POST(request: NextRequest) {
       // Add or update typing indicator
       let users = typingUsers.get(conversationId) || [];
       const existingIndex = users.findIndex((u) => u.userId === senderId);
-      
+
       if (existingIndex >= 0) {
         users[existingIndex].timestamp = Date.now();
       } else {
         users.push({ userId: senderId, timestamp: Date.now() });
       }
-      
+
       typingUsers.set(conversationId, users);
     } else {
       // Remove typing indicator
       const users = typingUsers.get(conversationId) || [];
       const updatedUsers = users.filter((u) => u.userId !== senderId);
-      
+
       if (updatedUsers.length === 0) {
         typingUsers.delete(conversationId);
       } else {
@@ -103,7 +107,7 @@ export async function GET(request: NextRequest) {
     }
 
     const senderId = session.user.id;
-    
+
     // Create a unique conversation ID (sorted user IDs joined with a dash)
     const userIds = [senderId, receiverId].sort();
     const conversationId = userIds.join("-");
@@ -113,7 +117,7 @@ export async function GET(request: NextRequest) {
 
     // Get typing users for this conversation
     const users = typingUsers.get(conversationId) || [];
-    
+
     // Filter out the current user
     const otherTypingUsers = users.filter((u) => u.userId !== senderId);
 

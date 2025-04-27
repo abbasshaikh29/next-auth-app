@@ -8,6 +8,11 @@ interface NotificationSettings {
   sms: boolean;
 }
 
+interface MessagingPreferences {
+  allowDirectMessages: boolean;
+  blockedCommunities: string[]; // Array of community IDs where messaging is blocked
+}
+
 export interface IUser {
   _id: mongoose.Types.ObjectId;
   username: string;
@@ -23,6 +28,7 @@ export interface IUser {
   lastName?: string;
   timezone?: string;
   notificationSettings?: NotificationSettings;
+  messagingPreferences?: MessagingPreferences;
   community: mongoose.Types.ObjectId[];
   followedBy: mongoose.Types.ObjectId[];
   following: mongoose.Types.ObjectId[];
@@ -51,6 +57,10 @@ const userSchema = new mongoose.Schema<IUser>(
       email: { type: Boolean, default: true },
       push: { type: Boolean, default: true },
       sms: { type: Boolean, default: false },
+    },
+    messagingPreferences: {
+      allowDirectMessages: { type: Boolean, default: true },
+      blockedCommunities: [{ type: String }],
     },
     community: [{ type: Schema.Types.ObjectId, ref: "Community" }],
     followedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],

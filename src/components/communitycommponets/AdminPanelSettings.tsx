@@ -43,17 +43,74 @@ export default function AdminPanelSettings() {
       // Set questions
       setQuestions(data.adminQuestions || []);
 
-      // Fetch members with their usernames
+      // Try to fetch members from the members API first (which includes usernames)
+      try {
+        console.log("Attempting to fetch members from members API");
+        const membersRes = await fetch(`/api/community/${slug}/members`);
+        if (membersRes.ok) {
+          const membersData = await membersRes.json();
+          console.log("Members data from API:", membersData);
+
+          if (membersData.members && Array.isArray(membersData.members)) {
+            // Map the members data to our required format
+            const formattedMembers = membersData.members.map((member: any) => ({
+              id: member._id.toString(),
+              username: member.username || "Unknown User",
+              isSubAdmin:
+                data.subAdmins?.includes(member._id.toString()) || false,
+            }));
+
+            console.log(
+              "Formatted members from members API:",
+              formattedMembers
+            );
+            setMembers(formattedMembers);
+            setLoading(false);
+            return; // Exit early since we got the data we needed
+          }
+        }
+      } catch (error) {
+        console.error(
+          "Error fetching from members API, falling back to individual user fetches:",
+          error
+        );
+      }
+
+      // Fallback: Fetch members with their usernames individually
+      console.log(
+        "Falling back to individual user fetches for members:",
+        data.members
+      );
       const membersWithUsernames = await Promise.all(
         data.members.map(async (memberId: string) => {
-          const userRes = await fetch(`/api/user/${memberId}`);
-          const userData = await userRes.json();
-          return {
-            id: memberId,
-            username: userData.username,
-            isSubAdmin: data.subAdmins?.includes(memberId) || false,
-          };
+          try {
+            console.log(`Fetching data for user ID: ${memberId}`);
+            const userRes = await fetch(`/api/user/${memberId}`);
+            const userData = await userRes.json();
+
+            console.log(`User data received for ${memberId}:`, userData);
+
+            // Check if the response has the expected structure
+            const username = userData.user?.username || "Unknown User";
+
+            return {
+              id: memberId,
+              username: username,
+              isSubAdmin: data.subAdmins?.includes(memberId) || false,
+            };
+          } catch (error) {
+            console.error(`Error fetching user ${memberId}:`, error);
+            return {
+              id: memberId,
+              username: "Unknown User",
+              isSubAdmin: data.subAdmins?.includes(memberId) || false,
+            };
+          }
         })
+      );
+      console.log(
+        "Members with usernames from individual fetches:",
+        membersWithUsernames
       );
       setMembers(membersWithUsernames);
 

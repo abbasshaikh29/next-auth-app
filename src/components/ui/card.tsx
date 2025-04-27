@@ -9,11 +9,17 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "card border bg-base-200  shadow-lg rounded-box w-full",
+      "card border bg-base-100 shadow-halloween rounded-box w-full relative overflow-hidden",
       className
     )}
     {...props}
-  />
+  >
+    {/* Subtle Halloween corner decoration */}
+    <div className="absolute top-0 right-0 w-16 h-16 overflow-hidden">
+      <div className="absolute top-0 right-0 w-4 h-4 bg-halloween-orange opacity-10 rounded-full"></div>
+    </div>
+    {props.children}
+  </div>
 ));
 Card.displayName = "Card";
 

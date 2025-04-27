@@ -1,0 +1,37 @@
+<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Subtle web pattern -->
+  <defs>
+    <pattern id="web" width="50" height="50" patternUnits="userSpaceOnUse">
+      <path d="M0,25 L50,25 M25,0 L25,50" stroke="#f1f5f9" stroke-width="0.5" fill="none"/>
+      <path d="M12.5,12.5 L37.5,37.5 M37.5,12.5 L12.5,37.5" stroke="#f1f5f9" stroke-width="0.5" fill="none"/>
+    </pattern>
+    
+    <!-- Halloween icons -->
+    <g id="pumpkin">
+      <path d="M5,3 C5,1 7,0 8,1 C9,0 11,1 11,3 C14,3 16,6 16,9 C16,13 13,16 8,16 C3,16 0,13 0,9 C0,6 2,3 5,3 Z" fill="#ff7518" fill-opacity="0.1"/>
+      <path d="M8,1 L8,3" stroke="#ff7518" stroke-width="0.5" stroke-opacity="0.2"/>
+    </g>
+    
+    <g id="ghost">
+      <path d="M5,0 C2,0 0,2 0,5 L0,10 C0,12 1,13 1,13 L0,15 L2,14 L4,15 L6,14 L8,15 L7,13 C7,13 8,12 8,10 L8,5 C8,2 6,0 5,0 Z" fill="#6b21a8" fill-opacity="0.1"/>
+      <circle cx="3" cy="5" r="0.5" fill="#6b21a8" fill-opacity="0.2"/>
+      <circle cx="6" cy="5" r="0.5" fill="#6b21a8" fill-opacity="0.2"/>
+      <path d="M3,8 C3,9 5,9 5,8" stroke="#6b21a8" stroke-width="0.5" stroke-opacity="0.2" fill="none"/>
+    </g>
+    
+    <g id="bat">
+      <path d="M5,2 L7,0 L9,2 L7,4 Z" fill="#1e1b4b" fill-opacity="0.1"/>
+      <path d="M5,2 L1,1 M5,2 L1,3 M9,2 L13,1 M9,2 L13,3" stroke="#1e1b4b" stroke-width="0.5" stroke-opacity="0.2"/>
+      <path d="M7,4 L7,6" stroke="#1e1b4b" stroke-width="0.5" stroke-opacity="0.2"/>
+    </g>
+  </defs>
+  
+  <!-- Background pattern -->
+  <rect width="100" height="100" fill="url(#web)"/>
+  
+  <!-- Scattered Halloween elements -->
+  <use href="#pumpkin" x="10" y="10" transform="scale(0.6)"/>
+  <use href="#ghost" x="70" y="30" transform="scale(0.6)"/>
+  <use href="#bat" x="30" y="60" transform="scale(0.6)"/>
+  <use href="#pumpkin" x="60" y="70" transform="scale(0.6)"/>
+</svg>

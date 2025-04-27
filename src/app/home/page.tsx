@@ -7,6 +7,7 @@ import { apiClient } from "@/lib/api-client";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import SessionDebug from "@/components/SessionDebug";
+import ConditionalHero from "@/components/ConditionalHero";
 export default function Home() {
   const { data: session, status } = useSession();
   const [community, setcommunity] = useState<ICommunity[]>([]);
@@ -48,6 +49,10 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       <Header />
+
+      {/* Conditional Hero based on theme */}
+      <ConditionalHero />
+
       <div className="container mx-auto px-4 py-4 sm:py-8">
         <div className="mx-4 sm:m-8 flex flex-col items-center text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl mt-2 sm:mt-9 font-bold leading-tight">

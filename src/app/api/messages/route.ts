@@ -103,7 +103,8 @@ export async function POST(request: NextRequest) {
 
       // If receiver doesn't have an unread count entry yet, add one
       const receiverHasUnreadEntry = conversation.unreadCounts?.some(
-        (entry) => entry.userId.toString() === receiverObjId.toString()
+        (entry: { userId: mongoose.Types.ObjectId; count: number }) =>
+          entry.userId.toString() === receiverObjId.toString()
       );
 
       if (!receiverHasUnreadEntry) {

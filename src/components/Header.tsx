@@ -3,11 +3,14 @@ import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useNotification } from "./Notification";
 import Link from "next/link";
-import { User, ChevronDown, Compass, Plus, Home } from "lucide-react";
+import Image from "next/image";
+import { User, ChevronDown, Compass, Plus } from "lucide-react";
 import SessionDebug from "./SessionDebug";
 import CommunityIcon from "./communitynav/CommunityIcon";
 import { usePathname } from "next/navigation";
 import MessageIcon from "./messages/MessageIcon";
+import ThemeSwitcher from "./ThemeSwitcher";
+import ProfileAvatar from "./ProfileAvatar";
 
 interface Community {
   _id: string;
@@ -32,7 +35,7 @@ export default function Header() {
   const preloadCommunityIcons = (communities: Community[]) => {
     communities.forEach((community) => {
       if (community.iconImageUrl && community.iconImageUrl.trim() !== "") {
-        const img = new Image();
+        const img = new window.Image();
         img.src = community.iconImageUrl;
       }
     });
@@ -118,18 +121,21 @@ export default function Header() {
     }
   };
   return (
-    <div className="navbar bg-base-300 sticky top-0 z-40">
+    <div className="navbar bg-white sticky top-0 z-40 shadow-sm border-b border-halloween-purple/10">
       <div className="container mx-auto">
         <div className="flex-1 lg:flex-none flex items-center gap-2">
           <Link
             href="/"
-            className="btn btn-ghost text-xl normal-case font-bold"
+            className="btn btn-ghost text-xl normal-case font-bold text-halloween-purple relative group"
             prefetch={true}
             onClick={() =>
               showNotification("Welcome to TheTribelab", "success")
             }
           >
-            SKOOL
+            <span className="relative z-10">SKOOL</span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-halloween-orange transition-all duration-300 group-hover:w-full"></span>
+            {/* Halloween decoration */}
+            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-halloween-orange opacity-70"></span>
           </Link>
 
           {/* Communities Dropdown */}
@@ -140,13 +146,13 @@ export default function Header() {
                 role="button"
                 aria-label="My communities"
                 title="My communities"
-                className="btn btn-ghost btn-sm normal-case flex items-center gap-1 hover:bg-base-200 rounded-lg"
+                className="btn btn-ghost btn-sm normal-case flex items-center gap-1 hover:bg-halloween-purple/5 rounded-lg text-halloween-purple"
               >
-                <ChevronDown size={20} className="text-primary" />
+                <ChevronDown size={20} className="text-halloween-orange" />
               </div>
               <ul
                 tabIndex={0}
-                className="dropdown-content z-[1] text-lg menu p-2 shadow-lg bg-base-100 rounded-box w-72 max-h-96 overflow-y-auto border border-base-300"
+                className="dropdown-content z-[1] text-lg menu p-2 shadow-halloween bg-white rounded-box w-72 border border-halloween-purple/10"
               >
                 <li className="">
                   <Link
@@ -227,29 +233,30 @@ export default function Header() {
           <div className="flex items-stretch gap-2">
             {/* Message Icon */}
             {session && <MessageIcon />}
+            {/* Theme Switcher */}
+            <ThemeSwitcher />
             <div className="dropdown dropdown-end">
               <div
                 tabIndex={0}
                 role="button"
                 aria-label="User menu"
                 title="User menu"
-                className="btn btn-ghost btn-circle avatar"
+                className="btn btn-ghost btn-circle avatar border-2 border-halloween-purple/10 hover:border-halloween-orange/30 transition-colors duration-300"
               >
-                {session?.user?.profileImage ? (
-                  <div className="w-10 h-10 rounded-full overflow-hidden">
-                    <img
-                      src={session.user.profileImage}
-                      alt="User profile"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+                {session?.user ? (
+                  <ProfileAvatar
+                    imageUrl={session.user.profileImage}
+                    name={session.user.name}
+                    email={session.user.email}
+                    size="md"
+                  />
                 ) : (
-                  <User className="w-5 h-5" />
+                  <User className="w-5 h-5 text-halloween-purple" />
                 )}
               </div>
               <ul
                 tabIndex={0}
-                className="dropdown-content z-[1] shadow-lg bg-base-100 rounded-box w-64 mt-4 py-2"
+                className="dropdown-content z-[1] shadow-halloween bg-white rounded-box w-64 mt-4 py-2 border border-halloween-purple/10"
               >
                 {session ? (
                   <>
@@ -262,44 +269,48 @@ export default function Header() {
                     <li>
                       <Link
                         href={"/profile"}
-                        className="px-4 py-2 hover:bg-base-200 block w-full"
+                        className="px-4 py-2 hover:bg-halloween-purple/5 block w-full text-halloween-purple transition-colors duration-200 group relative"
                         onClick={() =>
                           showNotification("Create your Community", "info")
                         }
                       >
-                        Profile
+                        <span className="relative z-10">Profile</span>
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 w-0 h-0 bg-halloween-orange/10 rounded-full transition-all duration-300 group-hover:w-full group-hover:h-full group-hover:left-0"></span>
                       </Link>
                     </li>
                     <li>
                       <Link
                         href={"/communityform"}
-                        className="px-4 py-2 hover:bg-base-200 block w-full"
+                        className="px-4 py-2 hover:bg-halloween-purple/5 block w-full text-halloween-purple transition-colors duration-200 group relative"
                         onClick={() =>
                           showNotification("Create your Community", "info")
                         }
                       >
-                        CreateCommunity
+                        <span className="relative z-10">Create Community</span>
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 w-0 h-0 bg-halloween-orange/10 rounded-full transition-all duration-300 group-hover:w-full group-hover:h-full group-hover:left-0"></span>
                       </Link>
                     </li>
                     <li>
                       <Link
                         href={"/UserSettings"}
-                        className="px-4 py-2 hover:bg-base-200 block w-full"
+                        className="px-4 py-2 hover:bg-halloween-purple/5 block w-full text-halloween-purple transition-colors duration-200 group relative"
                         onClick={() =>
                           showNotification("Going to Settings", "info")
                         }
                       >
-                        Settings
+                        <span className="relative z-10">Settings</span>
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 w-0 h-0 bg-halloween-orange/10 rounded-full transition-all duration-300 group-hover:w-full group-hover:h-full group-hover:left-0"></span>
                       </Link>
                     </li>
-                    <li className="divider my-1"></li>{" "}
+                    <li className="divider my-1 before:bg-halloween-purple/10 after:bg-halloween-purple/10"></li>
                     <li className="items-center px-20">
                       <button
                         type="button"
                         onClick={handleSignOut}
-                        className="btn btn-primary"
+                        className="btn btn-halloween relative overflow-hidden group"
                       >
-                        Log Out
+                        <span className="relative z-10">Log Out</span>
+                        <span className="absolute inset-0 bg-halloween-orange opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
                       </button>
                     </li>
                   </>
@@ -307,12 +318,13 @@ export default function Header() {
                   <li>
                     <Link
                       href="/login"
-                      className="px-4 py-2 hover:bg-base-200 block w-full"
+                      className="px-4 py-2 hover:bg-halloween-purple/5 block w-full text-halloween-purple transition-colors duration-200 group relative"
                       onClick={() =>
                         showNotification("Please sign in to continue", "info")
                       }
                     >
-                      Login
+                      <span className="relative z-10">Login</span>
+                      <span className="absolute left-2 top-1/2 -translate-y-1/2 w-0 h-0 bg-halloween-orange/10 rounded-full transition-all duration-300 group-hover:w-full group-hover:h-full group-hover:left-0"></span>
                     </Link>
                   </li>
                 )}

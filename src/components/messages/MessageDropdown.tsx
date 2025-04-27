@@ -57,7 +57,6 @@ export default function MessageDropdown({
     }, 30000);
 
     return () => clearInterval(intervalId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   const handleSelectConversation = (userId: string) => {
@@ -108,7 +107,7 @@ export default function MessageDropdown({
 
   return (
     <div className="dropdown-content z-[1] shadow-lg bg-base-100 rounded-box w-80 sm:w-96 mt-4 overflow-hidden absolute right-0">
-      <div className="max-h-[500px] flex flex-col">
+      <div className="flex flex-col">
         <div className="p-3 border-b border-base-300 flex justify-between items-center">
           <h3 className="font-semibold">Messages</h3>
           <button
