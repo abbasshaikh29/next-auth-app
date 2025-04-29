@@ -61,6 +61,26 @@ const nextConfig = {
         port: "",
         pathname: "/**",
       },
+      // AWS S3 buckets
+      {
+        protocol: "https",
+        hostname: "*.s3.amazonaws.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.s3.*.amazonaws.com",
+        port: "",
+        pathname: "/**",
+      },
+      // CloudFront
+      {
+        protocol: "https",
+        hostname: "*.cloudfront.net",
+        port: "",
+        pathname: "/**",
+      },
     ],
     // For backward compatibility
     domains: [
@@ -69,6 +89,10 @@ const nextConfig = {
       "avatars.githubusercontent.com",
       "res.cloudinary.com",
       "placehold.co",
+      "s3.amazonaws.com",
+      "s3.us-east-1.amazonaws.com",
+      "s3.us-west-1.amazonaws.com",
+      "s3.eu-west-1.amazonaws.com",
     ],
     deviceSizes: [
       96, 128, 256, 384, 512, 640, 750, 828, 1080, 1200, 1920, 2048,

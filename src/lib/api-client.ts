@@ -1,8 +1,10 @@
 import { ICommunity } from "../models/Community";
 import { ImageFormData } from "../components/ImageUploadForm";
 import { IImage } from "@/models/Image";
+import { IEvent } from "@/models/Event";
 
 export type CommunityFormData = Omit<ICommunity, "_id">;
+export type EventFormData = Omit<IEvent, "_id">;
 
 type FetchOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE";
@@ -64,6 +66,39 @@ class ApiClient {
     return this.fetch<IImage>("/image", {
       method: "POST",
       body: imageData,
+    });
+  }
+
+  // Event API methods
+  async getEvents(communityId: string, startDate?: string, endDate?: string) {
+    let endpoint = `/community/events?communityId=${communityId}`;
+    if (startDate && endDate) {
+      endpoint += `&start=${startDate}&end=${endDate}`;
+    }
+    return this.fetch<IEvent[]>(endpoint);
+  }
+
+  async getEvent(id: string) {
+    return this.fetch<IEvent>(`/community/events/${id}`);
+  }
+
+  async createEvent(eventData: EventFormData) {
+    return this.fetch<IEvent>("/community/events", {
+      method: "POST",
+      body: eventData,
+    });
+  }
+
+  async updateEvent(id: string, eventData: Partial<EventFormData>) {
+    return this.fetch<IEvent>(`/community/events/${id}`, {
+      method: "PUT",
+      body: eventData,
+    });
+  }
+
+  async deleteEvent(id: string) {
+    return this.fetch<{ message: string }>(`/community/events/${id}`, {
+      method: "DELETE",
     });
   }
 }
