@@ -57,7 +57,6 @@ const CommunityIcon: React.FC<CommunityIconProps> = ({
 
   // Handle image error
   const handleImageError = () => {
-    console.error("Failed to load community icon:", iconUrl);
     setImageError(true);
     setIsLoading(false);
   };

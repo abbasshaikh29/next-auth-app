@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { parseTextWithLinks } from "@/lib/url-utils";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
+import S3FileUpload from "@/components/S3FileUpload";
 interface PostContent {
   type: "text" | "image" | "link" | "file";
   content: string;
@@ -32,19 +33,37 @@ export function CreatePost({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleFileUpload = (file: File, type: "image" | "file") => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        setContents([
-          ...contents,
-          {
-            type,
-            content: e.target.result as string,
-          },
-        ]);
-      }
-    };
-    reader.readAsDataURL(file);
+    if (type === "file") {
+      // For non-image files, continue using the old method
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setContents([
+            ...contents,
+            {
+              type,
+              content: e.target.result as string,
+            },
+          ]);
+        }
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // For images, we'll use S3 upload instead via the button
+      // This is handled separately
+    }
+  };
+
+  const handleS3ImageUploadSuccess = (response: any) => {
+    if (response.url) {
+      setContents([
+        ...contents,
+        {
+          type: "image",
+          content: response.url,
+        },
+      ]);
+    }
   };
 
   const handleRemoveContent = (index: number) => {
@@ -250,28 +269,69 @@ export function CreatePost({
             )}
           </div>
           <div className="flex flex-wrap gap-2 sm:gap-3">
-            <button
-              type="button"
-              className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-full text-xs sm:text-sm flex items-center gap-1.5 transition-colors duration-200 border border-amber-200"
-              onClick={() => imageInputRef.current?.click()}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-3.5 w-3.5 sm:h-4 sm:w-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            <div className="relative">
+              <button
+                type="button"
+                className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-full text-xs sm:text-sm flex items-center gap-1.5 transition-colors duration-200 border border-amber-200"
+                onClick={() => {
+                  // Open a modal or dropdown with S3FileUpload
+                  document
+                    .getElementById("s3-upload-modal")
+                    ?.classList.remove("hidden");
+                }}
               >
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <polyline points="21 15 16 10 5 21" />
-              </svg>
-              <span className="hidden xs:inline">Add Image</span>
-              <span className="xs:hidden">Image</span>
-            </button>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-3.5 w-3.5 sm:h-4 sm:w-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <polyline points="21 15 16 10 5 21" />
+                </svg>
+                <span className="hidden xs:inline">Add Image</span>
+                <span className="xs:hidden">Image</span>
+              </button>
+
+              {/* S3 Upload Modal */}
+              <div
+                id="s3-upload-modal"
+                className="hidden absolute z-50 top-full left-0 mt-2 p-4 bg-white rounded-lg shadow-lg border border-amber-200 w-64"
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-sm font-medium">Upload Image</h3>
+                  <button
+                    type="button"
+                    className="text-gray-500 hover:text-gray-700"
+                    onClick={() =>
+                      document
+                        .getElementById("s3-upload-modal")
+                        ?.classList.add("hidden")
+                    }
+                    aria-label="Close upload modal"
+                    title="Close"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <S3FileUpload
+                  onSuccess={(response) => {
+                    handleS3ImageUploadSuccess(response);
+                    document
+                      .getElementById("s3-upload-modal")
+                      ?.classList.add("hidden");
+                  }}
+                  fileType="image"
+                  uploadType="post-image"
+                  entityId={communitySlug}
+                />
+              </div>
+            </div>
             <button
               type="button"
               className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-full text-xs sm:text-sm flex items-center gap-1.5 transition-colors duration-200 border border-amber-200"

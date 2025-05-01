@@ -7,6 +7,16 @@ import mongoose from "mongoose";
 import { User } from "@/models/User";
 
 export async function GET(request: NextRequest) {
+  // Create headers for responses
+  const responseHeaders = new Headers({
+    "Cache-Control":
+      "public, max-age=5, s-maxage=15, stale-while-revalidate=30",
+  });
+
+  const errorHeaders = new Headers({
+    "Cache-Control": "no-store, must-revalidate",
+  });
+
   try {
     await dbconnect();
 
@@ -16,29 +26,34 @@ export async function GET(request: NextRequest) {
     if (!communitySlug) {
       return NextResponse.json(
         { error: "Missing communitySlug" },
-        { status: 400 }
+        { status: 400, headers: responseHeaders }
       );
     }
 
-    // Find community by slug first
-    const community = await Community.findOne({ slug: communitySlug });
+    // Find community by slug first - optimized query
+    const community = await Community.findOne({ slug: communitySlug })
+      .select("_id") // Only select the _id field since that's all we need
+      .lean();
+
     if (!community) {
       return NextResponse.json(
         { error: "Community not found" },
-        { status: 404 }
+        { status: 404, headers: responseHeaders }
       );
     }
 
-    // Modify the query to filter by community ID and sort by createdAt in descending order (newest first)
+    // Query posts by community ID and sort by createdAt in descending order (newest first)
     const posts = await Post.find({ communityId: community._id })
+      .select("title content createdBy createdAt authorName")
       .sort({ createdAt: -1 })
-      .populate("createdBy", "name profileImage");
+      .populate("createdBy", "name profileImage")
+      .lean();
 
     if (!posts || posts.length === 0) {
-      return NextResponse.json([], { status: 200 });
+      return NextResponse.json([], { status: 200, headers: responseHeaders });
     }
 
-    const postsWithAuthor = posts.map((post: InstanceType<typeof Post>) => {
+    const postsWithAuthor = posts.map((post: any) => {
       let parsedContent;
       if (typeof post.content === "string") {
         try {
@@ -59,19 +74,24 @@ export async function GET(request: NextRequest) {
           ? post.createdBy.profileImage
           : undefined;
 
+      // Since we're using .lean(), post is already a plain object and doesn't have toObject()
       return {
-        ...post.toObject(),
+        ...post,
         content: parsedContent,
         profileImage: profileImage,
       };
     });
 
-    return NextResponse.json(postsWithAuthor);
+    return NextResponse.json(postsWithAuthor, { headers: responseHeaders });
   } catch (error) {
-    console.error("Error fetching community:", error);
+    console.error("Error in GET /api/community/posts:", error);
+
     return NextResponse.json(
-      { error: "Failed to fetch community" },
-      { status: 500 }
+      {
+        error: "Failed to fetch posts",
+        message: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500, headers: errorHeaders }
     );
   }
 }
@@ -148,9 +168,14 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error("Error creating post:", error);
+
+    const errorHeaders = new Headers({
+      "Cache-Control": "no-store, must-revalidate",
+    });
+
     return NextResponse.json(
       { error: error.message || "Failed to create post" },
-      { status: 500 }
+      { status: 500, headers: errorHeaders }
     );
   }
 }

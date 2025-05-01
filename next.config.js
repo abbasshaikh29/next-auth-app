@@ -3,30 +3,6 @@ const nextConfig = {
   images: {
     // For Next.js 13+ compatibility
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "ik.imagekit.io",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "*.imagekit.io",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "http",
-        hostname: "ik.imagekit.io",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "http",
-        hostname: "*.imagekit.io",
-        port: "",
-        pathname: "/**",
-      },
       // Google authentication profile images
       {
         protocol: "https",
@@ -93,6 +69,8 @@ const nextConfig = {
       "s3.us-east-1.amazonaws.com",
       "s3.us-west-1.amazonaws.com",
       "s3.eu-west-1.amazonaws.com",
+      "s3.ap-southeast-1.amazonaws.com",
+      "thetribelabbucket.s3.ap-southeast-1.amazonaws.com",
     ],
     deviceSizes: [
       96, 128, 256, 384, 512, 640, 750, 828, 1080, 1200, 1920, 2048,

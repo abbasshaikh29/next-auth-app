@@ -94,7 +94,6 @@ export async function GET(
       results,
     });
   } catch (error) {
-    console.error("Error debugging community:", error);
     return NextResponse.json(
       { error: "Failed to debug community" },
       { status: 500 }

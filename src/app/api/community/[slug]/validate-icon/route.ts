@@ -9,7 +9,6 @@ export async function GET(
   try {
     const resolvedParams = await context.params;
     const { slug } = resolvedParams;
-    console.log("Validate-icon API: Fetching icon for slug:", slug);
 
     // Add cache control headers to prevent caching
     const headers = new Headers({
@@ -24,7 +23,6 @@ export async function GET(
     const communityDoc = await Community.findOne({ slug });
 
     if (!communityDoc) {
-      console.log("Validate-icon API: Community not found for slug:", slug);
       return NextResponse.json(
         { error: "Community not found" },
         { status: 404, headers }
@@ -33,12 +31,6 @@ export async function GET(
 
     // Convert to plain object for safe access
     const community = communityDoc.toObject();
-
-    console.log("Validate-icon API: Community found:", {
-      id: community._id.toString(),
-      name: community.name,
-      iconImageUrl: community.iconImageUrl || "<empty>",
-    });
 
     // Check if the icon image URL exists and is valid
     let iconImageUrl = community.iconImageUrl || "";
@@ -50,11 +42,7 @@ export async function GET(
         new URL(iconImageUrl);
         isValid = true;
       } catch (e) {
-        console.error(
-          "Validate-icon API: Invalid URL format:",
-          iconImageUrl,
-          e
-        );
+        // Invalid URL format, reset to empty string
         iconImageUrl = "";
       }
     }

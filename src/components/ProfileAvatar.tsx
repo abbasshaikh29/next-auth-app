@@ -2,8 +2,31 @@
 
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import Image from "next/image";
 import { addCacheBusting, preloadImage } from "@/utils/crossBrowserImageUtils";
 import styles from "./ProfileAvatar.module.css";
+
+// Helper function to get initials from name or email
+const getInitials = (name?: string, email?: string): string => {
+  if (name && name.trim()) {
+    // Get first letter of first name and first letter of last name if available
+    const nameParts = name.trim().split(/\s+/);
+    if (nameParts.length > 1) {
+      return `${nameParts[0].charAt(0)}${nameParts[nameParts.length - 1].charAt(
+        0
+      )}`.toUpperCase();
+    }
+    return name.charAt(0).toUpperCase();
+  }
+
+  // Fallback to email
+  if (email && email.trim()) {
+    return email.charAt(0).toUpperCase();
+  }
+
+  // Default fallback
+  return "?";
+};
 
 interface ProfileAvatarProps {
   imageUrl?: string | null;
@@ -40,8 +63,35 @@ export default function ProfileAvatar({
   // Check if it's a Google profile image - do this before any conditional returns
   const isGoogleImage = imageUrl?.includes("googleusercontent.com");
 
-  // Process the image source
-  const processedSrc = imageUrl ? addCacheBusting(imageUrl) : "";
+  // Check if it's an S3 image - include both amazonaws.com and any custom S3 URL
+  const isS3Image =
+    imageUrl?.includes("amazonaws.com") ||
+    (imageUrl?.includes(".s3.") && imageUrl?.includes(".amazonaws.com"));
+
+  // Add a timestamp to force cache refresh
+  const timestamp = Date.now();
+
+  // Process the image source with forced cache busting for S3 images
+  const processedSrc = imageUrl
+    ? isS3Image
+      ? `${imageUrl}${imageUrl.includes("?") ? "&" : "?"}t=${timestamp}`
+      : addCacheBusting(imageUrl)
+    : "";
+
+  // Silently test if the image is accessible
+  useEffect(() => {
+    if (imageUrl) {
+      const testImg = document.createElement("img");
+      testImg.onload = () => {
+        // Image loaded successfully, no need to log
+      };
+      testImg.onerror = () => {
+        // If a Google image fails to load, we could be dealing with an outdated URL
+        // Just let the component's error handling take over
+      };
+      testImg.src = processedSrc;
+    }
+  }, [imageUrl, processedSrc]);
 
   // Preload the image - this hook is now unconditional
   useEffect(() => {
@@ -79,7 +129,6 @@ export default function ProfileAvatar({
 
   // Handle image error
   const handleImageError = () => {
-    console.error("Failed to load profile image:", imageUrl);
     setImageError(true);
     setIsLoading(false);
   };
@@ -107,19 +156,64 @@ export default function ProfileAvatar({
     );
   }
 
-  // For all other images, use img tag
+  // For S3 images, use Next.js Image component for optimization
+  if (isS3Image) {
+    return (
+      <div
+        className={`${styles.avatar} ${sizeClasses[size]} ${className} overflow-hidden relative`}
+      >
+        <Image
+          src={processedSrc}
+          alt={name || "User"}
+          fill
+          sizes={size === "sm" ? "32px" : size === "md" ? "48px" : "64px"}
+          priority={size === "lg"} // Only prioritize large avatars
+          className="object-cover"
+          onLoadingComplete={handleImageLoad}
+          onError={(e) => {
+            // Fall back to initials on error
+            handleImageError();
+            // Add a data attribute to mark this as failed
+            e.currentTarget.parentElement?.setAttribute(
+              "data-image-failed",
+              "true"
+            );
+            // Force a re-render to show initials
+            e.currentTarget.parentElement?.classList.add(styles.initialsAvatar);
+
+            // Add initials text
+            const initialsSpan = document.createElement("span");
+            initialsSpan.className = styles.initials;
+            initialsSpan.textContent = getInitials(name, email);
+            e.currentTarget.parentElement?.appendChild(initialsSpan);
+          }}
+        />
+        {isLoading && (
+          <div className={styles.loading}>
+            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // For all other images, use Next.js Image component
   return (
-    <div className={`${styles.avatar} ${sizeClasses[size]} ${className}`}>
+    <div
+      className={`${styles.avatar} ${sizeClasses[size]} ${className} relative`}
+    >
       {isLoading && (
         <div className={styles.loading}>
           <Loader2 className="w-4 h-4 animate-spin text-primary" />
         </div>
       )}
-      <img
+      <Image
         src={processedSrc}
         alt={name || "User profile"}
+        fill
+        sizes={size === "sm" ? "32px" : size === "md" ? "48px" : "64px"}
         className={styles.image}
-        onLoad={handleImageLoad}
+        onLoadingComplete={handleImageLoad}
         onError={handleImageError}
       />
     </div>

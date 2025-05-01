@@ -5,8 +5,6 @@ import { useSession } from "next-auth/react";
 import { useNotification } from "../Notification";
 import { ArrowLeft, Send, ImageIcon, Loader2, Smile } from "lucide-react";
 import { formatRelativeTime } from "@/lib/date-utils";
-import { IKUpload } from "imagekitio-next";
-import { IKUploadResponse } from "imagekitio-next/dist/types/components/IKUpload/props";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 
 interface Message {
@@ -277,23 +275,37 @@ export default function MessageThread({
     try {
       setUploading(true);
 
-      // Create form data
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("fileType", file.type);
-      formData.append("fileName", file.name);
-
-      // Upload to ImageKit
-      const uploadResponse = await fetch("/api/imagekit", {
+      // Get a presigned URL for S3 upload
+      const presignedResponse = await fetch("/api/upload/s3", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fileName: file.name,
+          fileType: file.type,
+          type: "message-image",
+        }),
+      });
+
+      if (!presignedResponse.ok) {
+        throw new Error("Failed to get upload URL");
+      }
+
+      const { uploadUrl, fileUrl } = await presignedResponse.json();
+
+      // Upload the file to S3
+      const uploadResponse = await fetch(uploadUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+        },
       });
 
       if (!uploadResponse.ok) {
         throw new Error("Failed to upload image");
       }
-
-      const uploadData = await uploadResponse.json();
 
       // Send message with image URL
       const response = await fetch(`/api/messages/${userId}`, {
@@ -302,7 +314,7 @@ export default function MessageThread({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          content: uploadData.url,
+          content: fileUrl,
           isImage: true,
         }),
       });

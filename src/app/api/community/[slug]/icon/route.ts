@@ -11,13 +11,11 @@ export async function GET(
   try {
     const resolvedParams = await context.params;
     const { slug } = resolvedParams;
-    console.log("Icon API: Fetching icon for slug:", slug);
 
-    // Add cache control headers to prevent caching
+    // Add cache control headers with longer cache time for icons (they change less frequently)
     const headers = new Headers({
-      "Cache-Control": "no-cache, no-store, must-revalidate",
-      Pragma: "no-cache",
-      Expires: "0",
+      "Cache-Control":
+        "public, max-age=300, s-maxage=600, stale-while-revalidate=86400",
     });
 
     await dbconnect();
@@ -26,21 +24,14 @@ export async function GET(
     const community = await Community.findOne({ slug });
 
     if (!community) {
-      console.log("Icon API: Community not found for slug:", slug);
       return NextResponse.json(
         { error: "Community not found" },
         { status: 404, headers }
       );
     }
 
-    // Convert to plain object for logging
+    // Convert to plain object for processing
     const communityObj = community.toObject();
-
-    console.log("Icon API: Community found:", {
-      id: communityObj._id.toString(),
-      name: communityObj.name,
-      iconImageUrl: communityObj.iconImageUrl || "<empty>",
-    });
 
     // Try to validate the icon URL
     let iconUrl = community.iconImageUrl || "";
@@ -52,7 +43,7 @@ export async function GET(
         new URL(iconUrl);
         isValid = true;
       } catch (e) {
-        console.error("Icon API: Invalid URL format:", iconUrl, e);
+        // Invalid URL format, reset to empty string
         iconUrl = "";
       }
     }
@@ -86,7 +77,6 @@ export async function PUT(
     }
 
     const { iconImageUrl } = await request.json();
-    console.log("Icon API PUT: Received icon URL:", iconImageUrl);
 
     if (!iconImageUrl) {
       return NextResponse.json(
@@ -99,7 +89,6 @@ export async function PUT(
     try {
       new URL(iconImageUrl);
     } catch (e) {
-      console.error("Icon API PUT: Invalid URL format:", iconImageUrl, e);
       return NextResponse.json(
         { error: "Invalid icon image URL format" },
         { status: 400 }
@@ -138,20 +127,14 @@ export async function PUT(
 
     // Approach 1: Use findOneAndUpdate with the slug
     try {
-      console.log("Icon API PUT: Attempting update with findOneAndUpdate");
       updatedCommunity = await Community.findOneAndUpdate(
         { slug },
         { $set: { iconImageUrl } },
         { new: true }
       );
-
-      console.log("Icon API PUT: Update result:", {
-        success: !!updatedCommunity,
-        iconImageUrl: updatedCommunity?.iconImageUrl || "<not set>",
-      });
       // Approach 1 completed
     } catch (error) {
-      console.error("Icon API PUT: Error in approach 1:", error);
+      // Silent error handling
     }
 
     // Approach 2: If the first approach didn't work, try updating by ID
@@ -185,30 +168,19 @@ export async function PUT(
           if (result && result.value) {
             updatedCommunity = await Community.findById(community._id);
           }
-        } else {
-          console.error(
-            "Icon API PUT: MongoDB connection not available for approach 3"
-          );
         }
-
         // Approach 3 completed
       } catch (error) {
-        console.error("Icon API PUT: Error in approach 3:", error);
+        // Silent error handling
       }
     }
 
     if (!updatedCommunity) {
-      console.error("Icon API PUT: All update approaches failed");
       return NextResponse.json(
         { error: "Failed to update community icon" },
         { status: 500 }
       );
     }
-
-    console.log(
-      "Icon API PUT: Successfully updated icon URL:",
-      updatedCommunity.iconImageUrl
-    );
     return NextResponse.json({
       success: true,
       community: updatedCommunity,

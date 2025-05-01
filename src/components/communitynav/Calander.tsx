@@ -83,36 +83,55 @@ function EventModal({
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Title</label>
+            <label
+              className="block text-sm font-medium mb-1"
+              htmlFor="eventTitle"
+            >
+              Title
+            </label>
             <input
               type="text"
+              id="eventTitle"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="input input-bordered w-full"
+              placeholder="Enter event title"
               required
               readOnly={!isAdmin}
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">
+            <label
+              className="block text-sm font-medium mb-1"
+              htmlFor="eventDescription"
+            >
               Description
             </label>
             <textarea
+              id="eventDescription"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="textarea textarea-bordered w-full"
+              placeholder="Enter event description"
               readOnly={!isAdmin}
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Location</label>
+            <label
+              className="block text-sm font-medium mb-1"
+              htmlFor="eventLocation"
+            >
+              Location
+            </label>
             <input
+              id="eventLocation"
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               className="input input-bordered w-full"
+              placeholder="Enter event location"
               readOnly={!isAdmin}
             />
           </div>
@@ -132,14 +151,19 @@ function EventModal({
 
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label
+                className="block text-sm font-medium mb-1"
+                htmlFor="startDate"
+              >
                 Start Date
               </label>
               <input
+                id="startDate"
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 className="input input-bordered w-full"
+                title="Event start date"
                 required
                 readOnly={!isAdmin}
               />
@@ -147,14 +171,19 @@ function EventModal({
 
             {!allDay && (
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label
+                  className="block text-sm font-medium mb-1"
+                  htmlFor="startTime"
+                >
                   Start Time
                 </label>
                 <input
+                  id="startTime"
                   type="time"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
                   className="input input-bordered w-full"
+                  title="Event start time"
                   required
                   readOnly={!isAdmin}
                 />
@@ -164,12 +193,19 @@ function EventModal({
 
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-medium mb-1">End Date</label>
+              <label
+                className="block text-sm font-medium mb-1"
+                htmlFor="endDate"
+              >
+                End Date
+              </label>
               <input
+                id="endDate"
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 className="input input-bordered w-full"
+                title="Event end date"
                 required
                 readOnly={!isAdmin}
               />
@@ -177,14 +213,19 @@ function EventModal({
 
             {!allDay && (
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label
+                  className="block text-sm font-medium mb-1"
+                  htmlFor="endTime"
+                >
                   End Time
                 </label>
                 <input
+                  id="endTime"
                   type="time"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
                   className="input input-bordered w-full"
+                  title="Event end time"
                   required
                   readOnly={!isAdmin}
                 />
@@ -240,7 +281,8 @@ function Calander() {
   const [viewMode, setViewMode] = useState<
     "dayGridMonth" | "timeGridWeek" | "timeGridDay"
   >("dayGridMonth");
-  const [currentDate, setCurrentDate] = useState(new Date());
+  // We'll use this to track the current date in the calendar
+  const [_, setCurrentDate] = useState(new Date());
   const [showYearPicker, setShowYearPicker] = useState(false);
   const calendarRef = useRef<any>(null);
   const yearPickerRef = useRef<HTMLDivElement>(null);
@@ -312,7 +354,6 @@ function Calander() {
           setEvents(formattedEvents);
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
         showNotification(
           error instanceof Error
             ? error.message
@@ -407,7 +448,7 @@ function Calander() {
           start: eventData.start,
           end: eventData.end,
           allDay: eventData.allDay,
-          communityId: communityId,
+          communityId: communityId as any, // Type cast to avoid ObjectId type error
           createdBy: session?.user?.id || "",
           createdAt: new Date(),
         });
@@ -432,7 +473,6 @@ function Calander() {
         showNotification("Event created successfully", "success");
       }
     } catch (error) {
-      console.error("Error saving event:", error);
       showNotification(
         error instanceof Error ? error.message : "Failed to save event",
         "error"
@@ -453,7 +493,6 @@ function Calander() {
       setModalOpen(false);
       showNotification("Event deleted successfully", "success");
     } catch (error) {
-      console.error("Error deleting event:", error);
       showNotification(
         error instanceof Error ? error.message : "Failed to delete event",
         "error"
@@ -793,11 +832,8 @@ function Calander() {
 
                           setEvents(formattedEvents);
                         })
-                        .catch((error) => {
-                          console.error(
-                            "Error fetching events for date range:",
-                            error
-                          );
+                        .catch(() => {
+                          // Silent error handling
                         });
                     }
 

@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { IKUploadResponse } from "imagekitio-next/dist/types/components/IKUpload/props";
 import { Loader2 } from "lucide-react";
 import { useNotification } from "./Notification";
 import { apiClient } from "@/lib/api-client"; // Assuming apiClient is in lib/api-client
-import FileUpload from "./FileUpload";
+import S3FileUpload from "./S3FileUpload";
 
 export interface ImageFormData {
   title: string;
@@ -32,8 +31,8 @@ export default function ImageUploadForm() {
     },
   });
 
-  const handleUploadSuccess = (response: IKUploadResponse) => {
-    setValue("imageUrl", response.filePath);
+  const handleUploadSuccess = (response: any) => {
+    setValue("imageUrl", response.url);
     showNotification("Image uploaded successfully!", "success");
   };
 
@@ -102,8 +101,9 @@ export default function ImageUploadForm() {
 
       <div className="form-control">
         <label className="label">Upload Image</label>
-        <FileUpload
+        <S3FileUpload
           fileType="image"
+          uploadType="post-image"
           onSuccess={handleUploadSuccess}
           onProgress={handleUploadProgress}
         />

@@ -78,11 +78,6 @@ export const authOptions: NextAuthConfig = {
   ],
   callbacks: {
     async jwt({ token, user, account }) {
-      console.log("JWT callback - Input:", {
-        tokenId: token?.id,
-        userId: user?.id,
-      });
-
       if (user) {
         token.id = user.id as string;
         token.email = user.email as string;
@@ -92,7 +87,6 @@ export const authOptions: NextAuthConfig = {
 
         // Add profileImage to token
         if (user.profileImage) {
-          console.log("Setting profileImage from user:", user.profileImage);
           token.profileImage = user.profileImage;
         }
       }
@@ -100,37 +94,41 @@ export const authOptions: NextAuthConfig = {
         token.provider = account.provider;
       }
 
-      // If token already exists but we need to update the profileImage
-      if (token.id && !token.profileImage) {
+      // Always check the database for the most up-to-date profile image
+      if (token.id) {
         try {
           await dbconnect();
           const dbUser = await User.findById(token.id);
+
           if (dbUser?.profileImage) {
-            console.log(
-              "Setting profileImage from database:",
-              dbUser.profileImage
+            // Check if the profile image is from S3 (user uploaded) or Google
+            const isDbS3Image =
+              dbUser.profileImage.includes(".amazonaws.com") ||
+              (dbUser.profileImage.includes(".s3.") &&
+                dbUser.profileImage.includes(".amazonaws.com"));
+
+            const isDbGoogleImage = dbUser.profileImage.includes(
+              "googleusercontent.com"
             );
-            token.profileImage = dbUser.profileImage;
+
+            // If the user has uploaded their own profile image (S3), always use that
+            if (isDbS3Image) {
+              token.profileImage = dbUser.profileImage;
+            }
+            // If the user hasn't uploaded their own image but has a Google image, use that as fallback
+            else if (isDbGoogleImage && !token.profileImage) {
+              token.profileImage = dbUser.profileImage;
+            }
           }
         } catch (error) {
-          console.error("Error fetching user profile image for token:", error);
+          // Silently handle error
         }
       }
-
-      console.log("JWT callback - Output token:", {
-        id: token.id,
-        profileImage: token.profileImage,
-      });
 
       return token;
     },
     // Using any for session type to match Auth.js v5 structure
     async session({ session, token }: { session: any; token: JWT }) {
-      console.log("Session callback - Input token:", {
-        id: token?.id,
-        profileImage: token?.profileImage,
-      });
-
       if (token && session.user) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
@@ -141,38 +139,37 @@ export const authOptions: NextAuthConfig = {
 
         // Add profileImage to session
         if (token.profileImage) {
-          console.log(
-            "Setting profileImage in session from token:",
-            token.profileImage
-          );
           session.user.profileImage = token.profileImage as string;
         } else {
-          console.log("No profileImage found in token");
-
           // Try to get profileImage from database as a fallback
           try {
             await dbconnect();
             const dbUser = await User.findById(token.id);
             if (dbUser?.profileImage) {
-              console.log(
-                "Setting profileImage in session from database:",
-                dbUser.profileImage
+              // Check if the profile image is from S3 (user uploaded) or Google
+              const isDbS3Image =
+                dbUser.profileImage.includes(".amazonaws.com") ||
+                (dbUser.profileImage.includes(".s3.") &&
+                  dbUser.profileImage.includes(".amazonaws.com"));
+
+              const isDbGoogleImage = dbUser.profileImage.includes(
+                "googleusercontent.com"
               );
-              session.user.profileImage = dbUser.profileImage;
+
+              // If the user has uploaded their own profile image (S3), always use that
+              if (isDbS3Image) {
+                session.user.profileImage = dbUser.profileImage;
+              }
+              // If the user hasn't uploaded their own image but has a Google image, use that as fallback
+              else if (isDbGoogleImage && !session.user.profileImage) {
+                session.user.profileImage = dbUser.profileImage;
+              }
             }
           } catch (error) {
-            console.error(
-              "Error fetching user profile image for session:",
-              error
-            );
+            // Silently handle error
           }
         }
       }
-
-      console.log("Session callback - Output session:", {
-        id: session?.user?.id,
-        profileImage: session?.user?.profileImage,
-      });
 
       return session;
     },
@@ -200,16 +197,33 @@ export const authOptions: NextAuthConfig = {
               ),
             });
           } else {
-            // Update existing user's Google-specific information
+            // For existing users, only update Google-specific information
+            const updateFields: any = {
+              name: user.name,
+              provider: "google",
+            };
+
+            // Check if the user has an S3 profile image
+            const hasS3Image =
+              dbUser.profileImage &&
+              (dbUser.profileImage.includes(".amazonaws.com") ||
+                (dbUser.profileImage.includes(".s3.") &&
+                  dbUser.profileImage.includes(".amazonaws.com")));
+
+            // Only update the profile image if:
+            // 1. The user doesn't have a profile image at all, or
+            // 2. The user only has a Google profile image (not an S3 image)
+            if (
+              !dbUser.profileImage ||
+              (!hasS3Image &&
+                dbUser.profileImage.includes("googleusercontent.com"))
+            ) {
+              updateFields.profileImage = user.image;
+            }
+
             await User.findOneAndUpdate(
               { email: user.email },
-              {
-                $set: {
-                  name: user.name,
-                  profileImage: user.image,
-                  provider: "google",
-                },
-              },
+              { $set: updateFields },
               { new: true }
             );
           }
@@ -221,7 +235,11 @@ export const authOptions: NextAuthConfig = {
 
         return true;
       } catch (error) {
-        console.error("SignIn error:", error);
+        // Silent error handling in production
+        if (process.env.NODE_ENV !== "production") {
+          // Only log in development
+          console.error("SignIn error:", error);
+        }
         return false;
       }
     },

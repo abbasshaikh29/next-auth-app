@@ -1,0 +1,105 @@
+/* Critical CSS for initial render */
+:root {
+  --primary: #f97316;
+  --primary-content: #ffffff;
+  --secondary: #6b21a8;
+  --accent: #1fb2a6;
+  --neutral: #2a323c;
+  --base-100: #1d232a;
+  --base-200: #191e24;
+  --base-300: #15191e;
+  --base-content: #a6adbb;
+  --halloween-orange: #f97316;
+  --halloween-purple: #6b21a8;
+  --halloween-green: #15803d;
+}
+
+/* Base styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--base-100);
+  color: var(--base-content);
+}
+
+/* Loading states */
+.skeleton {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  background-color: var(--base-200);
+  border-radius: 0.5rem;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+/* Layout */
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Basic components */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: var(--primary-content);
+}
+
+.card {
+  background-color: var(--base-200);
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+/* Loading spinner */
+.loading {
+  pointer-events: none;
+  display: inline-block;
+}
+
+.loading-spinner {
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  border: 0.25rem solid currentColor;
+  border-right-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Halloween theme decorative element */
+.bg-gradient-to-r {
+  background-image: linear-gradient(to right, var(--halloween-purple), var(--halloween-orange), var(--halloween-green));
+}

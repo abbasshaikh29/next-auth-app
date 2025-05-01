@@ -1,17 +1,29 @@
 "use client";
 import mongoose from "mongoose";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ICommunity } from "@/models/Community";
-import CommunityAboutcard from "@/components/communitycommponets/CommunityAboutcard";
-import { CreatePost } from "@/components/postcommponets/Createpost";
-import Searchs from "@/components/communitycommponets/Search";
 import { IPost } from "@/models/Posts";
-import PostCard from "@/components/Post";
 import CommunityNav from "@/components/communitynav/CommunityNav";
-import About from "@/components/communitynav/About";
-import { EditPostModal } from "@/components/postcommponets/EditPostModal";
+
+// Dynamically import components for code splitting
+const CommunityAboutcard = lazy(
+  () => import("@/components/communitycommponets/CommunityAboutcard")
+);
+const CreatePost = lazy(() =>
+  import("@/components/postcommponets/Createpost").then((mod) => ({
+    default: mod.CreatePost,
+  }))
+);
+const Searchs = lazy(() => import("@/components/communitycommponets/Search"));
+const PostCard = lazy(() => import("@/components/Post"));
+const About = lazy(() => import("@/components/communitynav/About"));
+const EditPostModal = lazy(() =>
+  import("@/components/postcommponets/EditPostModal").then((mod) => ({
+    default: mod.EditPostModal,
+  }))
+);
 
 interface PostWithAuthor extends Omit<IPost, "likes"> {
   _id: string;
@@ -42,18 +54,30 @@ export default function HomeIdPage() {
     if (!slug || !isMember) return;
 
     try {
+      console.log(`Fetching posts for community: ${slug}`);
       const postsResponse = await fetch(
         `/api/community/posts?communitySlug=${slug}`
       );
+
       if (!postsResponse.ok) {
-        throw new Error("Failed to fetch posts");
+        const errorText = await postsResponse.text();
+        console.error(`Server response (${postsResponse.status}):`, errorText);
+        throw new Error(
+          `Failed to fetch posts: ${postsResponse.status} ${postsResponse.statusText}`
+        );
       }
+
       const postsData = await postsResponse.json();
+      console.log(`Fetched ${postsData.length} posts successfully`);
+
       // Posts are already sorted by the API (newest first)
       setPosts(postsData);
       setFilteredPosts(searchQuery ? filteredPosts : postsData);
     } catch (error) {
       console.error("Error fetching posts:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to fetch posts"
+      );
     }
   };
 
@@ -243,16 +267,24 @@ export default function HomeIdPage() {
               {/* Main content - Posts */}
               <div className="flex flex-col mt-6 w-full lg:w-2/3 gap-3">
                 <div className="mb-4">
-                  <Searchs onSearch={handleSearch} />
+                  <Suspense
+                    fallback={<div className="skeleton h-12 w-full"></div>}
+                  >
+                    <Searchs onSearch={handleSearch} />
+                  </Suspense>
                 </div>
                 <div>
-                  <CreatePost
-                    communitySlug={slug}
-                    authorId={session?.user?.id as string}
-                    onPostCreated={(newPost) => {
-                      setPosts((prevPosts) => [newPost, ...prevPosts]);
-                    }}
-                  />
+                  <Suspense
+                    fallback={<div className="skeleton h-32 w-full"></div>}
+                  >
+                    <CreatePost
+                      communitySlug={slug}
+                      authorId={session?.user?.id as string}
+                      onPostCreated={(newPost) => {
+                        setPosts((prevPosts) => [newPost, ...prevPosts]);
+                      }}
+                    />
+                  </Suspense>
                 </div>
                 <div className="grid grid-cols-1 gap-4">
                   {filteredPosts.length === 0 && searchQuery ? (
@@ -282,41 +314,48 @@ export default function HomeIdPage() {
                             : post.createdBy,
                       };
                       return (
-                        <PostCard
+                        <Suspense
                           key={post._id}
-                          post={postData}
-                          onLike={(liked) => {
-                            // The Post component will handle the API call
-                            setPosts((prev) => {
-                              return prev.map((p) =>
-                                p._id === post._id
-                                  ? {
-                                      ...p,
-                                      likes: liked
-                                        ? [
-                                            ...(Array.isArray(p.likes)
+                          fallback={
+                            <div className="skeleton h-48 w-full"></div>
+                          }
+                        >
+                          <PostCard
+                            key={post._id}
+                            post={postData}
+                            onLike={(liked) => {
+                              // The Post component will handle the API call
+                              setPosts((prev) => {
+                                return prev.map((p) =>
+                                  p._id === post._id
+                                    ? {
+                                        ...p,
+                                        likes: liked
+                                          ? [
+                                              ...(Array.isArray(p.likes)
+                                                ? p.likes
+                                                : []),
+                                              new mongoose.Types.ObjectId(
+                                                session?.user?.id
+                                              ),
+                                            ]
+                                          : (Array.isArray(p.likes)
                                               ? p.likes
-                                              : []),
-                                            new mongoose.Types.ObjectId(
-                                              session?.user?.id
+                                              : []
+                                            ).filter(
+                                              (id) =>
+                                                id.toString() !==
+                                                session?.user?.id
                                             ),
-                                          ]
-                                        : (Array.isArray(p.likes)
-                                            ? p.likes
-                                            : []
-                                          ).filter(
-                                            (id) =>
-                                              id.toString() !==
-                                              session?.user?.id
-                                          ),
-                                    }
-                                  : p
-                              );
-                            });
-                          }}
-                          onEdit={(postId) => handleEditPost(postId)}
-                          onDelete={(postId) => handleDeletePost(postId)}
-                        />
+                                      }
+                                    : p
+                                );
+                              });
+                            }}
+                            onEdit={(postId) => handleEditPost(postId)}
+                            onDelete={(postId) => handleDeletePost(postId)}
+                          />
+                        </Suspense>
                       );
                     })
                   )}
@@ -325,7 +364,11 @@ export default function HomeIdPage() {
 
               {/* About card - Hidden on mobile, visible on large screens */}
               <div className="hidden lg:block lg:w-1/3 mt-6">
-                <CommunityAboutcard slug={slug} />
+                <Suspense
+                  fallback={<div className="skeleton h-96 w-full"></div>}
+                >
+                  <CommunityAboutcard slug={slug} />
+                </Suspense>
               </div>
 
               {/* Mobile-only about button that opens a modal */}
@@ -348,7 +391,11 @@ export default function HomeIdPage() {
                   className="modal modal-bottom sm:modal-middle"
                 >
                   <div className="modal-box">
-                    <CommunityAboutcard slug={slug} />
+                    <Suspense
+                      fallback={<div className="skeleton h-96 w-full"></div>}
+                    >
+                      <CommunityAboutcard slug={slug} />
+                    </Suspense>
                     <div className="modal-action">
                       <form method="dialog">
                         <button type="submit" className="btn">
@@ -364,7 +411,9 @@ export default function HomeIdPage() {
         ) : (
           <div className="container mx-auto px-4 py-8">
             <div className="flex flex-col gap-4">
-              <About slug={slug} />
+              <Suspense fallback={<div className="skeleton h-96 w-full"></div>}>
+                <About slug={slug} />
+              </Suspense>
             </div>
           </div>
         )}
@@ -372,22 +421,30 @@ export default function HomeIdPage() {
 
       {/* Edit Post Modal */}
       {editingPost && (
-        <EditPostModal
-          isOpen={isEditModalOpen}
-          onClose={() => {
-            setIsEditModalOpen(false);
-            setEditingPost(null);
-            setEditingPostId(null);
-          }}
-          postId={editingPostId || ""}
-          initialTitle={editingPost.title}
-          initialContent={
-            typeof editingPost.content === "string"
-              ? JSON.parse(editingPost.content)
-              : editingPost.content
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+              <div className="loading loading-spinner loading-lg text-primary"></div>
+            </div>
           }
-          onPostUpdated={handlePostUpdated}
-        />
+        >
+          <EditPostModal
+            isOpen={isEditModalOpen}
+            onClose={() => {
+              setIsEditModalOpen(false);
+              setEditingPost(null);
+              setEditingPostId(null);
+            }}
+            postId={editingPostId || ""}
+            initialTitle={editingPost.title}
+            initialContent={
+              typeof editingPost.content === "string"
+                ? JSON.parse(editingPost.content)
+                : editingPost.content
+            }
+            onPostUpdated={handlePostUpdated}
+          />
+        </Suspense>
       )}
     </>
   );

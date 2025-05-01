@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useNotification } from "@/components/Notification";
-import FileUpload from "@/components/FileUpload";
-import { IKUploadResponse } from "imagekitio-next/dist/types/components/IKUpload/props";
+import ProfileImageUpload from "@/components/ProfileImageUpload";
 
 interface UserProfileData {
   username: string;
@@ -19,9 +18,7 @@ export default function UserProfileForm() {
   const { data: session, update: updateSession } = useSession();
   const { showNotification } = useNotification();
   const [isLoading, setIsLoading] = useState(false);
-  const [uploadResponse, setUploadResponse] = useState<IKUploadResponse | null>(
-    null
-  );
+  // No longer need uploadResponse state with the new ProfileImageUpload component
   const [formData, setFormData] = useState<UserProfileData>({
     username: "",
     email: "",
@@ -155,33 +152,15 @@ export default function UserProfileForm() {
             </div>
 
             <div className="flex-1 w-full sm:w-auto">
-              <FileUpload
-                onSuccess={(response) => {
-                  setUploadResponse(response);
-
-                  // Use the URL from the response
-                  if (response.url) {
-                    setFormData((prev) => ({
-                      ...prev,
-                      profileImage: response.url,
-                    }));
-                  } else if (response.filePath) {
-                    setFormData((prev) => ({
-                      ...prev,
-                      profileImage: response.filePath,
-                    }));
-                  } else {
-                    showNotification(
-                      "Failed to get image URL from upload",
-                      "error"
-                    );
-                  }
+              <ProfileImageUpload
+                currentImage={formData.profileImage}
+                onImageUpdated={(imageUrl) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    profileImage: imageUrl,
+                  }));
                 }}
               />
-
-              <p className="text-xs text-gray-500 mt-2">
-                Upload a square image for best results. Maximum size: 5MB.
-              </p>
             </div>
           </div>
         </div>
@@ -269,13 +248,30 @@ export default function UserProfileForm() {
           </label>
         </div>
 
-        <div className="form-control mt-4 sm:mt-6">
+        <div className="form-control mt-4 sm:mt-6 flex flex-col sm:flex-row gap-2">
           <button
             type="submit"
             className="btn btn-primary w-full sm:w-auto"
             disabled={isLoading}
           >
             {isLoading ? "Saving..." : "Save Changes"}
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-outline w-full sm:w-auto"
+            onClick={async () => {
+              try {
+                showNotification("Refreshing session...", "info");
+                await updateSession();
+                showNotification("Session refreshed successfully", "success");
+              } catch (error) {
+                console.error("Error refreshing session:", error);
+                showNotification("Failed to refresh session", "error");
+              }
+            }}
+          >
+            Refresh Session
           </button>
         </div>
       </form>

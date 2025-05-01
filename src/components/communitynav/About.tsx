@@ -136,7 +136,7 @@ function About({ slug }: AboutProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000); // Reset copied state after 2 seconds
     } catch (err) {
-      console.error("Failed to copy:", err);
+      // Silent error handling
     }
   };
 

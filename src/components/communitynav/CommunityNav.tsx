@@ -20,12 +20,14 @@ interface Community {
 function CommunityNav() {
   const { slug } = useParams<{ slug: string }>();
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { showNotification } = useNotification();
   const [Name, setName] = useState("");
   const [isMember, setIsMember] = useState(false);
   const [iconImage, setIconImage] = useState("");
   const [userCommunities, setUserCommunities] = useState<Community[]>([]);
+
+  // No debug logging in production
 
   // Function to check if a link is active
   const isLinkActive = (path: string) => {
@@ -52,8 +54,6 @@ function CommunityNav() {
 
   const fetchCommunity = async () => {
     try {
-      console.log("CommunityNav: Fetching community data for slug:", slug);
-
       // Add a timestamp to prevent caching
       const timestamp = Date.now();
 
@@ -68,12 +68,10 @@ function CommunityNav() {
       });
 
       const data = await res.json();
-      console.log("CommunityNav: Community data received:", data);
       setName(data.name);
 
       // Set the icon image URL, ensuring it's a string
       let iconUrl = data.iconImageUrl || "";
-      console.log("CommunityNav: Initial icon URL from main API:", iconUrl);
 
       // Try all three approaches in parallel for faster response
       const fetchPromises = [];
@@ -93,10 +91,6 @@ function CommunityNav() {
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => {
               if (data?.isValid && data?.iconImageUrl) {
-                console.log(
-                  "CommunityNav: Got icon from validate API:",
-                  data.iconImageUrl
-                );
                 return data.iconImageUrl;
               }
               return null;
@@ -119,10 +113,6 @@ function CommunityNav() {
           .then((res) => (res.ok ? res.json() : null))
           .then((data) => {
             if (data?.iconImageUrl) {
-              console.log(
-                "CommunityNav: Got icon from icon API:",
-                data.iconImageUrl
-              );
               return data.iconImageUrl;
             }
             return null;
@@ -136,10 +126,6 @@ function CommunityNav() {
 
       if (validResults.length > 0 && !iconUrl) {
         iconUrl = validResults[0];
-        console.log(
-          "CommunityNav: Using icon URL from parallel fetch:",
-          iconUrl
-        );
       }
 
       // Directly set the icon image URL with a cache-busting parameter
@@ -151,9 +137,7 @@ function CommunityNav() {
           : `${iconUrl}?t=${timestamp}`;
       }
 
-      console.log("CommunityNav: Final icon URL being set:", finalIconUrl);
       setIconImage(finalIconUrl);
-
       setIsMember(data.members?.includes(session?.user?.id) || false);
 
       // Preload the image
@@ -162,7 +146,7 @@ function CommunityNav() {
         img.src = finalIconUrl;
       }
     } catch (error) {
-      console.error("CommunityNav: Error fetching community data:", error);
+      // Silent error handling
     }
   };
 

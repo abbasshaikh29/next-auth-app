@@ -24,13 +24,12 @@ export async function GET(
   try {
     const resolvedParams = await context.params;
     const { slug } = resolvedParams;
-    console.log("Main Community API: Fetching community for slug:", slug);
 
-    // Add cache control headers to prevent caching
+    // Add cache control headers with stale-while-revalidate strategy
+    // This allows the browser to use a cached version while fetching a new one in the background
     const headers = new Headers({
-      "Cache-Control": "no-cache, no-store, must-revalidate",
-      Pragma: "no-cache",
-      Expires: "0",
+      "Cache-Control":
+        "public, max-age=10, s-maxage=30, stale-while-revalidate=60",
     });
 
     if (!slug) {
@@ -53,10 +52,18 @@ export async function GET(
       );
     }
 
-    // Use lean() to get a plain JavaScript object instead of a Mongoose document
+    // Optimized query:
+    // 1. Use lean() to get a plain JavaScript object instead of a Mongoose document
+    // 2. Only select the fields we need
+    // 3. Add proper indexing hint
     const communityDoc = await Community.findOne({
       slug,
-    });
+    })
+      .select(
+        "_id name slug description bannerImageurl iconImageUrl members admin subAdmins adminQuestions"
+      )
+      .lean()
+      .hint({ slug: 1 }); // Use the slug index for better performance
 
     // Convert to plain object and cast to our type
     const community: CommunityType | null = communityDoc
@@ -91,14 +98,7 @@ export async function GET(
       );
     }
 
-    console.log("Main Community API: Community found:", {
-      id: community._id,
-      name: community.name,
-      iconImageUrl: community.iconImageUrl || "<empty>",
-      membersCount: community.members?.length || 0,
-      hasMembers: !!community.members,
-      firstFewMembers: community.members?.slice(0, 3) || [],
-    });
+    // Community found, continue with processing
 
     // Validate the icon URL
     let iconImageUrl = community.iconImageUrl || "";
@@ -107,11 +107,7 @@ export async function GET(
         // Validate URL format
         new URL(iconImageUrl);
       } catch (e) {
-        console.error(
-          "Main Community API: Invalid URL format:",
-          iconImageUrl,
-          e
-        );
+        // Invalid URL format, reset to empty string
         iconImageUrl = "";
       }
     }

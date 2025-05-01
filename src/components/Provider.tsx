@@ -2,64 +2,37 @@
 
 import { SessionProvider } from "next-auth/react";
 import { NotificationProvider } from "./Notification";
-import { ImageKitProvider } from "imagekitio-next";
 import { useState, useEffect } from "react";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-  const [ikConfig, setIkConfig] = useState({
-    urlEndpoint: "",
-    publicKey: "",
+  const [s3Config, setS3Config] = useState({
+    configured: false,
   });
 
-  // Load ImageKit config from environment variables
+  // Check if AWS S3 is configured
   useEffect(() => {
-    const urlEndpoint = process.env.NEXT_PUBLIC_URL_ENDPOINT;
-    const publicKey = process.env.NEXT_PUBLIC_PUBLIC_KEY;
+    const s3Url = process.env.NEXT_PUBLIC_S3_URL;
+    const cloudfrontDomain = process.env.NEXT_PUBLIC_CLOUDFRONT_DOMAIN;
 
-    if (urlEndpoint && publicKey) {
-      setIkConfig({
-        urlEndpoint,
-        publicKey,
+    if (s3Url || cloudfrontDomain) {
+      setS3Config({
+        configured: true,
       });
     }
   }, []);
 
-  const authenticator = async () => {
-    try {
-      const res = await fetch("/api/imagekitauth");
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Failed to authenticate: ${res.status} ${errorText}`);
-      }
-      const data = await res.json();
-      return data;
-    } catch (error) {
-      throw error;
-    }
-  };
-
   return (
     <SessionProvider
-      refetchInterval={5 * 60}
+      refetchInterval={5 * 60} // Back to 5 minutes (300 seconds)
       refetchOnWindowFocus={true}
       refetchWhenOffline={false}
     >
       <NotificationProvider>
-        {ikConfig.urlEndpoint && ikConfig.publicKey ? (
-          <ImageKitProvider
-            publicKey={ikConfig.publicKey}
-            urlEndpoint={ikConfig.urlEndpoint}
-            authenticator={authenticator}
-          >
-            {children}
-          </ImageKitProvider>
-        ) : (
-          <>
-            {children}
-            <div className="fixed bottom-4 left-4 bg-red-100 text-red-800 p-2 rounded text-xs">
-              ImageKit not configured
-            </div>
-          </>
+        {children}
+        {!s3Config.configured && (
+          <div className="fixed bottom-4 left-4 bg-yellow-100 text-yellow-800 p-2 rounded text-xs">
+            S3 storage not configured
+          </div>
         )}
       </NotificationProvider>
     </SessionProvider>

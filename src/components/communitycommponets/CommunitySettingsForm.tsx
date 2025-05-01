@@ -1,9 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { IKUploadResponse } from "imagekitio-next/dist/types/components/IKUpload/props";
 import { useNotification } from "@/components/Notification";
-import FileUpload from "../FileUpload";
+import S3FileUpload from "../S3FileUpload";
 import { Settings2Icon } from "lucide-react";
 import { useSession } from "next-auth/react";
 
@@ -16,11 +15,8 @@ export default function CommunitySettings() {
   const [bannerImage, setBannerImage] = useState<string>("");
   const [iconImage, setIconImage] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-  const [uploadResponse, setUploadResponse] = useState<IKUploadResponse | null>(
-    null
-  );
-  const [iconUploadResponse, setIconUploadResponse] =
-    useState<IKUploadResponse | null>(null);
+  const [uploadResponse, setUploadResponse] = useState<any>(null);
+  const [iconUploadResponse, setIconUploadResponse] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSubAdmin, setIsSubAdmin] = useState(false);
 
@@ -309,14 +305,34 @@ export default function CommunitySettings() {
             <label className="label">
               <span className="label-text">Banner Image</span>
             </label>
-            <FileUpload
+            <S3FileUpload
               onSuccess={(response) => {
                 setUploadResponse(response);
                 // Use the URL from the response
                 if (response.url) {
                   setBannerImage(response.url);
-                } else if (response.filePath) {
-                  setBannerImage(response.filePath);
+
+                  // Update the banner image directly via API
+                  fetch(`/api/community/${slug}/banner`, {
+                    method: "PUT",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ bannerImageurl: response.url }),
+                  })
+                    .then((res) => {
+                      if (!res.ok) {
+                        console.error("Failed to update banner image directly");
+                      } else {
+                        console.log("Banner image updated directly");
+                      }
+                    })
+                    .catch((err) => {
+                      console.error(
+                        "Error updating banner image directly:",
+                        err
+                      );
+                    });
                 } else {
                   showNotification(
                     "Failed to get image URL from upload",
@@ -324,6 +340,8 @@ export default function CommunitySettings() {
                   );
                 }
               }}
+              uploadType="community-banner"
+              entityId={communityId}
             />
 
             {/* Show the current banner image if available */}
@@ -355,7 +373,7 @@ export default function CommunitySettings() {
                 (Displayed next to community name)
               </span>
             </label>
-            <FileUpload
+            <S3FileUpload
               onSuccess={(response) => {
                 setIconUploadResponse(response);
                 // Use the URL from the response
@@ -365,20 +383,36 @@ export default function CommunitySettings() {
                     response.url
                   );
                   setIconImage(response.url);
-                } else if (response.filePath) {
-                  console.log(
-                    "Setting icon image URL from response.filePath:",
-                    response.filePath
-                  );
-                  setIconImage(response.filePath);
+
+                  // Update the icon image directly via API
+                  fetch(`/api/community/${slug}/icon`, {
+                    method: "PUT",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Cache-Control": "no-cache",
+                    },
+                    body: JSON.stringify({ iconImageUrl: response.url }),
+                  })
+                    .then((res) => {
+                      if (!res.ok) {
+                        console.error("Failed to update icon image directly");
+                      } else {
+                        console.log("Icon image updated directly");
+                      }
+                    })
+                    .catch((err) => {
+                      console.error("Error updating icon image directly:", err);
+                    });
                 } else {
-                  console.error("No URL or filePath in response:", response);
+                  console.error("No URL in response:", response);
                   showNotification(
                     "Failed to get image URL from upload",
                     "error"
                   );
                 }
               }}
+              uploadType="community-icon"
+              entityId={communityId}
             />
 
             {/* Show the current icon image if available */}

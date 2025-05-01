@@ -30,6 +30,8 @@ export default function Header() {
   );
   const pathname = usePathname();
 
+  // No debug logging in production
+
   // Fetch user communities
   // Function to preload community icons
   const preloadCommunityIcons = (communities: Community[]) => {

@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import React, { useEffect, useState, useCallback } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import CommunityNav from "@/components/communitynav/CommunityNav";
 import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useNotification } from "@/components/Notification";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Member {
   _id: string;
@@ -17,44 +18,80 @@ interface Member {
   joinedAt: string;
 }
 
+interface PaginationData {
+  currentPage: number;
+  totalPages: number;
+  totalMembers: number;
+  limit: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
 export default function MembersPage() {
   const { slug } = useParams<{ slug: string }>();
   const { data: session } = useSession();
   const { showNotification } = useNotification();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Get current page from URL or default to 1
+  const currentPage = parseInt(searchParams.get("page") || "1", 10);
+  const pageSize = 12; // Number of members per page
+
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSubAdmin, setIsSubAdmin] = useState(false);
+  const [pagination, setPagination] = useState<PaginationData>({
+    currentPage: 1,
+    totalPages: 1,
+    totalMembers: 0,
+    limit: pageSize,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
 
-  useEffect(() => {
-    const fetchMembers = async () => {
+  // Function to navigate to a specific page
+  const goToPage = useCallback(
+    (page: number) => {
+      router.push(`/Newcompage/${slug}/members?page=${page}`);
+    },
+    [router, slug]
+  );
+
+  // Fetch members with pagination
+  const fetchMembers = useCallback(
+    async (page: number) => {
       try {
         setLoading(true);
-        console.log("Fetching members for community:", slug);
-        const response = await fetch(`/api/community/${slug}/members`);
+        const response = await fetch(
+          `/api/community/${slug}/members?page=${page}&limit=${pageSize}`
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch members");
         }
 
         const data = await response.json();
-        console.log("Members data received:", data);
         setMembers(data.members);
         setIsAdmin(data.isAdmin);
         setIsSubAdmin(data.isSubAdmin);
+        setPagination(data.pagination);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching members:", error);
         setError("Failed to load members. Please try again later.");
         setLoading(false);
       }
-    };
+    },
+    [slug, pageSize]
+  );
 
+  useEffect(() => {
     if (session?.user?.id) {
-      fetchMembers();
+      fetchMembers(currentPage);
     }
-  }, [slug, session?.user?.id]);
+  }, [slug, session?.user?.id, currentPage, fetchMembers]);
 
   if (!session) {
     return (
@@ -103,6 +140,17 @@ export default function MembersPage() {
       <div className="container mx-auto p-6">
         <h1 className="text-3xl font-bold mb-6">Community Members</h1>
 
+        {/* Member count and pagination info */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="text-sm md:text-base">
+            Showing {members.length} of {pagination.totalMembers} members
+          </div>
+          <div className="text-sm md:text-base">
+            Page {pagination.currentPage} of {pagination.totalPages}
+          </div>
+        </div>
+
+        {/* Members grid with optimized rendering */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {members.map((member) => (
             <div
@@ -112,21 +160,24 @@ export default function MembersPage() {
               <div className="card-body">
                 <div className="flex items-center gap-4">
                   <div className="avatar">
-                    <div className="w-20 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+                    <div className="w-20 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 relative overflow-hidden">
                       {member.profileImage ? (
-                        <div
-                          className="w-20 h-20 rounded-full bg-center bg-cover"
-                          style={{
-                            backgroundImage: `url(${member.profileImage})`,
-                          }}
+                        <Image
+                          src={member.profileImage}
+                          alt={member.username}
+                          fill
+                          sizes="80px"
+                          className="object-cover"
+                          loading="lazy"
                         />
                       ) : member.image ? (
                         <Image
                           src={member.image}
                           alt={member.username}
-                          width={80}
-                          height={80}
-                          className="rounded-full"
+                          fill
+                          sizes="80px"
+                          className="object-cover"
+                          loading="lazy"
                         />
                       ) : (
                         <div className="bg-primary text-primary-content w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold">
@@ -176,6 +227,89 @@ export default function MembersPage() {
           <div className="bg-base-200 p-6 rounded-lg shadow-md text-center">
             <h2 className="text-xl font-bold mb-4">No Members Found</h2>
             <p>This community doesn't have any members yet.</p>
+          </div>
+        )}
+
+        {/* Pagination controls */}
+        {pagination.totalPages > 1 && (
+          <div className="flex justify-center mt-8">
+            <div className="join">
+              <button
+                type="button"
+                className="join-item btn"
+                disabled={!pagination.hasPrevPage}
+                onClick={() => goToPage(pagination.currentPage - 1)}
+                aria-label="Previous page"
+              >
+                <ChevronLeft size={18} />
+              </button>
+
+              {/* Generate page buttons */}
+              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
+                .filter(
+                  (page) =>
+                    // Show first page, last page, current page, and pages around current
+                    page === 1 ||
+                    page === pagination.totalPages ||
+                    (page >= pagination.currentPage - 1 &&
+                      page <= pagination.currentPage + 1)
+                )
+                .map((page, index, array) => {
+                  // Add ellipsis if there are gaps
+                  const showEllipsisBefore =
+                    index > 0 && page > array[index - 1] + 1;
+                  const showEllipsisAfter =
+                    index < array.length - 1 && page < array[index + 1] - 1;
+
+                  return (
+                    <React.Fragment key={page}>
+                      {showEllipsisBefore && (
+                        <button
+                          type="button"
+                          className="join-item btn btn-disabled"
+                          aria-label="More pages"
+                        >
+                          ...
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        className={`join-item btn ${
+                          pagination.currentPage === page ? "btn-active" : ""
+                        }`}
+                        onClick={() => goToPage(page)}
+                        aria-label={`Page ${page}`}
+                        aria-current={
+                          pagination.currentPage === page ? "page" : undefined
+                        }
+                      >
+                        {page}
+                      </button>
+
+                      {showEllipsisAfter && (
+                        <button
+                          type="button"
+                          className="join-item btn btn-disabled"
+                          aria-label="More pages"
+                        >
+                          ...
+                        </button>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+
+              <button
+                type="button"
+                className="join-item btn"
+                disabled={!pagination.hasNextPage}
+                onClick={() => goToPage(pagination.currentPage + 1)}
+                aria-label="Next page"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
           </div>
         )}
       </div>
