@@ -11,7 +11,7 @@ import mongoose from "mongoose";
 // GET /api/lessons/[id] - Get lesson details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession();
@@ -20,7 +20,8 @@ export async function GET(
     }
 
     await dbconnect();
-    const lessonId = params.id;
+    const resolvedParams = await context.params;
+    const lessonId = resolvedParams.id;
 
     // Get the lesson
     const lesson = await Lesson.findById(lessonId);
@@ -29,8 +30,8 @@ export async function GET(
     }
 
     // Get the module
-    const module = await Module.findById(lesson.moduleId);
-    if (!module) {
+    const courseModule = await Module.findById(lesson.moduleId);
+    if (!courseModule) {
       return NextResponse.json({ error: "Module not found" }, { status: 404 });
     }
 
@@ -112,29 +113,41 @@ export async function GET(
     const currentIndex = allLessons.findIndex(
       (l) => l._id.toString() === lessonId
     );
-    
-    const previousLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null;
-    const nextLesson = currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null;
+
+    const previousLesson =
+      currentIndex > 0 ? allLessons[currentIndex - 1] : null;
+    const nextLesson =
+      currentIndex < allLessons.length - 1
+        ? allLessons[currentIndex + 1]
+        : null;
 
     // Return lesson with navigation and progress info
     return NextResponse.json({
       lesson,
-      module,
+      module: courseModule,
       course,
       navigation: {
-        previousLesson: previousLesson ? {
-          _id: previousLesson._id,
-          title: previousLesson.title,
-        } : null,
-        nextLesson: nextLesson ? {
-          _id: nextLesson._id,
-          title: nextLesson.title,
-        } : null,
+        previousLesson: previousLesson
+          ? {
+              _id: previousLesson._id,
+              title: previousLesson.title,
+            }
+          : null,
+        nextLesson: nextLesson
+          ? {
+              _id: nextLesson._id,
+              title: nextLesson.title,
+            }
+          : null,
       },
-      progress: userProgress ? {
-        isCompleted: userProgress.completedLessons.includes(new mongoose.Types.ObjectId(lessonId)),
-        overallProgress: userProgress.progress,
-      } : null,
+      progress: userProgress
+        ? {
+            isCompleted: userProgress.completedLessons.includes(
+              new mongoose.Types.ObjectId(lessonId)
+            ),
+            overallProgress: userProgress.progress,
+          }
+        : null,
     });
   } catch (error) {
     console.error("Error fetching lesson:", error);
@@ -148,7 +161,7 @@ export async function GET(
 // PUT /api/lessons/[id] - Update lesson details
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession();
@@ -157,16 +170,17 @@ export async function PUT(
     }
 
     await dbconnect();
-    const lessonId = params.id;
-    const { 
-      title, 
-      description, 
-      content, 
-      videoUrl, 
-      attachments, 
-      isPublished, 
+    const resolvedParams = await context.params;
+    const lessonId = resolvedParams.id;
+    const {
+      title,
+      description,
+      content,
+      videoUrl,
+      attachments,
+      isPublished,
       duration,
-      releaseDate 
+      releaseDate,
     } = await request.json();
 
     // Get the lesson
@@ -196,7 +210,9 @@ export async function PUT(
 
     if (!isAdmin && !isSubAdmin && !isCreator) {
       return NextResponse.json(
-        { error: "Only admins, sub-admins, and the creator can update lessons" },
+        {
+          error: "Only admins, sub-admins, and the creator can update lessons",
+        },
         { status: 403 }
       );
     }
@@ -230,7 +246,7 @@ export async function PUT(
 // DELETE /api/lessons/[id] - Delete a lesson
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession();
@@ -239,7 +255,8 @@ export async function DELETE(
     }
 
     await dbconnect();
-    const lessonId = params.id;
+    const resolvedParams = await context.params;
+    const lessonId = resolvedParams.id;
 
     // Get the lesson
     const lesson = await Lesson.findById(lessonId);
@@ -268,7 +285,9 @@ export async function DELETE(
 
     if (!isAdmin && !isSubAdmin && !isCreator) {
       return NextResponse.json(
-        { error: "Only admins, sub-admins, and the creator can delete lessons" },
+        {
+          error: "Only admins, sub-admins, and the creator can delete lessons",
+        },
         { status: 403 }
       );
     }
@@ -278,9 +297,9 @@ export async function DELETE(
 
     // Update user progress records
     await UserProgress.updateMany(
-      { 
+      {
         courseId: lesson.courseId,
-        completedLessons: new mongoose.Types.ObjectId(lessonId)
+        completedLessons: new mongoose.Types.ObjectId(lessonId),
       },
       { $pull: { completedLessons: new mongoose.Types.ObjectId(lessonId) } }
     );

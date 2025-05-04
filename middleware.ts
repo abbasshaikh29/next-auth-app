@@ -84,9 +84,7 @@ export async function middleware(req: NextRequest) {
     pathname === "/register" ||
     pathname === "/" ||
     pathname.startsWith("/api/community") ||
-    pathname === "/api/community/posts" ||
-    pathname === "/auth-test" ||
-    pathname === "/auth-debug"
+    pathname === "/api/community/posts"
   ) {
     return NextResponse.next();
   }

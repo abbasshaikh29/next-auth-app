@@ -9,7 +9,7 @@ import mongoose from "mongoose";
 // POST /api/progress/lesson/[lessonId]/complete - Mark a lesson as completed
 export async function POST(
   request: NextRequest,
-  { params }: { params: { lessonId: string } }
+  context: { params: Promise<{ lessonId: string }> }
 ) {
   try {
     const session = await getServerSession();
@@ -18,7 +18,8 @@ export async function POST(
     }
 
     await dbconnect();
-    const lessonId = params.lessonId;
+    const resolvedParams = await context.params;
+    const lessonId = resolvedParams.lessonId;
 
     // Get the lesson
     const lesson = await Lesson.findById(lessonId);
@@ -60,8 +61,14 @@ export async function POST(
       });
     } else {
       // Add lesson to completed lessons if not already there
-      if (!userProgress.completedLessons.includes(new mongoose.Types.ObjectId(lessonId))) {
-        userProgress.completedLessons.push(new mongoose.Types.ObjectId(lessonId));
+      if (
+        !userProgress.completedLessons.includes(
+          new mongoose.Types.ObjectId(lessonId)
+        )
+      ) {
+        userProgress.completedLessons.push(
+          new mongoose.Types.ObjectId(lessonId)
+        );
       }
       userProgress.lastAccessedLesson = new mongoose.Types.ObjectId(lessonId);
       userProgress.lastAccessedAt = new Date();

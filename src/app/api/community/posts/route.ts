@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     // Find community by slug first - optimized query
     const community = await Community.findOne({ slug: communitySlug })
       .select("_id") // Only select the _id field since that's all we need
-      .lean();
+      .lean<{ _id: mongoose.Types.ObjectId }>();
 
     if (!community) {
       return NextResponse.json(
@@ -142,7 +142,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Find community by slug
-    const community = await Community.findOne({ slug: communitySlug });
+    const community = await Community.findOne({ slug: communitySlug }).lean<{
+      _id: mongoose.Types.ObjectId;
+    }>();
     if (!community) {
       return NextResponse.json(
         { error: "Community not found" },

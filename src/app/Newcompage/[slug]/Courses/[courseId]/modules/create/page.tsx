@@ -34,29 +34,34 @@ export default function CreateModule() {
     const fetchCourseDetails = async () => {
       try {
         if (!courseId) return;
-        
+
         const response = await fetch(`/api/courses/${courseId}`);
         if (!response.ok) {
           throw new Error("Failed to fetch course details");
         }
-        
+
         const data = await response.json();
         setCourse(data.course);
-        
+
         // Check if user is admin or creator
         if (session?.user?.id) {
           const communityResponse = await fetch(`/api/community/${slug}`);
           if (communityResponse.ok) {
             const communityData = await communityResponse.json();
             const isUserAdmin = communityData.admin === session.user.id;
-            const isUserSubAdmin = communityData.subAdmins?.includes(session.user.id);
+            const isUserSubAdmin = communityData.subAdmins?.includes(
+              session.user.id
+            );
             const isCreator = data.course.createdBy === session.user.id;
-            
+
             const hasPermission = isUserAdmin || isUserSubAdmin || isCreator;
             setIsAdmin(hasPermission);
-            
+
             if (!hasPermission) {
-              showNotification("You don't have permission to create modules", "error");
+              showNotification(
+                "You don't have permission to create modules",
+                "error"
+              );
               router.push(`/Newcompage/${slug}/Courses/${courseId}`);
             }
           }
@@ -74,7 +79,9 @@ export default function CreateModule() {
     }
   }, [courseId, slug, session, router, showNotification]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -84,7 +91,7 @@ export default function CreateModule() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim()) {
       showNotification("Module title is required", "error");
       return;
@@ -92,11 +99,11 @@ export default function CreateModule() {
 
     try {
       setSubmitting(true);
-      
-      const response = await fetch('/api/modules', {
-        method: 'POST',
+
+      const response = await fetch("/api/modules", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...formData,
@@ -106,16 +113,16 @@ export default function CreateModule() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to create module');
+        throw new Error(error.error || "Failed to create module");
       }
 
-      const module = await response.json();
-      
-      showNotification('Module created successfully', 'success');
+      const newModule = await response.json();
+
+      showNotification("Module created successfully", "success");
       router.push(`/Newcompage/${slug}/Courses/${courseId}`);
     } catch (error) {
-      console.error('Error creating module:', error);
-      showNotification('Failed to create module', 'error');
+      console.error("Error creating module:", error);
+      showNotification("Failed to create module", "error");
     } finally {
       setSubmitting(false);
     }
@@ -146,19 +153,21 @@ export default function CreateModule() {
   return (
     <div>
       <CommunityNav />
-      
+
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Add Module to {course?.title}</h1>
           <button
             type="button"
             className="btn btn-outline"
-            onClick={() => router.push(`/Newcompage/${slug}/Courses/${courseId}`)}
+            onClick={() =>
+              router.push(`/Newcompage/${slug}/Courses/${courseId}`)
+            }
           >
             Cancel
           </button>
         </div>
-        
+
         <div className="card bg-base-100 shadow-md">
           <div className="card-body">
             <form onSubmit={handleSubmit}>
@@ -176,7 +185,7 @@ export default function CreateModule() {
                   required
                 />
               </div>
-              
+
               <div className="form-control mb-4">
                 <label className="label">
                   <span className="label-text font-medium">Description</span>
@@ -189,10 +198,12 @@ export default function CreateModule() {
                   className="textarea textarea-bordered h-24"
                 />
               </div>
-              
+
               <div className="form-control mb-6">
                 <label className="label">
-                  <span className="label-text font-medium">Release Date (Optional)</span>
+                  <span className="label-text font-medium">
+                    Release Date (Optional)
+                  </span>
                 </label>
                 <div className="relative">
                   <input
@@ -202,18 +213,26 @@ export default function CreateModule() {
                     onChange={handleChange}
                     className="input input-bordered w-full pl-10"
                   />
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <Calendar
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={18}
+                  />
                 </div>
                 <label className="label">
-                  <span className="label-text-alt">If set, the module will be automatically published on this date</span>
+                  <span className="label-text-alt">
+                    If set, the module will be automatically published on this
+                    date
+                  </span>
                 </label>
               </div>
-              
+
               <div className="flex justify-end gap-3">
                 <button
                   type="button"
                   className="btn btn-outline"
-                  onClick={() => router.push(`/Newcompage/${slug}/Courses/${courseId}`)}
+                  onClick={() =>
+                    router.push(`/Newcompage/${slug}/Courses/${courseId}`)
+                  }
                 >
                   Cancel
                 </button>

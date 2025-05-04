@@ -9,7 +9,7 @@ import mongoose from "mongoose";
 // POST /api/courses/[id]/enroll - Enroll in a course
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession();
@@ -18,7 +18,8 @@ export async function POST(
     }
 
     await dbconnect();
-    const courseId = params.id;
+    const resolvedParams = await context.params;
+    const courseId = resolvedParams.id;
 
     // Get the course
     const course = await Course.findById(courseId);
@@ -46,7 +47,10 @@ export async function POST(
     const isMember = community.members.includes(session.user.id);
     if (!isMember) {
       return NextResponse.json(
-        { error: "You must be a member of the community to enroll in this course" },
+        {
+          error:
+            "You must be a member of the community to enroll in this course",
+        },
         { status: 403 }
       );
     }
@@ -77,7 +81,7 @@ export async function POST(
 // DELETE /api/courses/[id]/enroll - Unenroll from a course
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession();
@@ -86,7 +90,8 @@ export async function DELETE(
     }
 
     await dbconnect();
-    const courseId = params.id;
+    const resolvedParams = await context.params;
+    const courseId = resolvedParams.id;
 
     // Get the course
     const course = await Course.findById(courseId);
@@ -112,7 +117,7 @@ export async function DELETE(
 
     // Unenroll the user
     course.enrolledUsers = course.enrolledUsers.filter(
-      (userId) => userId !== session.user.id
+      (userId: string) => userId !== session.user.id
     );
     await course.save();
 

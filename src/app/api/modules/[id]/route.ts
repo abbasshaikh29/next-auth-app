@@ -10,7 +10,7 @@ import mongoose from "mongoose";
 // GET /api/modules/[id] - Get module details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession();
@@ -19,16 +19,17 @@ export async function GET(
     }
 
     await dbconnect();
-    const moduleId = params.id;
+    const resolvedParams = await context.params;
+    const moduleId = resolvedParams.id;
 
     // Get the module
-    const module = await Module.findById(moduleId);
-    if (!module) {
+    const courseModule = await Module.findById(moduleId);
+    if (!courseModule) {
       return NextResponse.json({ error: "Module not found" }, { status: 404 });
     }
 
     // Get the course
-    const course = await Course.findById(module.courseId);
+    const course = await Course.findById(courseModule.courseId);
     if (!course) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
@@ -49,7 +50,7 @@ export async function GET(
     const isCreator = course.createdBy === session.user.id;
 
     // If module is not published, only creator, admin, or sub-admin can access
-    if (!module.isPublished && !isCreator && !isAdmin && !isSubAdmin) {
+    if (!courseModule.isPublished && !isCreator && !isAdmin && !isSubAdmin) {
       return NextResponse.json(
         { error: "Module is not published" },
         { status: 403 }
@@ -73,15 +74,15 @@ export async function GET(
     }
 
     // Get lessons for this module
-    const lessons = await Lesson.find({ 
+    const lessons = await Lesson.find({
       moduleId: new mongoose.Types.ObjectId(moduleId),
-      ...((!isAdmin && !isSubAdmin && !isCreator) ? { isPublished: true } : {})
+      ...(!isAdmin && !isSubAdmin && !isCreator ? { isPublished: true } : {}),
     }).sort({ order: 1 });
 
     // Return module with lessons
     return NextResponse.json({
-      module,
-      lessons
+      module: courseModule,
+      lessons,
     });
   } catch (error) {
     console.error("Error fetching module:", error);
@@ -95,7 +96,7 @@ export async function GET(
 // PUT /api/modules/[id] - Update module details
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession();
@@ -104,17 +105,19 @@ export async function PUT(
     }
 
     await dbconnect();
-    const moduleId = params.id;
-    const { title, description, isPublished, releaseDate } = await request.json();
+    const resolvedParams = await context.params;
+    const moduleId = resolvedParams.id;
+    const { title, description, isPublished, releaseDate } =
+      await request.json();
 
     // Get the module
-    const module = await Module.findById(moduleId);
-    if (!module) {
+    const courseModule = await Module.findById(moduleId);
+    if (!courseModule) {
       return NextResponse.json({ error: "Module not found" }, { status: 404 });
     }
 
     // Get the course
-    const course = await Course.findById(module.courseId);
+    const course = await Course.findById(courseModule.courseId);
     if (!course) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
@@ -134,7 +137,9 @@ export async function PUT(
 
     if (!isAdmin && !isSubAdmin && !isCreator) {
       return NextResponse.json(
-        { error: "Only admins, sub-admins, and the creator can update modules" },
+        {
+          error: "Only admins, sub-admins, and the creator can update modules",
+        },
         { status: 403 }
       );
     }
@@ -164,7 +169,7 @@ export async function PUT(
 // DELETE /api/modules/[id] - Delete a module
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession();
@@ -173,16 +178,17 @@ export async function DELETE(
     }
 
     await dbconnect();
-    const moduleId = params.id;
+    const resolvedParams = await context.params;
+    const moduleId = resolvedParams.id;
 
     // Get the module
-    const module = await Module.findById(moduleId);
-    if (!module) {
+    const courseModule = await Module.findById(moduleId);
+    if (!courseModule) {
       return NextResponse.json({ error: "Module not found" }, { status: 404 });
     }
 
     // Get the course
-    const course = await Course.findById(module.courseId);
+    const course = await Course.findById(courseModule.courseId);
     if (!course) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
@@ -202,13 +208,17 @@ export async function DELETE(
 
     if (!isAdmin && !isSubAdmin && !isCreator) {
       return NextResponse.json(
-        { error: "Only admins, sub-admins, and the creator can delete modules" },
+        {
+          error: "Only admins, sub-admins, and the creator can delete modules",
+        },
         { status: 403 }
       );
     }
 
     // Delete all lessons for this module
-    await Lesson.deleteMany({ moduleId: new mongoose.Types.ObjectId(moduleId) });
+    await Lesson.deleteMany({
+      moduleId: new mongoose.Types.ObjectId(moduleId),
+    });
 
     // Delete the module
     await Module.findByIdAndDelete(moduleId);

@@ -62,29 +62,24 @@ export async function GET(
       .select(
         "_id name slug description bannerImageurl iconImageUrl members admin subAdmins adminQuestions"
       )
-      .lean()
+      .lean<{
+        _id: mongoose.Types.ObjectId;
+        name: string;
+        slug?: string;
+        description?: string;
+        bannerImageurl?: string;
+        iconImageUrl?: string;
+        members: string[];
+        admin: string;
+        subAdmins?: string[];
+        adminQuestions?: string[];
+      }>()
       .hint({ slug: 1 }); // Use the slug index for better performance
 
-    // Convert to plain object and cast to our type
-    const community: CommunityType | null = communityDoc
-      ? {
-          _id: communityDoc._id.toString(),
-          name: communityDoc.name,
-          slug: communityDoc.slug || "",
-          description: communityDoc.description,
-          bannerImageurl: communityDoc.bannerImageurl,
-          iconImageUrl: communityDoc.iconImageUrl,
-          members: communityDoc.members || [],
-          admin: communityDoc.admin || "",
-          subAdmins: communityDoc.subAdmins || [],
-          adminQuestions: communityDoc.adminQuestions || [],
-        }
-      : null;
-
-    if (!community) {
-      // Try to find if any communities exist
+    // Check if we have a valid document
+    if (!communityDoc) {
+      // No community found
       const communityCount = await Community.countDocuments({});
-
       return NextResponse.json(
         {
           error: "Community not found",
@@ -97,6 +92,21 @@ export async function GET(
         { status: 404, headers }
       );
     }
+
+    // We know communityDoc exists and is a valid document at this point
+    // Convert to our CommunityType
+    const community: CommunityType = {
+      _id: communityDoc._id.toString(),
+      name: communityDoc.name,
+      slug: communityDoc.slug || "",
+      description: communityDoc.description,
+      bannerImageurl: communityDoc.bannerImageurl,
+      iconImageUrl: communityDoc.iconImageUrl,
+      members: communityDoc.members || [],
+      admin: communityDoc.admin || "",
+      subAdmins: communityDoc.subAdmins || [],
+      adminQuestions: communityDoc.adminQuestions || [],
+    };
 
     // Community found, continue with processing
 

@@ -9,7 +9,7 @@ import mongoose from "mongoose";
 // GET /api/progress/course/[courseId] - Get user progress for a course
 export async function GET(
   request: NextRequest,
-  { params }: { params: { courseId: string } }
+  context: { params: Promise<{ courseId: string }> }
 ) {
   try {
     const session = await getServerSession();
@@ -18,7 +18,8 @@ export async function GET(
     }
 
     await dbconnect();
-    const courseId = params.courseId;
+    const resolvedParams = await context.params;
+    const courseId = resolvedParams.courseId;
 
     // Get the course
     const course = await Course.findById(courseId);
@@ -59,13 +60,16 @@ export async function GET(
     });
 
     // Create a map of completed lessons
-    const completedLessonsMap = userProgress.completedLessons.reduce((acc, lessonId) => {
-      acc[lessonId.toString()] = true;
-      return acc;
-    }, {} as Record<string, boolean>);
+    const completedLessonsMap = userProgress.completedLessons.reduce(
+      (acc: Record<string, boolean>, lessonId: mongoose.Types.ObjectId) => {
+        acc[lessonId.toString()] = true;
+        return acc;
+      },
+      {} as Record<string, boolean>
+    );
 
     // Add completion status to each lesson
-    const lessonsWithStatus = lessons.map(lesson => ({
+    const lessonsWithStatus = lessons.map((lesson) => ({
       _id: lesson._id,
       title: lesson.title,
       moduleId: lesson.moduleId,

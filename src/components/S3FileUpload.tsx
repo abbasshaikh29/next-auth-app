@@ -18,7 +18,8 @@ interface S3FileUploadProps {
     | "community-banner"
     | "community-icon"
     | "course"
-    | "thumbnail";
+    | "thumbnail"
+    | "post-image";
   entityId?: string; // Community ID, course ID, etc.
 }
 

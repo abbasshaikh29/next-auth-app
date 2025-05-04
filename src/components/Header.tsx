@@ -5,7 +5,7 @@ import { useNotification } from "./Notification";
 import Link from "next/link";
 import Image from "next/image";
 import { User, ChevronDown, Compass, Plus } from "lucide-react";
-import SessionDebug from "./SessionDebug";
+
 import CommunityIcon from "./communitynav/CommunityIcon";
 import { usePathname } from "next/navigation";
 import MessageIcon from "./messages/MessageIcon";
@@ -23,7 +23,7 @@ interface Community {
 export default function Header() {
   const { data: session } = useSession();
   const { showNotification } = useNotification();
-  const [showDebug, setShowDebug] = useState(false);
+
   const [userCommunities, setUserCommunities] = useState<Community[]>([]);
   const [currentCommunity, setCurrentCommunity] = useState<Community | null>(
     null
@@ -100,19 +100,6 @@ export default function Header() {
 
     fetchUserCommunities();
   }, [session]);
-
-  // Toggle debug panel with Ctrl+D
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === "d") {
-        e.preventDefault();
-        setShowDebug((prev) => !prev);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -335,7 +322,6 @@ export default function Header() {
           </div>
         </div>
       </div>
-      {showDebug && <SessionDebug />}
     </div>
   );
 }

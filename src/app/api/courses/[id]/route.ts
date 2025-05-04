@@ -10,7 +10,7 @@ import mongoose from "mongoose";
 // GET /api/courses/[id] - Get course details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession();
@@ -19,7 +19,8 @@ export async function GET(
     }
 
     await dbconnect();
-    const courseId = params.id;
+    const resolvedParams = await context.params;
+    const courseId = resolvedParams.id;
 
     // Get the course
     const course = await Course.findById(courseId);
@@ -67,22 +68,22 @@ export async function GET(
     }
 
     // Get modules for this course
-    const modules = await Module.find({ 
+    const modules = await Module.find({
       courseId: new mongoose.Types.ObjectId(courseId),
-      ...((!isAdmin && !isSubAdmin && !isCreator) ? { isPublished: true } : {})
+      ...(!isAdmin && !isSubAdmin && !isCreator ? { isPublished: true } : {}),
     }).sort({ order: 1 });
 
     // Get lessons for this course
-    const lessons = await Lesson.find({ 
+    const lessons = await Lesson.find({
       courseId: new mongoose.Types.ObjectId(courseId),
-      ...((!isAdmin && !isSubAdmin && !isCreator) ? { isPublished: true } : {})
+      ...(!isAdmin && !isSubAdmin && !isCreator ? { isPublished: true } : {}),
     }).sort({ order: 1 });
 
     // Return course with modules and lessons
     return NextResponse.json({
       course,
       modules,
-      lessons
+      lessons,
     });
   } catch (error) {
     console.error("Error fetching course:", error);
@@ -96,7 +97,7 @@ export async function GET(
 // PUT /api/courses/[id] - Update course details
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession();
@@ -105,8 +106,10 @@ export async function PUT(
     }
 
     await dbconnect();
-    const courseId = params.id;
-    const { title, description, thumbnail, isPublished, isPublic, tags } = await request.json();
+    const resolvedParams = await context.params;
+    const courseId = resolvedParams.id;
+    const { title, description, thumbnail, isPublished, isPublic, tags } =
+      await request.json();
 
     // Get the course
     const course = await Course.findById(courseId);
@@ -129,7 +132,9 @@ export async function PUT(
 
     if (!isAdmin && !isSubAdmin && !isCreator) {
       return NextResponse.json(
-        { error: "Only admins, sub-admins, and the creator can update courses" },
+        {
+          error: "Only admins, sub-admins, and the creator can update courses",
+        },
         { status: 403 }
       );
     }
@@ -161,7 +166,7 @@ export async function PUT(
 // DELETE /api/courses/[id] - Delete a course
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession();
@@ -170,7 +175,8 @@ export async function DELETE(
     }
 
     await dbconnect();
-    const courseId = params.id;
+    const resolvedParams = await context.params;
+    const courseId = resolvedParams.id;
 
     // Get the course
     const course = await Course.findById(courseId);
@@ -198,8 +204,12 @@ export async function DELETE(
     }
 
     // Delete all modules and lessons for this course
-    await Module.deleteMany({ courseId: new mongoose.Types.ObjectId(courseId) });
-    await Lesson.deleteMany({ courseId: new mongoose.Types.ObjectId(courseId) });
+    await Module.deleteMany({
+      courseId: new mongoose.Types.ObjectId(courseId),
+    });
+    await Lesson.deleteMany({
+      courseId: new mongoose.Types.ObjectId(courseId),
+    });
 
     // Delete the course
     await Course.findByIdAndDelete(courseId);

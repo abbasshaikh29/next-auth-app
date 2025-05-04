@@ -6,27 +6,12 @@ import { ICommunity } from "@/models/Community";
 import { apiClient } from "@/lib/api-client";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import SessionDebug from "@/components/SessionDebug";
 import ConditionalHero from "@/components/ConditionalHero";
 export default function Home() {
   const { data: session, status } = useSession();
   const [community, setcommunity] = useState<ICommunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showDebug, setShowDebug] = useState(false);
-
-  // Toggle debug panel with Ctrl+D
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === "d") {
-        e.preventDefault();
-        setShowDebug((prev) => !prev);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -88,13 +73,6 @@ export default function Home() {
             <Communityfeed communitys={community} />
           </div>
         )}
-      </div>
-
-      {showDebug && <SessionDebug />}
-
-      {/* Debug info about session status */}
-      <div className="fixed bottom-4 left-4 text-xs opacity-50">
-        Session status: {status}
       </div>
     </main>
   );

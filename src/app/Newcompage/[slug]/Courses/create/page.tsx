@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useNotification } from "@/components/Notification";
 import CommunityNav from "@/components/communitynav/CommunityNav";
-import { Image, X, Upload, Tag, Plus } from "lucide-react";
+import { ImageIcon, X, Upload, Tag, Plus } from "lucide-react";
 import { generateUploadUrl } from "@/lib/s3";
 
 interface FormData {
@@ -42,23 +42,26 @@ export default function CreateCourse() {
     const fetchCommunityDetails = async () => {
       try {
         if (!slug) return;
-        
+
         const response = await fetch(`/api/community/${slug}`);
         if (!response.ok) {
           throw new Error("Failed to fetch community details");
         }
-        
+
         const data = await response.json();
         setCommunityId(data._id);
-        
+
         // Check if user is admin or sub-admin
         if (session?.user?.id) {
           const isUserAdmin = data.admin === session.user.id;
           const isUserSubAdmin = data.subAdmins?.includes(session.user.id);
           setIsAdmin(isUserAdmin || isUserSubAdmin);
-          
+
           if (!isUserAdmin && !isUserSubAdmin) {
-            showNotification("Only admins and sub-admins can create courses", "error");
+            showNotification(
+              "Only admins and sub-admins can create courses",
+              "error"
+            );
             router.push(`/Newcompage/${slug}/Courses`);
           }
         }
@@ -75,10 +78,14 @@ export default function CreateCourse() {
     }
   }, [slug, session, router, showNotification]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value, type } = e.target;
-    
-    if (type === 'checkbox') {
+
+    if (type === "checkbox") {
       const checkbox = e.target as HTMLInputElement;
       setFormData({
         ...formData,
@@ -92,13 +99,15 @@ export default function CreateCourse() {
     }
   };
 
-  const handleThumbnailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     try {
       setUploadingThumbnail(true);
-      
+
       // Create a local preview
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -107,36 +116,36 @@ export default function CreateCourse() {
       reader.readAsDataURL(file);
 
       // Get a presigned URL for S3 upload
-      const response = await fetch('/api/upload/s3', {
-        method: 'POST',
+      const response = await fetch("/api/upload/s3", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           fileName: file.name,
           fileType: file.type,
           courseId: communityId,
-          type: 'thumbnail',
+          type: "thumbnail",
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get upload URL');
+        throw new Error("Failed to get upload URL");
       }
 
       const { uploadUrl, fileUrl } = await response.json();
 
       // Upload the file to S3
       const uploadResponse = await fetch(uploadUrl, {
-        method: 'PUT',
+        method: "PUT",
         body: file,
         headers: {
-          'Content-Type': file.type,
+          "Content-Type": file.type,
         },
       });
 
       if (!uploadResponse.ok) {
-        throw new Error('Failed to upload file');
+        throw new Error("Failed to upload file");
       }
 
       // Update form data with the file URL
@@ -144,11 +153,11 @@ export default function CreateCourse() {
         ...formData,
         thumbnail: fileUrl,
       });
-      
-      showNotification('Thumbnail uploaded successfully', 'success');
+
+      showNotification("Thumbnail uploaded successfully", "success");
     } catch (error) {
-      console.error('Error uploading thumbnail:', error);
-      showNotification('Failed to upload thumbnail', 'error');
+      console.error("Error uploading thumbnail:", error);
+      showNotification("Failed to upload thumbnail", "error");
     } finally {
       setUploadingThumbnail(false);
     }
@@ -167,13 +176,13 @@ export default function CreateCourse() {
   const handleRemoveTag = (tag: string) => {
     setFormData({
       ...formData,
-      tags: formData.tags.filter(t => t !== tag),
+      tags: formData.tags.filter((t) => t !== tag),
     });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim()) {
       showNotification("Course title is required", "error");
       return;
@@ -181,11 +190,11 @@ export default function CreateCourse() {
 
     try {
       setSubmitting(true);
-      
-      const response = await fetch('/api/courses', {
-        method: 'POST',
+
+      const response = await fetch("/api/courses", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...formData,
@@ -195,16 +204,16 @@ export default function CreateCourse() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to create course');
+        throw new Error(error.error || "Failed to create course");
       }
 
       const course = await response.json();
-      
-      showNotification('Course created successfully', 'success');
+
+      showNotification("Course created successfully", "success");
       router.push(`/Newcompage/${slug}/Courses/${course._id}`);
     } catch (error) {
-      console.error('Error creating course:', error);
-      showNotification('Failed to create course', 'error');
+      console.error("Error creating course:", error);
+      showNotification("Failed to create course", "error");
     } finally {
       setSubmitting(false);
     }
@@ -235,7 +244,7 @@ export default function CreateCourse() {
   return (
     <div>
       <CommunityNav />
-      
+
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Create New Course</h1>
@@ -247,7 +256,7 @@ export default function CreateCourse() {
             Cancel
           </button>
         </div>
-        
+
         <div className="card bg-base-100 shadow-md">
           <div className="card-body">
             <form onSubmit={handleSubmit}>
@@ -265,7 +274,7 @@ export default function CreateCourse() {
                   required
                 />
               </div>
-              
+
               <div className="form-control mb-4">
                 <label className="label">
                   <span className="label-text font-medium">Description</span>
@@ -278,7 +287,7 @@ export default function CreateCourse() {
                   className="textarea textarea-bordered h-24"
                 />
               </div>
-              
+
               <div className="form-control mb-4">
                 <label className="label">
                   <span className="label-text font-medium">Thumbnail</span>
@@ -288,14 +297,16 @@ export default function CreateCourse() {
                     {thumbnailPreview ? (
                       <img
                         src={thumbnailPreview}
-                        alt="Thumbnail preview"
+                        alt="Course thumbnail preview"
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <Image className="text-gray-400" size={24} />
+                      <div aria-label="Thumbnail placeholder">
+                        <ImageIcon className="text-gray-400" size={24} />
+                      </div>
                     )}
                   </div>
-                  
+
                   <div>
                     <input
                       type="file"
@@ -327,17 +338,14 @@ export default function CreateCourse() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="form-control mb-4">
                 <label className="label">
                   <span className="label-text font-medium">Tags</span>
                 </label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {formData.tags.map((tag) => (
-                    <div
-                      key={tag}
-                      className="badge badge-primary gap-1"
-                    >
+                    <div key={tag} className="badge badge-primary gap-1">
                       <span>{tag}</span>
                       <button
                         type="button"
@@ -356,7 +364,7 @@ export default function CreateCourse() {
                     placeholder="Add a tag"
                     className="input input-bordered flex-grow"
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
+                      if (e.key === "Enter") {
                         e.preventDefault();
                         handleAddTag();
                       }
@@ -372,7 +380,7 @@ export default function CreateCourse() {
                   </button>
                 </div>
               </div>
-              
+
               <div className="form-control mb-6">
                 <label className="label cursor-pointer justify-start gap-2">
                   <input
@@ -382,10 +390,12 @@ export default function CreateCourse() {
                     onChange={handleChange}
                     className="checkbox"
                   />
-                  <span className="label-text">Make this course available to all community members</span>
+                  <span className="label-text">
+                    Make this course available to all community members
+                  </span>
                 </label>
               </div>
-              
+
               <div className="flex justify-end gap-3">
                 <button
                   type="button"

@@ -9,7 +9,7 @@ import mongoose from "mongoose";
 // GET /api/community/[slug]/courses - Get all courses for a community
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  context: { params: Promise<{ slug: string }> }
 ) {
   try {
     const session = await getServerSession();
@@ -18,7 +18,8 @@ export async function GET(
     }
 
     await dbconnect();
-    const slug = params.slug;
+    const resolvedParams = await context.params;
+    const slug = resolvedParams.slug;
 
     // Get the community
     const community = await Community.findOne({ slug });
@@ -43,24 +44,24 @@ export async function GET(
     const isPublished = url.searchParams.get("isPublished");
     const tag = url.searchParams.get("tag");
     const enrolled = url.searchParams.get("enrolled") === "true";
-    
+
     // Build query
     const query: any = {
       communityId: community._id,
     };
-    
+
     if (isPublished === "true") {
       query.isPublished = true;
     }
-    
+
     if (tag) {
       query.tags = tag;
     }
-    
+
     if (enrolled) {
       query.enrolledUsers = session.user.id;
     }
-    
+
     // Get courses
     const courses = await Course.find(query).sort({ createdAt: -1 });
 

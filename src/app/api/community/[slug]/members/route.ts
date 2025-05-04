@@ -3,6 +3,9 @@ import { dbconnect } from "@/lib/db";
 import { Community } from "@/models/Community";
 import { User } from "@/models/User";
 import { getServerSession } from "@/lib/auth-helpers";
+import mongoose from "mongoose";
+
+// We'll use 'any' type for MongoDB documents to avoid TypeScript issues
 
 export async function GET(
   request: NextRequest,
@@ -73,15 +76,19 @@ export async function GET(
     console.log("Member IDs:", memberIds);
 
     // Convert string IDs to ObjectIds if needed
-    const memberObjectIds = memberIds.map((id) =>
-      typeof id === "string" ? id : id.toString()
+    const memberObjectIds = memberIds.map(
+      (id: string | mongoose.Types.ObjectId) =>
+        typeof id === "string" ? id : id.toString()
     );
 
     console.log("Looking up users with IDs:", memberObjectIds);
 
-    let membersData = [];
+    // Declare membersData outside the try block so it's available in the wider scope
+    let membersData: any[] = [];
+
     try {
-      membersData = await User.find(
+      // Fetch the data from MongoDB and use type assertion
+      membersData = (await User.find(
         { _id: { $in: memberObjectIds } },
         {
           // Use inclusion projection (only include these fields)
@@ -95,7 +102,7 @@ export async function GET(
         .sort({ createdAt: -1 }) // Sort by join date, newest first
         .skip(skip)
         .limit(validLimit)
-        .lean(); // Get plain objects instead of Mongoose documents
+        .lean()) as any[]; // Get plain objects instead of Mongoose documents
 
       console.log(
         `Found ${membersData.length} members out of ${memberIds.length} IDs`
@@ -121,8 +128,9 @@ export async function GET(
     }
 
     // Map members with their roles
-    const membersWithRoles = membersData.map((member) => {
-      const memberId = member._id.toString();
+    const membersWithRoles = membersData.map((member: any) => {
+      // Safely convert _id to string regardless of its type
+      const memberId = String(member._id);
       let role = "member";
 
       if (memberId === community.admin) {

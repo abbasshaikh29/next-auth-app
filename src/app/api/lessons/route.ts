@@ -16,17 +16,17 @@ export async function POST(request: NextRequest) {
     }
 
     await dbconnect();
-    const { 
-      title, 
-      description, 
-      moduleId, 
-      courseId, 
-      order, 
-      content, 
-      videoUrl, 
-      attachments, 
+    const {
+      title,
+      description,
+      moduleId,
+      courseId,
+      order,
+      content,
+      videoUrl,
+      attachments,
       duration,
-      releaseDate 
+      releaseDate,
     } = await request.json();
 
     if (!title || !moduleId || !courseId) {
@@ -43,13 +43,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the module
-    const module = await Module.findById(moduleId);
-    if (!module) {
+    const courseModule = await Module.findById(moduleId);
+    if (!courseModule) {
       return NextResponse.json({ error: "Module not found" }, { status: 404 });
     }
 
     // Check if module belongs to the course
-    if (module.courseId.toString() !== courseId) {
+    if (courseModule.courseId.toString() !== courseId) {
       return NextResponse.json(
         { error: "Module does not belong to the course" },
         { status: 400 }
@@ -79,10 +79,10 @@ export async function POST(request: NextRequest) {
     // If order is not provided, get the highest order and add 1
     let lessonOrder = order;
     if (lessonOrder === undefined) {
-      const highestOrderLesson = await Lesson.findOne({ 
-        moduleId: new mongoose.Types.ObjectId(moduleId) 
+      const highestOrderLesson = await Lesson.findOne({
+        moduleId: new mongoose.Types.ObjectId(moduleId),
       }).sort({ order: -1 });
-      
+
       lessonOrder = highestOrderLesson ? highestOrderLesson.order + 1 : 0;
     }
 
@@ -130,13 +130,13 @@ export async function PUT(request: NextRequest) {
     }
 
     // Get the module
-    const module = await Module.findById(moduleId);
-    if (!module) {
+    const courseModule = await Module.findById(moduleId);
+    if (!courseModule) {
       return NextResponse.json({ error: "Module not found" }, { status: 404 });
     }
 
     // Get the course
-    const course = await Course.findById(module.courseId);
+    const course = await Course.findById(courseModule.courseId);
     if (!course) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
@@ -156,21 +156,25 @@ export async function PUT(request: NextRequest) {
 
     if (!isAdmin && !isSubAdmin && !isCreator) {
       return NextResponse.json(
-        { error: "Only admins, sub-admins, and the creator can reorder lessons" },
+        {
+          error: "Only admins, sub-admins, and the creator can reorder lessons",
+        },
         { status: 403 }
       );
     }
 
     // Update the order of each lesson
-    const updatePromises = lessonOrders.map(({ lessonId, order }: { lessonId: string, order: number }) => {
-      return Lesson.findByIdAndUpdate(lessonId, { order });
-    });
+    const updatePromises = lessonOrders.map(
+      ({ lessonId, order }: { lessonId: string; order: number }) => {
+        return Lesson.findByIdAndUpdate(lessonId, { order });
+      }
+    );
 
     await Promise.all(updatePromises);
 
     // Get the updated lessons
-    const updatedLessons = await Lesson.find({ 
-      moduleId: new mongoose.Types.ObjectId(moduleId) 
+    const updatedLessons = await Lesson.find({
+      moduleId: new mongoose.Types.ObjectId(moduleId),
     }).sort({ order: 1 });
 
     return NextResponse.json(updatedLessons);
