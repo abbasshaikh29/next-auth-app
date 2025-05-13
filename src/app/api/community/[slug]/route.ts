@@ -14,6 +14,11 @@ interface CommunityType {
   admin: string;
   subAdmins?: string[];
   adminQuestions?: string[];
+  isPrivate?: boolean;
+  price?: number;
+  currency?: string;
+  paymentEnabled?: boolean;
+  subscriptionRequired?: boolean;
 }
 
 // In Next.js 15, the params object is a Promise
@@ -25,11 +30,11 @@ export async function GET(
     const resolvedParams = await context.params;
     const { slug } = resolvedParams;
 
-    // Add cache control headers with stale-while-revalidate strategy
-    // This allows the browser to use a cached version while fetching a new one in the background
+    // Add cache control headers to prevent caching
     const headers = new Headers({
-      "Cache-Control":
-        "public, max-age=10, s-maxage=30, stale-while-revalidate=60",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
     });
 
     if (!slug) {
@@ -60,7 +65,7 @@ export async function GET(
       slug,
     })
       .select(
-        "_id name slug description bannerImageurl iconImageUrl members admin subAdmins adminQuestions"
+        "_id name slug description bannerImageurl iconImageUrl members admin subAdmins adminQuestions isPrivate price currency paymentEnabled subscriptionRequired"
       )
       .lean<{
         _id: mongoose.Types.ObjectId;
@@ -73,6 +78,11 @@ export async function GET(
         admin: string;
         subAdmins?: string[];
         adminQuestions?: string[];
+        isPrivate?: boolean;
+        price?: number;
+        currency?: string;
+        paymentEnabled?: boolean;
+        subscriptionRequired?: boolean;
       }>()
       .hint({ slug: 1 }); // Use the slug index for better performance
 
@@ -106,6 +116,12 @@ export async function GET(
       admin: communityDoc.admin || "",
       subAdmins: communityDoc.subAdmins || [],
       adminQuestions: communityDoc.adminQuestions || [],
+      isPrivate:
+        communityDoc.isPrivate !== undefined ? communityDoc.isPrivate : true,
+      price: communityDoc.price || 0,
+      currency: communityDoc.currency || "USD",
+      paymentEnabled: communityDoc.paymentEnabled || false,
+      subscriptionRequired: communityDoc.subscriptionRequired || false,
     };
 
     // Community found, continue with processing

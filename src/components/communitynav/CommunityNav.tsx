@@ -8,6 +8,7 @@ import { useNotification } from "@/components/Notification";
 import { useSession, signOut } from "next-auth/react";
 import CommunityIcon from "./CommunityIcon";
 import MessageIcon from "../messages/MessageIcon";
+import NotificationIcon from "../notifications/NotificationIcon";
 import ProfileAvatar from "../ProfileAvatar";
 interface Community {
   _id: string;
@@ -317,6 +318,8 @@ function CommunityNav() {
             <div className="flex items-stretch gap-2">
               {/* Message Icon */}
               {session && <MessageIcon />}
+              {/* Notification Icon */}
+              {session && <NotificationIcon />}
               <div className="dropdown dropdown-end">
                 <div
                   tabIndex={0}

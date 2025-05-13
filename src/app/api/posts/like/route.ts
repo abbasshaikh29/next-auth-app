@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth-helpers";
 import { dbconnect } from "@/lib/db";
 import { Post } from "@/models/Posts";
+import { User } from "@/models/User";
 import mongoose from "mongoose";
+import { emitToRoom } from "@/lib/socket";
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,6 +39,12 @@ export async function POST(request: NextRequest) {
 
     const userId = new mongoose.Types.ObjectId(session.user.id);
 
+    // Get user info for real-time updates
+    const user = await User.findById(userId).select("name image");
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     // Update likes based on action
     if (action === "like") {
       // Check if user already liked the post
@@ -55,6 +63,110 @@ export async function POST(request: NextRequest) {
     }
 
     await post.save();
+
+    // Try to emit the socket event for real-time updates
+    try {
+      // Prepare the event data
+      const eventData = {
+        postId,
+        likes: post.likes,
+        likeCount: post.likes.length,
+        action,
+        userId: userId.toString(),
+        userName: user.name || "A user",
+        userImage: user.image,
+      };
+
+      // Try to emit directly using our global socket instance
+      const emitSuccess = emitToRoom(
+        `post:${postId}`,
+        "post-like-update",
+        eventData
+      );
+
+      // If direct emission fails, log the error
+      if (!emitSuccess) {
+        console.log("Direct socket emission failed, trying alternative method");
+
+        // Get the origin for absolute URLs
+        const origin =
+          request.headers.get("origin") || request.headers.get("host") || "";
+        const protocol = origin.startsWith("localhost")
+          ? "http://"
+          : "https://";
+        const baseUrl = origin.startsWith("http")
+          ? origin
+          : `${protocol}${origin}`;
+
+        // Try to emit using the socket API
+        await fetch(`${baseUrl}/api/socket/emit`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            event: "post-like-update",
+            room: `post:${postId}`,
+            data: eventData,
+          }),
+        });
+
+        console.log(
+          `Emitted post-like-update event for post ${postId} via API`
+        );
+      } else {
+        console.log(`Successfully emitted like update for post ${postId}`);
+      }
+    } catch (socketError) {
+      console.error("Error with socket emission:", socketError);
+      // Continue even if socket emission fails - the like will still be saved
+    }
+
+    // Also emit to the community room for broader awareness
+    try {
+      // Get the origin for absolute URLs
+      const origin =
+        request.headers.get("origin") || request.headers.get("host") || "";
+      const protocol = origin.startsWith("localhost") ? "http://" : "https://";
+      const baseUrl = origin.startsWith("http")
+        ? origin
+        : `${protocol}${origin}`;
+
+      // Prepare the event data
+      const communityEventData = {
+        postId,
+        likes: post.likes,
+        likeCount: post.likes.length,
+        action,
+        userId: userId.toString(),
+        userName: user.name || "A user",
+        userImage: user.image,
+        communityId: post.communityId.toString(),
+      };
+
+      // Try to emit using the socket API to the community room
+      await fetch(`${baseUrl}/api/socket/emit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          event: "post-like-update",
+          room: `community:${post.communityId}`,
+          data: communityEventData,
+        }),
+      });
+
+      console.log(
+        `Emitted post-like-update event to community:${post.communityId}`
+      );
+    } catch (communitySocketError) {
+      console.error(
+        "Error with community socket emission:",
+        communitySocketError
+      );
+      // Continue even if socket emission fails
+    }
 
     return NextResponse.json({
       success: true,

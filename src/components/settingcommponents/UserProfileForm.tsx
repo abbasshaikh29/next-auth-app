@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useNotification } from "@/components/Notification";
 import ProfileImageUpload from "@/components/ProfileImageUpload";
+import ProfileImageDisplay from "./ProfileImageDisplay";
+import styles from "./UserProfileForm.module.css";
+import { CheckCircle, XCircle, AlertCircle, Mail } from "lucide-react";
 
 interface UserProfileData {
   username: string;
@@ -12,6 +15,7 @@ interface UserProfileData {
   lastName: string;
   bio: string;
   profileImage: string;
+  emailVerified?: boolean;
 }
 
 export default function UserProfileForm() {
@@ -26,6 +30,21 @@ export default function UserProfileForm() {
     lastName: "",
     bio: "",
     profileImage: "",
+    emailVerified: false,
+  });
+
+  const [resendingVerification, setResendingVerification] = useState(false);
+
+  // Add validation state
+  const [errors, setErrors] = useState({
+    username: "",
+    email: "",
+  });
+
+  // Add state to track if fields have been modified
+  const [modified, setModified] = useState({
+    username: false,
+    email: false,
   });
 
   // Fetch user data when component mounts
@@ -45,6 +64,7 @@ export default function UserProfileForm() {
           lastName: userData.user.lastName || "",
           bio: userData.user.bio || "",
           profileImage: userData.user.profileImage || "",
+          emailVerified: userData.user.emailVerified || false,
         });
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -60,6 +80,77 @@ export default function UserProfileForm() {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Track modified fields for username and email
+    if (name === "username" || name === "email") {
+      setModified((prev) => ({ ...prev, [name]: true }));
+
+      // Validate as user types
+      validateField(name, value);
+    }
+  };
+
+  // Validate individual fields
+  const validateField = (name: string, value: string) => {
+    let errorMessage = "";
+
+    if (name === "username") {
+      if (!value.trim()) {
+        errorMessage = "Username is required";
+      } else if (value.length < 3) {
+        errorMessage = "Username must be at least 3 characters";
+      } else if (!/^[a-zA-Z0-9_]+$/.test(value)) {
+        errorMessage =
+          "Username can only contain letters, numbers, and underscores";
+      }
+    } else if (name === "email") {
+      if (!value.trim()) {
+        errorMessage = "Email is required";
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        errorMessage = "Please enter a valid email address";
+      }
+    }
+
+    setErrors((prev) => ({ ...prev, [name]: errorMessage }));
+    return !errorMessage; // Return true if valid, false if invalid
+  };
+
+  const handleResendVerification = async () => {
+    if (!formData.email) {
+      showNotification("Email address is required", "error");
+      return;
+    }
+
+    setResendingVerification(true);
+
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: formData.email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showNotification(
+          "Verification email sent. Please check your inbox.",
+          "success"
+        );
+      } else {
+        showNotification(
+          data.error || "Failed to send verification email",
+          "error"
+        );
+      }
+    } catch (error) {
+      console.error("Error sending verification email:", error);
+      showNotification("An error occurred. Please try again later.", "error");
+    } finally {
+      setResendingVerification(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,11 +161,62 @@ export default function UserProfileForm() {
       return;
     }
 
+    // Validate all fields before submission
+    const isUsernameValid = validateField("username", formData.username);
+    const isEmailValid = validateField("email", formData.email);
+
+    // Check if username or email has been modified and is invalid
+    if (
+      (modified.username && !isUsernameValid) ||
+      (modified.email && !isEmailValid)
+    ) {
+      showNotification("Please fix the errors before submitting", "error");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       console.log("Submitting profile data:", formData);
 
+      // First, update username and email if they've been modified
+      if (modified.username || modified.email) {
+        const settingsResponse = await fetch(`/api/user/settings`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: formData.username,
+            email: formData.email,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            bio: formData.bio,
+            profileImageUrl: formData.profileImage,
+          }),
+        });
+
+        if (!settingsResponse.ok) {
+          const errorData = await settingsResponse.json();
+          console.error("Settings update error:", errorData);
+
+          // Handle specific errors
+          if (settingsResponse.status === 409) {
+            setErrors((prev) => ({
+              ...prev,
+              username: "Username already taken",
+            }));
+            throw new Error("Username already taken");
+          } else {
+            throw new Error("Failed to update username and email");
+          }
+        }
+
+        // Reset modified flags after successful update
+        setModified({ username: false, email: false });
+      }
+
+      // Then update other profile fields
       const response = await fetch(`/api/user/${session.user.id}/profile`, {
         method: "PUT",
         headers: {
@@ -92,17 +234,14 @@ export default function UserProfileForm() {
       const updatedUser = await response.json();
       console.log("Profile updated successfully:", updatedUser);
 
-      // Update the session to reflect the new profile image
-      console.log(
-        "Updating session with new profile image:",
-        formData.profileImage
-      );
-
+      // Update the session to reflect the changes
       const updatedSession = {
         ...session,
         user: {
           ...session.user,
           profileImage: formData.profileImage,
+          username: formData.username,
+          email: formData.email,
         },
       };
 
@@ -113,9 +252,9 @@ export default function UserProfileForm() {
       window.location.reload();
 
       showNotification("Profile updated successfully", "success");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating profile:", error);
-      showNotification("Failed to update profile", "error");
+      showNotification(error.message || "Failed to update profile", "error");
     } finally {
       setIsLoading(false);
     }
@@ -134,22 +273,11 @@ export default function UserProfileForm() {
           </label>
 
           <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-4">
-            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden bg-gray-200">
-              {formData.profileImage ? (
-                <div
-                  className="w-full h-full bg-center bg-cover"
-                  style={{ backgroundImage: `url(${formData.profileImage})` }}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-primary text-primary-content">
-                  <span className="text-3xl font-bold">
-                    {formData.username
-                      ? formData.username.charAt(0).toUpperCase()
-                      : "?"}
-                  </span>
-                </div>
-              )}
-            </div>
+            <ProfileImageDisplay
+              imageUrl={formData.profileImage}
+              username={formData.username}
+              size="md"
+            />
 
             <div className="flex-1 w-full sm:w-auto">
               <ProfileImageUpload
@@ -217,13 +345,22 @@ export default function UserProfileForm() {
             name="username"
             value={formData.username}
             onChange={handleChange}
-            className="input input-bordered w-full"
+            className={`input input-bordered w-full ${
+              errors.username ? "input-error" : ""
+            }`}
             placeholder="Your username"
-            disabled
           />
+          {errors.username && (
+            <label className="label">
+              <span className="label-text-alt text-error">
+                {errors.username}
+              </span>
+            </label>
+          )}
           <label className="label">
             <span className="label-text-alt text-gray-500">
-              Username cannot be changed
+              Choose a unique username with letters, numbers, and underscores
+              only
             </span>
           </label>
         </div>
@@ -237,15 +374,59 @@ export default function UserProfileForm() {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            className="input input-bordered w-full"
+            className={`input input-bordered w-full ${
+              errors.email ? "input-error" : ""
+            }`}
             placeholder="Your email address"
-            disabled
           />
+          {errors.email && (
+            <label className="label">
+              <span className="label-text-alt text-error">{errors.email}</span>
+            </label>
+          )}
           <label className="label">
             <span className="label-text-alt text-gray-500">
-              Email cannot be changed
+              Make sure to use a valid email address you can access
             </span>
           </label>
+
+          {/* Email Verification Status */}
+          <div className="mt-2 p-3 rounded-lg border border-base-300 bg-base-200">
+            <div className="flex items-center gap-2">
+              {formData.emailVerified ? (
+                <>
+                  <CheckCircle className="text-success w-5 h-5" />
+                  <span className="font-medium">Email verified</span>
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="text-warning w-5 h-5" />
+                  <span className="font-medium">Email not verified</span>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline btn-warning ml-auto"
+                    onClick={handleResendVerification}
+                    disabled={resendingVerification}
+                  >
+                    {resendingVerification ? (
+                      <span className="loading loading-spinner loading-xs"></span>
+                    ) : (
+                      <Mail className="w-4 h-4 mr-1" />
+                    )}
+                    {resendingVerification
+                      ? "Sending..."
+                      : "Resend Verification"}
+                  </button>
+                </>
+              )}
+            </div>
+            {!formData.emailVerified && (
+              <p className="text-sm mt-2 text-gray-500">
+                Please verify your email address to ensure account security and
+                receive important notifications.
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="form-control mt-4 sm:mt-6 flex flex-col sm:flex-row gap-2">

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { addCacheBusting, preloadImage } from "@/utils/crossBrowserImageUtils";
+import { convertS3UrlToR2, isS3Url } from "@/utils/s3-to-r2-migration";
 
 interface CommunityIconProps {
   iconUrl?: string;
@@ -78,8 +79,11 @@ const CommunityIcon: React.FC<CommunityIconProps> = ({
     return renderFallback();
   }
 
+  // Convert S3 URLs to R2 URLs if needed
+  const convertedUrl = isS3Url(iconUrl) ? convertS3UrlToR2(iconUrl) : iconUrl;
+
   // Use utility function to add cache busting
-  const processedSrc = addCacheBusting(iconUrl);
+  const processedSrc = addCacheBusting(convertedUrl);
 
   return (
     <div

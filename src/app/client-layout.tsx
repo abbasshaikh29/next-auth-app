@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Footer from "@/components/Footer";
 
 export default function ClientLayout({
   children,
@@ -10,16 +11,18 @@ export default function ClientLayout({
   useEffect(() => {
     // Get the theme from localStorage or use default
     const savedTheme = localStorage.getItem("theme") || "whiteHalloween";
-    document.documentElement.setAttribute("data-theme", savedTheme);
-    document.body.setAttribute("data-theme", savedTheme);
+    // If the saved theme was skoolTheme, default to whiteHalloween
+    const validTheme =
+      savedTheme === "skoolTheme" ? "whiteHalloween" : savedTheme;
+    document.documentElement.setAttribute("data-theme", validTheme);
+    document.body.setAttribute("data-theme", validTheme);
   }, []);
 
   return (
-    <>
-      {/* Halloween-themed decorative elements */}
-      <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-halloween-purple via-halloween-orange to-halloween-green opacity-70"></div>
+    <div className="flex flex-col min-h-screen">
+      <div className="flex-grow">{children}</div>
 
-      {children}
-    </>
+      <Footer />
+    </div>
   );
 }

@@ -16,10 +16,10 @@ export async function GET(
 
   try {
     // Verify authentication
-    const id = req.url.match(/\/api\/user\/([^\/]+)/)?.[1];
     if (!id) {
       return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
     }
+
     const session = await getServerSession();
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -45,6 +45,7 @@ export async function GET(
     // Fetch posts created by the user using the same approach as community posts
     const posts = await Post.find({ createdBy: user._id })
       .populate("communityId", "name slug")
+      .select("title content createdAt likes") // Explicitly select likes
       .sort({ createdAt: -1 });
 
     // Find communities the user is a member of
@@ -78,6 +79,7 @@ export async function GET(
         location: user.location || "",
         website: user.website || "",
         createdAt: user.createdAt,
+        emailVerified: user.emailVerified || false,
       },
       communities: userCommunities,
       posts: posts.map((post) => ({
@@ -85,6 +87,7 @@ export async function GET(
         title: post.title,
         content: post.content,
         createdAt: post.createdAt,
+        likes: post.likes || [], // Include likes array
         community: {
           name: post.communityId?.name || "Unknown Community",
           slug: post.communityId?.slug || "",

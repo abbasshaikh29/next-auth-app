@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
+import { convertS3UrlToR2, isS3Url } from "@/utils/s3-to-r2-migration";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useNotification } from "@/components/Notification";
@@ -12,6 +13,9 @@ import {
   User,
   MapPin,
   Link as LinkIcon,
+  CheckCircle,
+  AlertCircle,
+  Mail,
 } from "lucide-react";
 
 interface UserData {
@@ -23,6 +27,7 @@ interface UserData {
   location?: string;
   website?: string;
   createdAt: string;
+  emailVerified?: boolean;
 }
 
 interface Community {
@@ -59,6 +64,7 @@ export default function UserProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const [resendingVerification, setResendingVerification] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -126,6 +132,44 @@ export default function UserProfilePage() {
     );
   }
 
+  const handleResendVerification = async () => {
+    if (!userData?.email) {
+      showNotification("Email address is required", "error");
+      return;
+    }
+
+    setResendingVerification(true);
+
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: userData.email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showNotification(
+          "Verification email sent. Please check your inbox.",
+          "success"
+        );
+      } else {
+        showNotification(
+          data.error || "Failed to send verification email",
+          "error"
+        );
+      }
+    } catch (error) {
+      console.error("Error sending verification email:", error);
+      showNotification("An error occurred. Please try again later.", "error");
+    } finally {
+      setResendingVerification(false);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
       <div className="mb-4">
@@ -150,7 +194,9 @@ export default function UserProfilePage() {
               {userData.profileImage ? (
                 <div
                   className="w-full h-full rounded-full bg-center bg-cover"
-                  style={{ backgroundImage: `url(${userData.profileImage})` }}
+                  style={{
+                    backgroundImage: `url(${isS3Url(userData.profileImage) ? convertS3UrlToR2(userData.profileImage) : userData.profileImage})`,
+                  }}
                 />
               ) : userData.image ? (
                 <Image
@@ -169,7 +215,22 @@ export default function UserProfilePage() {
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end mb-12 sm:mb-16">
+          <div className="flex justify-end mb-12 sm:mb-16 gap-2">
+            {isOwnProfile && !userData.emailVerified && (
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                className="btn btn-warning btn-sm"
+                disabled={resendingVerification}
+              >
+                {resendingVerification ? (
+                  <span className="loading loading-spinner loading-xs"></span>
+                ) : (
+                  <Mail className="w-4 h-4 mr-1" />
+                )}
+                {resendingVerification ? "Sending..." : "Verify Email"}
+              </button>
+            )}
             {isOwnProfile && (
               <Link href="/UserSettings" className="btn btn-primary btn-sm">
                 Edit Profile
@@ -215,6 +276,23 @@ export default function UserProfilePage() {
                   </a>
                 </div>
               )}
+
+              {/* Email verification status - only show on own profile */}
+              {isOwnProfile && (
+                <div className="flex items-center gap-1">
+                  {userData.emailVerified ? (
+                    <>
+                      <CheckCircle size={16} className="text-success" />
+                      <span className="text-success">Email verified</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle size={16} className="text-warning" />
+                      <span className="text-warning">Email not verified</span>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
             {userData.bio && (
@@ -241,8 +319,8 @@ export default function UserProfilePage() {
                     {community.role === "admin"
                       ? "Admin"
                       : community.role === "sub-admin"
-                      ? "Sub-Admin"
-                      : "Member"}
+                        ? "Sub-Admin"
+                        : "Member"}
                   </div>
                 </div>
               </Link>

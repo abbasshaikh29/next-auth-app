@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useNotification } from "@/components/Notification";
 import S3FileUpload from "../S3FileUpload";
-import { Settings2Icon } from "lucide-react";
+import { Settings2Icon, Image, Video } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 export default function CommunitySettings() {

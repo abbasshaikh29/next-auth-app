@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { User } from "@/models/User";
 import { dbconnect } from "@/lib/db";
-// TEMPORARILY MODIFIED: Keeping only generateVerificationToken import
-import { generateVerificationToken } from "@/lib/email";
-// Will restore this when email verification is re-enabled: import { sendVerificationEmail } from "@/lib/email";
+import { generateVerificationToken, sendVerificationEmail } from "@/lib/resend";
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,24 +56,16 @@ export async function POST(request: NextRequest) {
     verificationTokenExpiry.setHours(verificationTokenExpiry.getHours() + 24); // Token expires in 24 hours
 
     // Create user with verification token
-    // TEMPORARILY MODIFIED: Auto-verify all users
     await User.create({
       email,
       password,
       username,
-      emailVerified: true, // TEMPORARILY set to true to bypass email verification
+      emailVerified: false, // User needs to verify email
       verificationToken,
       verificationTokenExpiry,
     });
 
-    // TEMPORARILY DISABLED: Email verification process
-    // Skip sending verification email while keeping the code for future re-enabling
-    console.log(
-      "Email verification temporarily disabled - skipping email send for:",
-      email
-    );
-
-    /* Original code - to be restored later:
+    // Send verification email
     try {
       const emailResult = await sendVerificationEmail(
         email,
@@ -97,16 +87,75 @@ export async function POST(request: NextRequest) {
           console.log("Email auto-verified for:", email);
         }
       }
+
+      // Handle provider-specific scenarios
+      if (!emailResult.success) {
+        // Resend rate limit or other errors
+        if (
+          emailResult.errorCode === "429" ||
+          emailResult.errorCode === "rate_limit_exceeded"
+        ) {
+          console.warn(
+            "Resend rate limit reached. Consider upgrading your plan or implementing rate limiting."
+          );
+
+          // In development, we can auto-verify for testing
+          if (process.env.NODE_ENV === "development") {
+            console.log(
+              "Auto-verifying email in development mode due to Resend rate limits"
+            );
+            const user = await User.findOne({ email });
+            if (user) {
+              user.emailVerified = true;
+              await user.save();
+              console.log("Email auto-verified for:", email);
+            }
+          }
+        }
+        // Missing API key
+        else if (emailResult.errorCode === "MISSING_API_KEY") {
+          console.error("Resend API key is not configured properly");
+
+          // In development, auto-verify for testing
+          if (process.env.NODE_ENV === "development") {
+            console.log(
+              "Auto-verifying email in development mode due to missing API key"
+            );
+            const user = await User.findOne({ email });
+            if (user) {
+              user.emailVerified = true;
+              await user.save();
+              console.log("Email auto-verified for:", email);
+            }
+          }
+        }
+        // Log any other errors
+        else {
+          console.error("Email sending error:", emailResult.errorMessage);
+
+          // In development, auto-verify regardless of error
+          if (process.env.NODE_ENV === "development") {
+            console.log(
+              "Auto-verifying email in development mode despite email error"
+            );
+            const user = await User.findOne({ email });
+            if (user) {
+              user.emailVerified = true;
+              await user.save();
+              console.log("Email auto-verified for:", email);
+            }
+          }
+        }
+      }
     } catch (emailError) {
       console.error("Failed to send verification email:", emailError);
       // Continue with registration even if email fails
     }
-    */
 
     return NextResponse.json(
       {
         message:
-          "User registered successfully. You can now log in to your account.", // TEMPORARILY modified message
+          "User registered successfully. Please check your email to verify your account.",
       },
       { status: 201 }
     );

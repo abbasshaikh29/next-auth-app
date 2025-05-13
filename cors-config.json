@@ -1,0 +1,15 @@
+{
+  "CORSRules": [
+    {
+      "AllowedOrigins": [
+        "http://localhost:3000",
+        "https://the-tribelab-cx8u84enk-abbas-projects-2ef642c3.vercel.app",
+        "https://thetribelab.com"
+      ],
+      "AllowedMethods": ["GET", "PUT", "POST", "DELETE", "HEAD"],
+      "AllowedHeaders": ["*"],
+      "ExposeHeaders": ["ETag", "x-amz-meta-custom-header"],
+      "MaxAgeSeconds": 86400
+    }
+  ]
+}

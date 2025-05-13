@@ -4,6 +4,8 @@ import CommunitySettings from "@/components/communitycommponets/CommunitySetting
 import PaymentDisplay from "@/components/communitycommponets/PaymentDisplay";
 import AdminPanelSettings from "@/components/communitycommponets/AdminPanelSettings";
 import UserCommunitySettings from "@/components/communitycommponets/UserCommunitySettings";
+import CommunityAboutMediaManager from "@/components/communitycommponets/CommunityAboutMediaManager";
+import CommunityAccessSettings from "@/components/communitycommponets/CommunityAccessSettings";
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useParams, useSearchParams } from "next/navigation";
@@ -82,16 +84,35 @@ function CommunitySetting() {
                   Community Settings
                 </Link>
                 <Link
-                  href="?t=payments"
+                  href="?t=AboutMedia"
                   className={
                     "py-3 font-semibold px-6 w-full text-lg transition-colors duration-200 hover:bg-base-300 " +
-                    (t === "payments"
+                    (t === "AboutMedia"
                       ? "bg-primary text-primary-content border-l-4 border-primary-focus"
                       : "")
                   }
                 >
-                  Payment
+                  About Media
                 </Link>
+                <Link
+                  href={`/community/${slug}/payment-settings`}
+                  className="py-3 font-semibold px-6 w-full text-lg transition-colors duration-200 hover:bg-base-300"
+                >
+                  Payment Settings
+                </Link>
+                {isAdmin && (
+                  <Link
+                    href="?t=AccessSettings"
+                    className={
+                      "py-3 font-semibold px-6 w-full text-lg transition-colors duration-200 hover:bg-base-300 " +
+                      (t === "AccessSettings"
+                        ? "bg-primary text-primary-content border-l-4 border-primary-focus"
+                        : "")
+                    }
+                  >
+                    Access & Pricing
+                  </Link>
+                )}
                 {/* Admin only link */}
                 {isAdmin && (
                   <Link
@@ -121,9 +142,24 @@ function CommunitySetting() {
                 {(isAdmin || isSubAdmin) && t === "CommunitySettings" && (
                   <CommunitySettings />
                 )}
-                {(isAdmin || isSubAdmin) && t === "payments" && (
-                  <PaymentDisplay />
+                {(isAdmin || isSubAdmin) && t === "AboutMedia" && (
+                  <div className="space-y-6">
+                    <h2 className="text-2xl font-bold mb-6">
+                      About Page Media
+                    </h2>
+                    <p className="text-sm text-gray-600 mb-6">
+                      Manage images and videos that appear on your community's
+                      about page. These media items will be displayed in a
+                      gallery format to showcase your community.
+                    </p>
+                    <CommunityAboutMediaManager />
+                  </div>
                 )}
+                {/* Access & Pricing settings */}
+                {isAdmin && t === "AccessSettings" && (
+                  <CommunityAccessSettings />
+                )}
+                {/* Payment settings moved to dedicated page */}
                 {isAdmin && t === "AdminPanel" && <AdminPanelSettings />}
                 {!t && <UserCommunitySettings />}
               </>

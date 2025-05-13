@@ -42,10 +42,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Query posts by community ID and sort by createdAt in descending order (newest first)
+    // Query posts by community ID and sort by isPinned first, then createdAt in descending order
     const posts = await Post.find({ communityId: community._id })
-      .select("title content createdBy createdAt authorName")
-      .sort({ createdAt: -1 })
+      .select(
+        "title content createdBy createdAt authorName isPinned likes communityId"
+      )
+      .sort({ isPinned: -1, createdAt: -1 }) // Sort pinned posts first, then by date
       .populate("createdBy", "name profileImage")
       .lean();
 
@@ -105,7 +107,8 @@ export async function POST(request: NextRequest) {
     }
 
     await dbconnect();
-    const { title, content, communitySlug } = await request.json();
+    const { title, content, communitySlug, notifyMembers } =
+      await request.json();
 
     // Validate required fields
     if (!title || !content || !communitySlug) {
@@ -163,11 +166,85 @@ export async function POST(request: NextRequest) {
     // Create the post
     const newPost = await Post.create(postData);
 
-    // Return the post with profile image
-    return NextResponse.json({
+    // If notifyMembers is true, create notifications for all community members
+    if (notifyMembers === true) {
+      try {
+        // Get the origin for absolute URLs
+        const origin =
+          request.headers.get("origin") || request.headers.get("host") || "";
+        const protocol = origin.startsWith("localhost")
+          ? "http://"
+          : "https://";
+        const baseUrl = origin.startsWith("http")
+          ? origin
+          : `${protocol}${origin}`;
+
+        // Create notifications for community members
+        await fetch(`${baseUrl}/api/notifications/create`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            type: "post",
+            title: "New post in your community",
+            content: title,
+            sourceId: newPost._id,
+            sourceType: "post",
+            communityId: community._id,
+          }),
+        });
+      } catch (notificationError) {
+        console.error("Error creating notifications:", notificationError);
+        // Continue even if notification creation fails
+      }
+    }
+
+    // Prepare the post data for the response and real-time event
+    const formattedPostData = {
       ...newPost.toObject(),
       profileImage: user.profileImage,
-    });
+    };
+
+    // Try to emit a socket event for real-time updates
+    try {
+      // Get the origin for absolute URLs
+      const origin =
+        request.headers.get("origin") || request.headers.get("host") || "";
+      const protocol = origin.startsWith("localhost") ? "http://" : "https://";
+      const baseUrl = origin.startsWith("http")
+        ? origin
+        : `${protocol}${origin}`;
+
+      // Prepare the event data
+      const eventData = {
+        post: formattedPostData,
+        userId: session.user.id,
+        userName: user.username || user.name || "A user",
+        communityId: community._id.toString(),
+      };
+
+      // Try to emit using the socket API
+      await fetch(`${baseUrl}/api/socket/emit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          event: "post-created",
+          room: `community:${community._id}`,
+          data: eventData,
+        }),
+      });
+
+      console.log(`Emitted post-created event for post ${newPost._id}`);
+    } catch (socketError) {
+      console.error("Error with socket emission:", socketError);
+      // Continue even if socket emission fails - the post will still be created
+    }
+
+    // Return the post with profile image
+    return NextResponse.json(formattedPostData);
   } catch (error: any) {
     console.error("Error creating post:", error);
 

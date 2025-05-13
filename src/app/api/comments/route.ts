@@ -73,7 +73,21 @@ export async function POST(request: NextRequest) {
     };
 
     const newComment = await Comment.create(commentData);
-    return NextResponse.json(newComment);
+
+    // If this is a reply to another comment, get the parent comment's author ID
+    let parentAuthorId = null;
+    if (parentCommentId) {
+      const parentComment = await Comment.findById(parentCommentId);
+      if (parentComment) {
+        parentAuthorId = parentComment.author.toString();
+      }
+    }
+
+    // Return the new comment with parent author info if applicable
+    return NextResponse.json({
+      ...newComment.toObject(),
+      parentAuthorId,
+    });
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to create comment" },
@@ -117,7 +131,14 @@ export async function PUT(request: NextRequest) {
     }
 
     await comment.save();
-    return NextResponse.json(comment);
+
+    // Populate the author field for the response
+    const populatedComment = await Comment.findById(commentId).populate(
+      "author",
+      "username name"
+    );
+
+    return NextResponse.json(populatedComment);
   } catch (error) {
     console.error("Error updating comment:", error);
     return NextResponse.json(

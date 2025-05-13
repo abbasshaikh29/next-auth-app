@@ -4,7 +4,12 @@ import { useState, useRef } from "react";
 import { Loader2, Upload } from "lucide-react";
 
 interface DirectFileUploadProps {
-  onSuccess: (response: { url: string; key: string; fileName: string; fileType: string }) => void;
+  onSuccess: (response: {
+    url: string;
+    key: string;
+    fileName: string;
+    fileType: string;
+  }) => void;
   onProgress?: (progress: number) => void;
   fileType?: "image" | "video" | "document";
   uploadType?: "profile" | "community" | "community-banner" | "community-icon";
@@ -45,12 +50,14 @@ export default function DirectFileUpload({
 
       // Upload directly to server
       const xhr = new XMLHttpRequest();
-      xhr.open("POST", "/api/upload/direct");
-      
+      xhr.open("POST", "/api/upload/r2-direct");
+
       // Track upload progress
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {
-          const percentComplete = Math.round((event.loaded / event.total) * 100);
+          const percentComplete = Math.round(
+            (event.loaded / event.total) * 100
+          );
           setProgress(percentComplete);
           if (onProgress) {
             onProgress(percentComplete);
@@ -64,7 +71,7 @@ export default function DirectFileUpload({
           const response = JSON.parse(xhr.responseText);
           console.log("Upload successful:", response);
           setUploading(false);
-          
+
           // Call the success callback with the file URL and metadata
           onSuccess({
             url: response.url,
@@ -72,7 +79,7 @@ export default function DirectFileUpload({
             fileName: response.fileName,
             fileType: response.fileType,
           });
-          
+
           // Reset the file input
           if (fileInputRef.current) {
             fileInputRef.current.value = "";
@@ -80,7 +87,7 @@ export default function DirectFileUpload({
         } else {
           console.error("Upload failed with status:", xhr.status);
           let errorMessage = "Upload failed";
-          
+
           try {
             const errorResponse = JSON.parse(xhr.responseText);
             errorMessage = errorResponse.error || errorMessage;
@@ -88,7 +95,7 @@ export default function DirectFileUpload({
           } catch (e) {
             console.error("Could not parse error response:", xhr.responseText);
           }
-          
+
           setUploading(false);
           setError(errorMessage);
         }
@@ -103,11 +110,12 @@ export default function DirectFileUpload({
 
       // Send the form data
       xhr.send(formData);
-      
     } catch (err) {
       console.error("Error in upload:", err);
       setUploading(false);
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
     }
   };
 
@@ -135,7 +143,11 @@ export default function DirectFileUpload({
         return false;
       }
     } else if (fileType === "document") {
-      const validTypes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+      const validTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ];
       if (!validTypes.includes(file.type)) {
         setError("Please upload a valid document (PDF, DOC, DOCX)");
         return false;
@@ -146,7 +158,7 @@ export default function DirectFileUpload({
         return false;
       }
     }
-    
+
     return true;
   };
 
@@ -157,10 +169,10 @@ export default function DirectFileUpload({
         ref={fileInputRef}
         onChange={handleFileChange}
         accept={
-          fileType === "image" 
-            ? "image/jpeg,image/png,image/webp" 
-            : fileType === "video" 
-              ? "video/*" 
+          fileType === "image"
+            ? "image/jpeg,image/png,image/webp"
+            : fileType === "video"
+              ? "video/*"
               : "application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         }
         className="file-input file-input-bordered w-full"
@@ -175,7 +187,7 @@ export default function DirectFileUpload({
             <span>Uploading... {progress}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
+            <div
               className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             />

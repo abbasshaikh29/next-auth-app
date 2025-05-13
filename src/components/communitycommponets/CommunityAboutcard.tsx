@@ -77,9 +77,15 @@ function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
   useEffect(() => {
     async function fetchData() {
       try {
+        // Add timestamp to prevent caching
+        const timestamp = new Date().getTime();
         const data = await getCommunity(slug);
 
         if (data.community) {
+          console.log(
+            "CommunityAboutcard - Fetched community data:",
+            data.community
+          );
           setCommunityData({
             community: data.community,
           });
@@ -101,6 +107,15 @@ function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
 
     if (slug) {
       fetchData();
+
+      // Add a refresh interval to keep the data updated
+      const refreshInterval = setInterval(() => {
+        if (slug) {
+          fetchData();
+        }
+      }, 5000); // Refresh every 5 seconds
+
+      return () => clearInterval(refreshInterval);
     } else {
       setError("Invalid community slug");
       setLoading(false);
@@ -166,8 +181,8 @@ function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
 
   return (
     <>
-      <div className="card bg-base-100 shadow-xl overflow-hidden flex flex-col justify-between w-full max-w-sm mx-auto">
-        <div className="w-full h-52 overflow-hidden relative">
+      <div className="card bg-base-100 shadow-xl overflow-hidden flex flex-col justify-between w-full mx-auto">
+        <div className="w-full h-48 overflow-hidden relative">
           {communityData.community?.bannerImageurl ? (
             <div
               className="w-full h-full bg-gray-200"
@@ -198,6 +213,92 @@ function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
                 communityData.community?.description || "this is a community"
               )}
             </p>
+          </div>
+
+          {/* Display price and privacy status */}
+          <div className="flex flex-wrap gap-2 mt-3 mb-2">
+            {/* Privacy Status */}
+            <div className="badge badge-outline py-2 px-3">
+              {communityData.community?.isPrivate === true ? (
+                <div className="flex items-center gap-1">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-lock"
+                  >
+                    <rect
+                      width="18"
+                      height="11"
+                      x="3"
+                      y="11"
+                      rx="2"
+                      ry="2"
+                    ></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                  <span className="ml-1">Private</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-globe"
+                  >
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    <path d="M2 12h20"></path>
+                  </svg>
+                  <span className="ml-1">Public</span>
+                </div>
+              )}
+            </div>
+
+            {/* Price */}
+            <div className="badge badge-outline py-2 px-3">
+              <div className="flex items-center gap-1">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-tag"
+                >
+                  <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"></path>
+                  <path d="M7 7h.01"></path>
+                </svg>
+                <span className="ml-1">
+                  {(communityData.community?.price || 0) > 0
+                    ? `${communityData.community?.currency === "USD" ? "$" : communityData.community?.currency} ${communityData.community?.price} ${
+                        communityData.community?.pricingType === "monthly"
+                          ? "/month"
+                          : communityData.community?.pricingType === "yearly"
+                            ? "/year"
+                            : ""
+                      }`
+                    : "Free"}
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Display member and admin counts */}
@@ -270,6 +371,8 @@ function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
             </div>
             <CommunityJoinForm
               communityId={communityData.community?._id?.toString() || ""}
+              communitySlug={slug}
+              communityName={communityData.community?.name || ""}
               questions={communityData.community?.adminQuestions || []}
               onSuccess={handleJoinSuccess}
             />

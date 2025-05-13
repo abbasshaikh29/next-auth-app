@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import S3FileUpload from "./S3FileUpload";
+import R2FileUpload from "./R2FileUpload";
 
 // For backward compatibility
 interface IKUploadResponse {
@@ -29,7 +29,7 @@ interface FileUploadProps {
 }
 
 /**
- * @deprecated Use S3FileUpload component directly instead
+ * File upload component using Cloudflare R2
  */
 export default function FileUpload({
   onSuccess,
@@ -40,28 +40,28 @@ export default function FileUpload({
 }: FileUploadProps) {
   const [error, setError] = useState<string | null>(null);
 
-  // This component is now just a wrapper around S3FileUpload for backward compatibility
-  const handleS3Success = (response: {
+  // This component now uses R2FileUpload
+  const handleR2Success = (response: {
     url: string;
     key: string;
     fileName: string;
     fileType: string;
   }) => {
-    // Convert S3 response to IKUploadResponse format for backward compatibility
-    const ikResponse: IKUploadResponse = {
+    // Convert R2 response to the expected format
+    const uploadResponse: IKUploadResponse = {
       url: response.url,
       fileId: response.key,
       name: response.fileName,
       fileType: response.fileType,
     };
 
-    onSuccess(ikResponse);
+    onSuccess(uploadResponse);
   };
 
   return (
     <div className="space-y-2">
-      <S3FileUpload
-        onSuccess={handleS3Success}
+      <R2FileUpload
+        onSuccess={handleR2Success}
         onProgress={onProgress}
         fileType={fileType}
         uploadType={uploadType}

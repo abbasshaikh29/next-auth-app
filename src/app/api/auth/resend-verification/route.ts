@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { User } from "@/models/User";
 import { dbconnect } from "@/lib/db";
-import { generateVerificationToken, sendVerificationEmail } from "@/lib/email";
+import { generateVerificationToken, sendVerificationEmail } from "@/lib/resend";
 
 export async function POST(request: NextRequest) {
   try {
@@ -71,7 +71,38 @@ export async function POST(request: NextRequest) {
     await user.save();
 
     // Send verification email
-    await sendVerificationEmail(email, verificationToken, user.username);
+    const emailResult = await sendVerificationEmail(
+      email,
+      verificationToken,
+      user.username
+    );
+
+    if (!emailResult.success) {
+      console.error(
+        "Failed to send verification email:",
+        emailResult.errorMessage
+      );
+
+      // In development, we can still return success
+      if (process.env.NODE_ENV === "development") {
+        console.log(
+          "Development mode: returning success despite email failure"
+        );
+        return NextResponse.json(
+          {
+            message:
+              "Verification email would have been sent (development mode)",
+            devMode: true,
+          },
+          { status: 200 }
+        );
+      }
+
+      return NextResponse.json(
+        { error: "Failed to send verification email. Please try again later." },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       { message: "Verification email has been sent" },

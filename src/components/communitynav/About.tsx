@@ -6,7 +6,16 @@ import { IUser } from "@/models/User";
 import { useSession } from "next-auth/react";
 import CommunityJoinForm from "../CommunityJoinForm";
 import Link from "next/link";
-import { Link as LinkIcon, Copy, Check } from "lucide-react";
+import {
+  Users,
+  User,
+  DollarSign,
+  Lock,
+  ShieldCheck,
+  Tag,
+  Globe,
+} from "lucide-react";
+import CommunityMediaGallery from "./CommunityMediaGallery";
 
 interface AboutProps {
   slug: string;
@@ -18,8 +27,19 @@ async function getCommunity(slug: string): Promise<{
   error?: string;
 }> {
   try {
-    // Fetch community data
-    const communityResponse = await fetch(`/api/community/${slug}`);
+    // Fetch community data with cache-busting query parameter
+    const timestamp = new Date().getTime();
+    const communityResponse = await fetch(
+      `/api/community/${slug}?t=${timestamp}`,
+      {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      }
+    );
     if (!communityResponse.ok) {
       // If that fails, try the debug endpoint to get more information
       const debugResponse = await fetch(
@@ -59,7 +79,17 @@ async function getCommunity(slug: string): Promise<{
     // Fetch admin data using the admin ID from community data
     if (communityData.admin) {
       try {
-        const adminResponse = await fetch(`/api/user/${communityData.admin}`);
+        const adminResponse = await fetch(
+          `/api/user/${communityData.admin}?t=${timestamp}`,
+          {
+            cache: "no-store",
+            headers: {
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              Pragma: "no-cache",
+              Expires: "0",
+            },
+          }
+        );
         if (adminResponse.ok) {
           const adminData = await adminResponse.json();
           return { community: communityData, adminData };
@@ -106,6 +136,7 @@ function About({ slug }: AboutProps) {
       const data = await getCommunity(slug);
 
       if (data.community) {
+        console.log("Fetched community data:", data.community);
         setCommunityData({
           community: data.community,
           admin: data.adminData ? data.adminData.user : null,
@@ -142,6 +173,13 @@ function About({ slug }: AboutProps) {
 
   useEffect(() => {
     fetchData();
+
+    // Add a refresh interval to keep the data updated
+    const refreshInterval = setInterval(() => {
+      fetchData();
+    }, 5000); // Refresh every 5 seconds
+
+    return () => clearInterval(refreshInterval);
   }, [slug]);
 
   if (loading) {
@@ -179,17 +217,93 @@ function About({ slug }: AboutProps) {
   const isAdmin = session?.user?.id === community.admin;
   const isMember = members.includes(session?.user?.id || "");
 
+  // Log community data for debugging
+  console.log("Rendering community data:", {
+    name: community.name,
+    isPrivate: community.isPrivate,
+    price: community.price,
+    currency: community.currency,
+  });
+
   return (
-    <div className="m-3 sm:m-6 md:m-8 flex flex-col gap-3 bg-base-300 p-3 sm:p-4 rounded-md">
-      <h1 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4">
-        {community.name}
-      </h1>
-      <p className="text-sm sm:text-base text-gray-600">
-        Created by{" "}
-        {communityData.admin?.username ||
-          communityData.community.createdBy ||
-          "Unknown"}
-      </p>
+    <div className="m-3 sm:m-6 md:m-8 flex flex-col gap-3 bg-base-300 p-4 sm:p-6 rounded-md">
+      <h1 className="text-xl sm:text-2xl font-bold mb-2">{community.name}</h1>
+
+      {/* Community Media Gallery */}
+      <CommunityMediaGallery slug={slug} />
+
+      {/* Community Info Bar */}
+      <div className="flex flex-wrap items-center gap-6 mt-4 mb-4 border-b border-base-200 pb-3">
+        <div className="flex items-center">
+          <div className="flex items-center gap-2">
+            {community.isPrivate === true ? (
+              <>
+                <ShieldCheck size={18} className="text-gray-600" />
+                <span className="font-medium">Private</span>
+              </>
+            ) : (
+              <>
+                <Globe size={18} className="text-gray-600" />
+                <span className="font-medium">Public</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center">
+          <div className="flex items-center gap-2">
+            <Users size={18} className="text-gray-600" />
+            <span className="font-medium">{members.length}</span> members
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <User size={18} className="text-gray-600" />
+          <span className="text-sm">By</span>
+          <span className="font-medium">
+            {communityData.admin?.username ||
+              communityData.community.createdBy ||
+              "Unknown"}
+          </span>
+        </div>
+
+        {/* Price Tag */}
+        <div className="flex items-center">
+          <div className="flex items-center gap-2">
+            <Tag size={18} className="text-gray-600" />
+            <span className="font-medium">
+              {(community.price || 0) > 0
+                ? `${community.currency === "USD" ? "$" : community.currency} ${community.price} ${
+                    community.pricingType === "monthly"
+                      ? "/month"
+                      : community.pricingType === "yearly"
+                        ? "/year"
+                        : ""
+                  }`
+                : "Free"}
+            </span>
+          </div>
+        </div>
+
+        {community.paymentEnabled && (
+          <div className="flex items-center">
+            <div className="flex items-center gap-2">
+              {community.subscriptionRequired ? (
+                <>
+                  <Lock size={18} className="text-gray-600" />
+                  <span className="font-medium">Subscription</span>
+                </>
+              ) : (
+                <>
+                  <DollarSign size={18} className="text-gray-600" />
+                  <span className="font-medium">One-time payment</span>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="text-sm sm:text-base text-gray-600 mb-3">
         {community.description}
       </div>
@@ -215,6 +329,8 @@ function About({ slug }: AboutProps) {
           </h2>
           <CommunityJoinForm
             communityId={community._id?.toString() || ""}
+            communitySlug={slug}
+            communityName={community.name}
             questions={adminQuestions}
             onSuccess={fetchData}
           />

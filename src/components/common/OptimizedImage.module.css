@@ -2,6 +2,9 @@
   position: relative;
   width: 100%;
   height: 100%;
+  overflow: hidden; /* Prevent image overflow */
+  background-color: #f1f1f1; /* Light gray placeholder */
+  will-change: transform; /* Optimize for animations */
 }
 
 .loading {
@@ -11,52 +14,34 @@
   align-items: center;
   justify-content: center;
   background-color: rgba(249, 250, 251, 0.5);
+  z-index: 1;
 }
 
 .image {
   width: 100%;
   height: 100%;
-  transition: opacity 0.3s;
-}
-
-.hidden {
-  opacity: 0;
-}
-
-.visible {
+  transition: opacity 0.2s ease-in-out;
   opacity: 1;
+  object-fit: cover; /* Default object-fit */
+  transform: translateZ(0); /* Force GPU acceleration */
 }
 
-.backgroundImage {
-  width: 100%;
-  height: 100%;
-  background-position: center;
-  background-repeat: no-repeat;
+.imageCover {
+  object-fit: cover;
 }
 
-.backgroundCover {
-  background-size: cover;
+.imageContain {
+  object-fit: contain;
 }
 
-.backgroundContain {
-  background-size: contain;
+.imageFill {
+  object-fit: fill;
 }
 
-/* Google image classes with different URLs */
-.googleImage1 {
-  background-image: var(--bg-image-url);
-}
-.googleImage2 {
-  background-image: var(--bg-image-url);
-}
-.googleImage3 {
-  background-image: var(--bg-image-url);
-}
-.googleImage4 {
-  background-image: var(--bg-image-url);
-}
-.googleImage5 {
-  background-image: var(--bg-image-url);
+/* For Google profile images */
+img.image {
+  display: block;
+  object-position: center;
 }
 
 .fallbackContainer {
@@ -67,4 +52,5 @@
   justify-content: center;
   background-color: #f3f4f6;
   color: #9ca3af;
+  font-weight: 500;
 }

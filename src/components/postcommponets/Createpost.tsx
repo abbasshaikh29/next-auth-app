@@ -1,6 +1,6 @@
 "use client";
 
-import { Link, FileText, X, Smile } from "lucide-react";
+import { Link, FileText, X, Smile, Bell } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { parseTextWithLinks } from "@/lib/url-utils";
@@ -26,6 +26,7 @@ export function CreatePost({
   const [contents, setContents] = useState<PostContent[]>([]);
   const [currentInput, setCurrentInput] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [notifyMembers, setNotifyMembers] = useState(false);
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -112,8 +113,14 @@ export function CreatePost({
     };
   }, []);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const handleSubmit = async () => {
     if (!title.trim()) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
 
     const finalContents: PostContent[] = [...contents];
 
@@ -126,6 +133,7 @@ export function CreatePost({
     }
 
     try {
+      console.log("Creating new post...");
       const response = await fetch("/api/community/posts", {
         method: "POST",
         headers: {
@@ -135,6 +143,7 @@ export function CreatePost({
           title: title,
           content: JSON.stringify(finalContents),
           communitySlug: communitySlug,
+          notifyMembers: notifyMembers,
         }),
       });
 
@@ -144,8 +153,43 @@ export function CreatePost({
       }
 
       const newPost = await response.json();
+      console.log("Post created successfully:", newPost);
+
+      // Format the post data to match the expected format in the UI
+      const formattedPost = {
+        ...newPost,
+        _id: newPost._id.toString(),
+        createdAt: new Date().toISOString(),
+        likes: newPost.likes || [],
+        content: finalContents,
+      };
+
+      // Call the onPostCreated callback with the formatted post
       if (onPostCreated) {
-        onPostCreated(newPost);
+        onPostCreated(formattedPost);
+      }
+
+      // If notify members is enabled, create notifications
+      if (notifyMembers) {
+        try {
+          await fetch("/api/notifications/create", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              type: "post",
+              title: "New post in your community",
+              content: title,
+              sourceId: newPost._id,
+              sourceType: "post",
+              communityId: newPost.communityId,
+            }),
+          });
+        } catch (notificationError) {
+          console.error("Error creating notifications:", notificationError);
+          // Continue even if notification creation fails
+        }
       }
 
       // Clear the form
@@ -154,7 +198,9 @@ export function CreatePost({
       setCurrentInput("");
     } catch (error: any) {
       console.error("Error creating post:", error.message);
-      throw error;
+      setSubmitError(error.message || "Failed to create post");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -372,14 +418,61 @@ export function CreatePost({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className="w-full py-2 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg text-xs sm:text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 mt-2"
-          disabled={!title.trim() && contents.length === 0}
-        >
-          Post
-        </button>
+        <div className="flex items-center gap-3 mt-2">
+          <div className="flex-1">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                className="checkbox checkbox-sm checkbox-primary"
+                checked={notifyMembers}
+                onChange={(e) => setNotifyMembers(e.target.checked)}
+              />
+              <span className="flex items-center text-xs sm:text-sm text-amber-700">
+                <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1" />
+                Notify community members
+              </span>
+            </label>
+          </div>
+          {submitError && (
+            <div className="text-red-500 text-xs mr-2">{submitError}</div>
+          )}
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className={`py-2 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg text-xs sm:text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
+              isSubmitting ? "opacity-70 cursor-wait" : ""
+            }`}
+            disabled={isSubmitting || (!title.trim() && contents.length === 0)}
+          >
+            {isSubmitting ? (
+              <>
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Creating...
+              </>
+            ) : (
+              "Post"
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

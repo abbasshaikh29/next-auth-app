@@ -11,6 +11,8 @@ import {
   MoreVertical,
   Edit,
   Trash,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { formatRelativeTime } from "@/lib/date-utils";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
@@ -27,12 +29,17 @@ import { useSession } from "next-auth/react";
 import mongoose from "mongoose";
 import { normalizeUrl } from "@/lib/url-utils";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
+import { useRealtime } from "./RealtimeProvider";
+import { listenForRealtimeEvents, sendRealtimeEvent } from "@/lib/realtime";
+import { useNotification } from "./Notification";
+import { convertS3UrlToR2, isS3Url } from "@/utils/s3-to-r2-migration";
 
 import ProfileAvatar from "./ProfileAvatar";
 
 interface Comment {
   _id: string;
   text: string;
+  author: mongoose.Types.ObjectId;
   authorName: string;
   createdAt: string;
   likes: mongoose.Types.ObjectId[];
@@ -46,6 +53,7 @@ interface Post extends Omit<IPost, "likes" | "createdAt" | "createdBy"> {
   createdAt: string | Date;
   profileImage?: string;
   createdBy: mongoose.Types.ObjectId | string;
+  isPinned?: boolean;
 }
 
 interface CommunityCardProps {
@@ -53,6 +61,8 @@ interface CommunityCardProps {
   onLike: (liked: boolean) => void;
   onDelete?: (id: string) => void;
   onEdit?: (id: string) => void;
+  onPin?: (id: string, isPinned: boolean) => void;
+  isAdmin?: boolean;
 }
 
 export default function PostCard({
@@ -60,6 +70,8 @@ export default function PostCard({
   onLike,
   onDelete,
   onEdit,
+  onPin,
+  isAdmin = false,
 }: CommunityCardProps) {
   const [mounted, setMounted] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
@@ -80,6 +92,11 @@ export default function PostCard({
   // Ensure post.likes is always an array
   const likesArray = Array.isArray(post.likes) ? post.likes : [];
 
+  // Debug likes
+  useEffect(() => {
+    console.log(`Post ${post._id} likes:`, likesArray);
+  }, [post._id, likesArray]);
+
   // Define fetchComments before using it in useEffect
   const fetchComments = async () => {
     try {
@@ -92,6 +109,9 @@ export default function PostCard({
       console.error("Error fetching comments:", error);
     }
   };
+
+  const { isEnabled } = useRealtime();
+  const { showNotification } = useNotification();
 
   useEffect(() => {
     setMounted(true);
@@ -113,6 +133,100 @@ export default function PostCard({
     // Fetch comments when component mounts
     fetchComments();
   }, [likesArray, session?.user?.id, post._id]);
+
+  // Realtime event listener for like updates and post deletion
+  useEffect(() => {
+    // Skip if realtime is not enabled
+    if (!isEnabled) {
+      console.log("Realtime not enabled for post:", post._id);
+      return;
+    }
+
+    console.log("Setting up realtime listeners for post:", post._id);
+
+    // Listen for like updates
+    const likeCleanup = listenForRealtimeEvents(
+      "post-like-update",
+      (data: any) => {
+        console.log("Received like update:", data);
+        try {
+          if (data.postId === post._id) {
+            // If we have likes data from the server, update the post directly
+            if (data.likes && Array.isArray(data.likes)) {
+              // This is a more accurate update that uses the server's like data
+              // We'll update the parent component with a special flag to use the server data
+              const isCurrentUserLiked = data.likes.some(
+                (likeId: any) => likeId.toString() === session?.user?.id
+              );
+
+              // Only update the like state if it's from another user
+              if (data.userId !== session?.user?.id) {
+                setIsLiked(isCurrentUserLiked);
+              }
+            } else {
+              // Fallback to the old behavior if we don't have likes data
+              onLike(data.action === "like");
+            }
+
+            // Show a notification if someone else liked the post
+            if (data.action === "like" && data.userId !== session?.user?.id) {
+              showNotification(
+                `${data.userName || "Someone"} liked this post`,
+                "info"
+              );
+            }
+          }
+        } catch (updateError) {
+          console.error("Error handling like update:", updateError);
+        }
+      }
+    );
+
+    // Listen for post deletion events
+    const deleteCleanup = listenForRealtimeEvents(
+      "post-deleted",
+      (data: any) => {
+        console.log("Received post deletion event:", data);
+        try {
+          // If this post was deleted, close any open dialogs and notify parent
+          if (data.postId === post._id) {
+            console.log("This post was deleted, updating UI");
+
+            // Close any open dialogs
+            setIsDialogOpen(false);
+
+            // If the post was deleted by another user, show a notification
+            if (data.userId !== session?.user?.id) {
+              showNotification(
+                `This post was deleted by ${data.userName || "the author"}`,
+                "info"
+              );
+            }
+
+            // Notify parent component to remove this post from the list
+            if (onDelete) {
+              onDelete(post._id);
+            }
+          }
+        } catch (deleteError) {
+          console.error("Error handling post deletion:", deleteError);
+        }
+      }
+    );
+
+    // Clean up when component unmounts
+    return () => {
+      likeCleanup();
+      deleteCleanup();
+    };
+  }, [
+    isEnabled,
+    post._id,
+    session?.user?.id,
+    onLike,
+    onDelete,
+    showNotification,
+  ]);
 
   // We don't need a separate useEffect for post._id changes anymore
 
@@ -203,6 +317,137 @@ export default function PostCard({
       });
 
       if (response.ok) {
+        const commentData = await response.json();
+
+        // Send notification to post creator if the commenter is not the post creator
+        try {
+          // Defensive extraction and type checks for postCreatorId and communityId
+          const postCreatorId: string | null =
+            typeof post.createdBy === "string"
+              ? post.createdBy
+              : post.createdBy &&
+                  typeof post.createdBy === "object" &&
+                  "toString" in post.createdBy
+                ? post.createdBy.toString()
+                : null;
+
+          const communityId: string | null =
+            typeof post.communityId === "string"
+              ? post.communityId
+              : post.communityId &&
+                  typeof post.communityId === "object" &&
+                  "toString" in post.communityId
+                ? post.communityId.toString()
+                : null;
+
+          if (!postCreatorId || !communityId) {
+            console.error("Post creator ID or community ID is missing", {
+              post,
+            });
+            return;
+          }
+
+          console.log("Sending comment notification via dedicated API");
+          console.log("Post data for comment notification:", {
+            postId: post._id,
+            communityId: communityId,
+            currentUser: session.user.id,
+            postCreator: postCreatorId,
+          });
+
+          // Send notification to post creator using the dedicated API
+          const notificationResponse = await fetch(
+            "/api/notifications/post-interaction",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                interactionType: "comment",
+                postId: post._id.toString(),
+                communityId: communityId,
+                postCreatorId: postCreatorId,
+              }),
+            }
+          );
+
+          const notificationResult = await notificationResponse.json();
+          console.log("Comment notification response:", notificationResult);
+
+          if (notificationResult.success) {
+            console.log(
+              "Successfully sent comment notification to post creator"
+            );
+          } else {
+            console.log(
+              "Notification skipped or failed:",
+              notificationResult.message || notificationResult.error
+            );
+          }
+        } catch (notificationError) {
+          console.error(
+            "Error sending comment notification:",
+            notificationError
+          );
+          // Continue even if notification creation fails
+        }
+
+        // If this is a reply to another comment, also notify the original commenter
+        if (replyingTo && commentData.parentAuthorId) {
+          try {
+            console.log("Sending comment reply notification via dedicated API");
+            console.log("Reply data:", {
+              postId: post._id,
+              parentCommentId: replyingTo,
+              parentAuthorId: commentData.parentAuthorId,
+              communityId: post.communityId,
+              currentUser: session.user.id,
+            });
+
+            // Send notification to the original commenter using the dedicated API
+            const notificationResponse = await fetch(
+              "/api/notifications/post-interaction",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  interactionType: "comment_reply",
+                  postId: post._id,
+                  parentCommentId: replyingTo,
+                  parentAuthorId: commentData.parentAuthorId,
+                  communityId: post.communityId,
+                }),
+              }
+            );
+
+            const notificationResult = await notificationResponse.json();
+            console.log(
+              "Comment reply notification response:",
+              notificationResult
+            );
+
+            if (notificationResult.success) {
+              console.log(
+                "Successfully sent reply notification to original commenter"
+              );
+            } else {
+              console.log(
+                "Notification skipped or failed:",
+                notificationResult.message || notificationResult.error
+              );
+            }
+          } catch (notificationError) {
+            console.error(
+              "Error sending reply notification:",
+              notificationError
+            );
+            // Continue even if notification creation fails
+          }
+        }
+
         // Refresh all comments to ensure we have the latest data
         fetchComments();
         setNewComment("");
@@ -223,12 +468,13 @@ export default function PostCard({
       const newLikedState = !isLiked;
       setIsLiked(newLikedState);
 
-      // User is authenticated, proceed with like action
+      console.log(
+        `Sending like request for post ${post._id}, action: ${
+          newLikedState ? "like" : "unlike"
+        }`
+      );
 
-      // Call the parent component's onLike function to update the state
-      onLike(newLikedState);
-
-      // Send the request to the server
+      // Send the request to the server first
       const response = await fetch("/api/posts/like", {
         method: "POST",
         headers: {
@@ -243,14 +489,121 @@ export default function PostCard({
       if (!response.ok) {
         // If the request fails, revert the like state
         setIsLiked(!newLikedState);
-        onLike(!newLikedState);
         console.error("Failed to update like status");
+        return;
+      }
+
+      // Get the updated likes from the server response
+      const data = await response.json();
+      console.log(`Server response for like update:`, data);
+
+      // Only update the parent component's state after successful server update
+      // Pass the server's likes data to ensure consistency
+      onLike(newLikedState);
+
+      // If this is a like action (not unlike), send a notification to the post creator
+      if (newLikedState) {
+        try {
+          // Defensive extraction and type checks for postCreatorId and communityId
+          const postCreatorId: string | null =
+            typeof post.createdBy === "string"
+              ? post.createdBy
+              : post.createdBy &&
+                  typeof post.createdBy === "object" &&
+                  "toString" in post.createdBy
+                ? post.createdBy.toString()
+                : null;
+
+          const communityId: string | null =
+            typeof post.communityId === "string"
+              ? post.communityId
+              : post.communityId &&
+                  typeof post.communityId === "object" &&
+                  "toString" in post.communityId
+                ? post.communityId.toString()
+                : null;
+
+          if (!postCreatorId || !communityId) {
+            console.error("Post creator ID or community ID is missing", {
+              post,
+            });
+            return;
+          }
+
+          console.log("Sending post like notification via dedicated API");
+          console.log("Post data for like notification:", {
+            postId: post._id,
+            communityId: communityId,
+            currentUser: session.user.id,
+            postCreator: postCreatorId,
+          });
+
+          // Send notification to post creator using the dedicated API
+          const notificationResponse = await fetch(
+            "/api/notifications/post-interaction",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                interactionType: "like",
+                postId: post._id.toString(),
+                communityId: communityId,
+                postCreatorId: postCreatorId,
+              }),
+            }
+          );
+
+          const notificationResult = await notificationResponse.json();
+          console.log("Post like notification response:", notificationResult);
+
+          if (notificationResult.success) {
+            console.log("Successfully sent like notification to post creator");
+          } else {
+            console.log(
+              "Notification skipped or failed:",
+              notificationResult.message || notificationResult.error
+            );
+          }
+        } catch (notificationError) {
+          console.error("Error sending like notification:", notificationError);
+          // Continue even if notification creation fails
+        }
+      }
+
+      // Prepare the event data for realtime updates with the server-provided likes
+      const eventData = {
+        postId: post._id,
+        action: newLikedState ? "like" : "unlike",
+        userId: session.user.id,
+        userName: session.user.name || "A user",
+        userImage: session.user.image,
+        likes: data.likes,
+        likeCount: data.likeCount,
+        communityId: post.communityId,
+      };
+
+      // Send the realtime event to other tabs/windows
+      sendRealtimeEvent("post-like-update", eventData);
+      console.log("Sent realtime like update:", eventData);
+
+      // Update the local like state with the server data to ensure consistency
+      if (data.likes && Array.isArray(data.likes)) {
+        const serverLikedState = data.likes.some(
+          (likeId: any) => likeId.toString() === session.user.id
+        );
+
+        // Only update if different from current state
+        if (serverLikedState !== isLiked) {
+          console.log(`Updating like state from server: ${serverLikedState}`);
+          setIsLiked(serverLikedState);
+        }
       }
     } catch (error) {
       console.error("Error liking post:", error);
       // Revert the like state on error
       setIsLiked(!isLiked);
-      onLike(!isLiked);
     }
   };
 
@@ -258,6 +611,15 @@ export default function PostCard({
     if (!session?.user?.id) return;
 
     try {
+      // First, find the comment in our local state to get the author
+      const comment = comments.find((c) => c._id === commentId);
+      if (!comment) {
+        console.error("Comment not found in local state");
+        return;
+      }
+
+      console.log("Liking comment:", comment);
+
       const response = await fetch("/api/comments", {
         method: "PUT",
         headers: {
@@ -270,6 +632,62 @@ export default function PostCard({
       });
 
       if (response.ok) {
+        const updatedComment = await response.json();
+        console.log("Comment like response:", updatedComment);
+
+        // If this is a like action (not unlike), send a notification to the comment author
+        if (!isLiked) {
+          try {
+            console.log("Sending comment like notification via dedicated API");
+            console.log("Comment data:", {
+              commentId: commentId,
+              postId: post._id,
+              communityId: post.communityId,
+              currentUser: session.user.id,
+            });
+
+            // Send notification to comment author using the dedicated API
+            const notificationResponse = await fetch(
+              "/api/notifications/post-interaction",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  interactionType: "comment_like",
+                  postId: post._id,
+                  commentId: commentId,
+                  communityId: post.communityId,
+                }),
+              }
+            );
+
+            const notificationResult = await notificationResponse.json();
+            console.log(
+              "Comment like notification response:",
+              notificationResult
+            );
+
+            if (notificationResult.success) {
+              console.log(
+                "Successfully sent like notification to comment author"
+              );
+            } else {
+              console.log(
+                "Notification skipped or failed:",
+                notificationResult.message || notificationResult.error
+              );
+            }
+          } catch (notificationError) {
+            console.error(
+              "Error sending comment like notification:",
+              notificationError
+            );
+            // Continue even if notification creation fails
+          }
+        }
+
         // Refresh all comments to ensure we have the latest data
         fetchComments();
       }
@@ -298,23 +716,23 @@ export default function PostCard({
   const content = Array.isArray(post.content)
     ? post.content
     : typeof post.content === "string"
-    ? (() => {
-        try {
-          const parsed = JSON.parse(post.content);
-          return Array.isArray(parsed) ? parsed : [];
-        } catch (error) {
-          console.error("Error parsing content:", error);
-          return []; // Handle parsing errors gracefully
-        }
-      })()
-    : [];
+      ? (() => {
+          try {
+            const parsed = JSON.parse(post.content);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch (error) {
+            console.error("Error parsing content:", error);
+            return []; // Handle parsing errors gracefully
+          }
+        })()
+      : [];
 
   // Ensure  post.authorName exist
   const authorName = post.authorName || "Unknown Author";
 
   return (
     <>
-      <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer  max-w-4xl w-full mx-auto">
+      <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer max-w-4xl w-full mx-auto">
         <CardHeader className="flex flex-row items-center justify-between py-3 px-4">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-4">
@@ -332,6 +750,12 @@ export default function PostCard({
               </div>
             </div>
           </div>
+          {post.isPinned && (
+            <div className="flex items-center text-primary" title="Pinned post">
+              <Pin className="h-4 w-4 mr-1" />
+              <span className="text-xs font-medium">Pinned</span>
+            </div>
+          )}
         </CardHeader>
 
         <CardContent
@@ -411,7 +835,11 @@ export default function PostCard({
                   item?.type === "image" && (
                     <img
                       key={index}
-                      src={item.content}
+                      src={
+                        isS3Url(item.content)
+                          ? convertS3UrlToR2(item.content)
+                          : item.content
+                      }
                       alt=""
                       className="w-20 h-auto rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
                     />
@@ -492,6 +920,26 @@ export default function PostCard({
                     </DropdownMenuItem>
                   </>
                 ) : null}
+                {isAdmin && onPin && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setIsDialogOpen(false);
+                      if (onPin) onPin(post._id, !post.isPinned);
+                    }}
+                  >
+                    {post.isPinned ? (
+                      <>
+                        <PinOff className="h-4 w-4 mr-2" />
+                        Unpin Post
+                      </>
+                    ) : (
+                      <>
+                        <Pin className="h-4 w-4 mr-2" />
+                        Pin Post
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={handleShare}>
                   <Share2 className="h-4 w-4 mr-2" />
                   Share
@@ -556,7 +1004,11 @@ export default function PostCard({
                 item.type === "image" && (
                   <img
                     key={index}
-                    src={item.content}
+                    src={
+                      isS3Url(item.content)
+                        ? convertS3UrlToR2(item.content)
+                        : item.content
+                    }
                     alt=""
                     className="w-40 h-40 object-contain rounded-md"
                   />

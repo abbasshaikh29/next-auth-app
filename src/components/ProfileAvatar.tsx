@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import { addCacheBusting, preloadImage } from "@/utils/crossBrowserImageUtils";
+import { convertS3UrlToR2, isS3Url } from "@/utils/s3-to-r2-migration";
 import styles from "./ProfileAvatar.module.css";
 
 // Helper function to get initials from name or email
@@ -46,6 +47,7 @@ export default function ProfileAvatar({
   // All hooks must be called at the top level, before any conditional returns
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(!!imageUrl);
+  const [userProfileData, setUserProfileData] = useState<any>(null);
 
   // For Google images, we need a unique ID - create it unconditionally
   const [avatarId] = useState(`google-avatar-${Date.now()}`);
@@ -60,27 +62,55 @@ export default function ProfileAvatar({
     lg: styles.avatarLg,
   };
 
+  // If no image URL is provided, try to fetch it from the API
+  useEffect(() => {
+    if (!imageUrl) {
+      const fetchUserProfile = async () => {
+        try {
+          const response = await fetch("/api/debug/user-profile");
+          if (response.ok) {
+            const data = await response.json();
+            setUserProfileData(data);
+          }
+        } catch (error) {
+          // Silent error handling
+        }
+      };
+
+      fetchUserProfile();
+    }
+  }, [imageUrl]);
+
+  // Use the fetched profile image if available
+  const effectiveImageUrl =
+    imageUrl ||
+    userProfileData?.r2ProfileImage ||
+    userProfileData?.profileImage;
+
   // Check if it's a Google profile image - do this before any conditional returns
-  const isGoogleImage = imageUrl?.includes("googleusercontent.com");
+  const isGoogleImage = effectiveImageUrl?.includes("googleusercontent.com");
 
   // Check if it's an S3 image - include both amazonaws.com and any custom S3 URL
-  const isS3Image =
-    imageUrl?.includes("amazonaws.com") ||
-    (imageUrl?.includes(".s3.") && imageUrl?.includes(".amazonaws.com"));
+  const isS3Image = isS3Url(effectiveImageUrl || "");
 
   // Add a timestamp to force cache refresh
   const timestamp = Date.now();
 
-  // Process the image source with forced cache busting for S3 images
-  const processedSrc = imageUrl
+  // Convert S3 URLs to R2 URLs if needed
+  const convertedUrl = isS3Image
+    ? convertS3UrlToR2(effectiveImageUrl || "")
+    : effectiveImageUrl;
+
+  // Process the image source - avoid cache busting for S3 images to reduce requests
+  const processedSrc = convertedUrl
     ? isS3Image
-      ? `${imageUrl}${imageUrl.includes("?") ? "&" : "?"}t=${timestamp}`
-      : addCacheBusting(imageUrl)
+      ? convertedUrl // Don't add cache busting for S3 images
+      : addCacheBusting(convertedUrl)
     : "";
 
   // Silently test if the image is accessible
   useEffect(() => {
-    if (imageUrl) {
+    if (effectiveImageUrl) {
       const testImg = document.createElement("img");
       testImg.onload = () => {
         // Image loaded successfully, no need to log
@@ -91,26 +121,26 @@ export default function ProfileAvatar({
       };
       testImg.src = processedSrc;
     }
-  }, [imageUrl, processedSrc]);
+  }, [effectiveImageUrl, processedSrc]);
 
   // Preload the image - this hook is now unconditional
   useEffect(() => {
-    if (imageUrl) {
-      preloadImage(imageUrl);
+    if (effectiveImageUrl) {
+      preloadImage(effectiveImageUrl);
     }
-  }, [imageUrl]);
+  }, [effectiveImageUrl]);
 
   // For Google images, add a style tag to the document head
   useEffect(() => {
     // Only proceed if we have a Google image
-    if (!isGoogleImage || !imageUrl) return;
+    if (!isGoogleImage || !effectiveImageUrl) return;
 
     // Create a style element
     const styleEl = document.createElement("style");
     styleEl.id = avatarId;
     styleEl.innerHTML = `
       .${avatarId} {
-        background-image: url(${imageUrl});
+        background-image: url(${effectiveImageUrl});
       }
     `;
     document.head.appendChild(styleEl);
@@ -120,7 +150,7 @@ export default function ProfileAvatar({
       const el = document.getElementById(avatarId);
       if (el) el.remove();
     };
-  }, [imageUrl, avatarId, isGoogleImage]);
+  }, [effectiveImageUrl, avatarId, isGoogleImage]);
 
   // Handle image load
   const handleImageLoad = () => {
@@ -143,7 +173,7 @@ export default function ProfileAvatar({
   );
 
   // If there's no image or there was an error loading it, show fallback
-  if (!imageUrl || imageError) {
+  if ((!effectiveImageUrl && !userProfileData) || imageError) {
     return renderFallback();
   }
 
@@ -156,43 +186,82 @@ export default function ProfileAvatar({
     );
   }
 
-  // For S3 images, use Next.js Image component for optimization
+  // For S3 images, check if it's an R2 URL
   if (isS3Image) {
+    // Check if it's an R2 URL
+    const isR2Image = processedSrc ? isR2Url(processedSrc) : false;
+
+    if (isR2Image) {
+      // Use a regular img tag for R2 images to avoid Next.js Image optimization issues
+      return (
+        <div
+          className={`${styles.avatar} ${sizeClasses[size]} ${className} overflow-hidden relative`}
+        >
+          <img
+            src={processedSrc}
+            alt={name || "User"}
+            className="object-cover w-full h-full"
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+          />
+          {isLoading && (
+            <div className={styles.loading}>
+              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+            </div>
+          )}
+        </div>
+      );
+    } else {
+      // Use Next.js Image component for other S3 images
+      return (
+        <div
+          className={`${styles.avatar} ${sizeClasses[size]} ${className} overflow-hidden relative`}
+        >
+          <Image
+            src={processedSrc}
+            alt={name || "User"}
+            fill
+            sizes={size === "sm" ? "32px" : size === "md" ? "48px" : "64px"}
+            priority={size === "lg"} // Only prioritize large avatars
+            className="object-cover"
+            onLoad={handleImageLoad}
+            onError={(e) => {
+              // Fall back to initials on error
+              handleImageError();
+              // Add a data attribute to mark this as failed
+              e.currentTarget.parentElement?.setAttribute(
+                "data-image-failed",
+                "true"
+              );
+              // Force a re-render to show initials
+              e.currentTarget.parentElement?.classList.add(
+                styles.initialsAvatar
+              );
+
+              // Add initials text
+              const initialsSpan = document.createElement("span");
+              initialsSpan.className = styles.initials;
+              initialsSpan.textContent = getInitials(name, email);
+              e.currentTarget.parentElement?.appendChild(initialsSpan);
+            }}
+          />
+          {isLoading && (
+            <div className={styles.loading}>
+              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+            </div>
+          )}
+        </div>
+      );
+    }
+  }
+
+  // If we're still loading user profile data, show a loading indicator
+  if (!effectiveImageUrl && !imageError) {
     return (
       <div
-        className={`${styles.avatar} ${sizeClasses[size]} ${className} overflow-hidden relative`}
+        className={`${styles.avatar} ${sizeClasses[size]} ${styles.fallback} ${className}`}
       >
-        <Image
-          src={processedSrc}
-          alt={name || "User"}
-          fill
-          sizes={size === "sm" ? "32px" : size === "md" ? "48px" : "64px"}
-          priority={size === "lg"} // Only prioritize large avatars
-          className="object-cover"
-          onLoadingComplete={handleImageLoad}
-          onError={(e) => {
-            // Fall back to initials on error
-            handleImageError();
-            // Add a data attribute to mark this as failed
-            e.currentTarget.parentElement?.setAttribute(
-              "data-image-failed",
-              "true"
-            );
-            // Force a re-render to show initials
-            e.currentTarget.parentElement?.classList.add(styles.initialsAvatar);
-
-            // Add initials text
-            const initialsSpan = document.createElement("span");
-            initialsSpan.className = styles.initials;
-            initialsSpan.textContent = getInitials(name, email);
-            e.currentTarget.parentElement?.appendChild(initialsSpan);
-          }}
-        />
-        {isLoading && (
-          <div className={styles.loading}>
-            <Loader2 className="w-4 h-4 animate-spin text-primary" />
-          </div>
-        )}
+        <Loader2 className="w-4 h-4 animate-spin text-primary" />
       </div>
     );
   }
@@ -213,7 +282,7 @@ export default function ProfileAvatar({
         fill
         sizes={size === "sm" ? "32px" : size === "md" ? "48px" : "64px"}
         className={styles.image}
-        onLoadingComplete={handleImageLoad}
+        onLoad={handleImageLoad}
         onError={handleImageError}
       />
     </div>

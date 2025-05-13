@@ -45,6 +45,8 @@ export default function HomeIdPage() {
   const [filteredPosts, setFilteredPosts] = useState<PostWithAuthor[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isMember, setIsMember] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isSubAdmin, setIsSubAdmin] = useState(false);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [editingPost, setEditingPost] = useState<PostWithAuthor | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -70,9 +72,21 @@ export default function HomeIdPage() {
       const postsData = await postsResponse.json();
       console.log(`Fetched ${postsData.length} posts successfully`);
 
+      // Ensure each post has a properly formatted likes array
+      const processedPosts = postsData.map((post: any) => ({
+        ...post,
+        // Ensure likes is always an array
+        likes: Array.isArray(post.likes) ? post.likes : [],
+      }));
+
+      // Log likes for debugging
+      processedPosts.forEach((post: any) => {
+        console.log(`Post ${post._id} has ${post.likes.length} likes`);
+      });
+
       // Posts are already sorted by the API (newest first)
-      setPosts(postsData);
-      setFilteredPosts(searchQuery ? filteredPosts : postsData);
+      setPosts(processedPosts);
+      setFilteredPosts(searchQuery ? filteredPosts : processedPosts);
     } catch (error) {
       console.error("Error fetching posts:", error);
       setError(
@@ -80,6 +94,11 @@ export default function HomeIdPage() {
       );
     }
   };
+
+  // Import realtime functions
+  const { listenForRealtimeEvents } = require("@/lib/realtime");
+  const { useRealtime } = require("@/components/RealtimeProvider");
+  const { isEnabled } = useRealtime();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,6 +127,15 @@ export default function HomeIdPage() {
           communityData.members?.includes(session?.user?.id) || false;
         setIsMember(membershipStatus);
 
+        // Check if user is admin or sub-admin
+        if (session?.user?.id) {
+          const adminStatus = communityData.admin === session.user.id;
+          const subAdminStatus =
+            communityData.subAdmins?.includes(session.user.id) || false;
+          setIsAdmin(adminStatus);
+          setIsSubAdmin(subAdminStatus);
+        }
+
         if (membershipStatus) {
           await fetchPosts();
         }
@@ -122,15 +150,134 @@ export default function HomeIdPage() {
 
     fetchData();
 
-    // Set up interval to refresh posts periodically
+    // Set up interval to refresh posts periodically - reduced frequency since we have real-time updates
     const refreshInterval = setInterval(() => {
       if (isMember) {
         fetchPosts();
       }
-    }, 30000); // Refresh every 30 seconds
+    }, 60000); // Refresh every 60 seconds (reduced from 30 seconds)
 
     return () => clearInterval(refreshInterval);
   }, [slug, session?.user?.id, isMember]);
+
+  // Set up real-time listeners for post events
+  useEffect(() => {
+    if (!isEnabled || !community || !isMember) {
+      return;
+    }
+
+    console.log("Setting up real-time listeners for community:", community._id);
+
+    // Listen for new posts
+    const newPostCleanup = listenForRealtimeEvents(
+      "post-created",
+      (data: any) => {
+        console.log("Received new post event:", data);
+
+        // Only process if it's for this community
+        if (data.communityId === community._id) {
+          // Check if we already have this post (avoid duplicates)
+          const postExists = posts.some((post) => post._id === data.post._id);
+
+          if (!postExists) {
+            console.log("Adding new post to state:", data.post);
+
+            // Format the post data to match our expected format
+            const formattedPost = {
+              ...data.post,
+              _id: data.post._id.toString(),
+              createdAt: new Date(data.post.createdAt),
+              likes: Array.isArray(data.post.likes) ? data.post.likes : [],
+            };
+
+            // Add the new post to the beginning of the posts array
+            setPosts((prevPosts) => [formattedPost, ...prevPosts]);
+
+            // Also update filtered posts if we're not searching
+            if (!searchQuery) {
+              setFilteredPosts((prevPosts) => [formattedPost, ...prevPosts]);
+            }
+          }
+        }
+      }
+    );
+
+    // Listen for post deletions
+    const deletePostCleanup = listenForRealtimeEvents(
+      "post-deleted",
+      (data: any) => {
+        console.log("Received post deletion event:", data);
+
+        // Only process if it's for this community
+        if (data.communityId === community._id) {
+          console.log("Removing deleted post from state:", data.postId);
+
+          // Remove the post from state
+          setPosts((prevPosts) =>
+            prevPosts.filter((post) => post._id !== data.postId)
+          );
+
+          // Also update filtered posts
+          setFilteredPosts((prevPosts) =>
+            prevPosts.filter((post) => post._id !== data.postId)
+          );
+        }
+      }
+    );
+
+    // Listen for like updates at the community level
+    const likeUpdateCleanup = listenForRealtimeEvents(
+      "post-like-update",
+      (data: any) => {
+        console.log("Received like update at community level:", data);
+
+        // Only process if it's for this community
+        if (data.communityId === community._id) {
+          // Find the post in our state
+          const postIndex = posts.findIndex((post) => post._id === data.postId);
+
+          if (postIndex !== -1) {
+            console.log("Updating likes for post:", data.postId);
+
+            // Create a new posts array with the updated post
+            const updatedPosts = [...posts];
+
+            // Update the likes array with the server data
+            if (data.likes && Array.isArray(data.likes)) {
+              updatedPosts[postIndex] = {
+                ...updatedPosts[postIndex],
+                likes: data.likes,
+              };
+
+              // Update the posts state
+              setPosts(updatedPosts);
+
+              // Also update filtered posts if we're searching
+              if (searchQuery) {
+                const filteredPostIndex = filteredPosts.findIndex(
+                  (post) => post._id === data.postId
+                );
+                if (filteredPostIndex !== -1) {
+                  const updatedFilteredPosts = [...filteredPosts];
+                  updatedFilteredPosts[filteredPostIndex] = {
+                    ...updatedFilteredPosts[filteredPostIndex],
+                    likes: data.likes,
+                  };
+                  setFilteredPosts(updatedFilteredPosts);
+                }
+              }
+            }
+          }
+        }
+      }
+    );
+
+    return () => {
+      newPostCleanup();
+      deletePostCleanup();
+      likeUpdateCleanup();
+    };
+  }, [isEnabled, community, isMember, posts, filteredPosts, searchQuery]);
 
   // Handle search functionality
   const handleSearch = (query: string) => {
@@ -197,6 +344,47 @@ export default function HomeIdPage() {
     } catch (error: any) {
       console.error("Error deleting post:", error.message);
       alert("Failed to delete post: " + error.message);
+    }
+  };
+
+  // Handle pin/unpin post
+  const handlePinPost = async (postId: string, isPinned: boolean) => {
+    try {
+      const response = await fetch("/api/community/posts/pin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          postId,
+          communityId: community._id,
+          isPinned,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update pin status");
+      }
+
+      // Update the post in state
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post._id === postId ? { ...post, isPinned } : post
+        )
+      );
+
+      // Also update filtered posts if needed
+      if (searchQuery) {
+        setFilteredPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post._id === postId ? { ...post, isPinned } : post
+          )
+        );
+      }
+    } catch (error: any) {
+      console.error("Error updating pin status:", error.message);
+      alert("Failed to update pin status: " + error.message);
     }
   };
 
@@ -281,7 +469,43 @@ export default function HomeIdPage() {
                       communitySlug={slug}
                       authorId={session?.user?.id as string}
                       onPostCreated={(newPost) => {
-                        setPosts((prevPosts) => [newPost, ...prevPosts]);
+                        console.log("New post created:", newPost);
+
+                        // Ensure the new post has all required fields and proper formatting
+                        const formattedPost = {
+                          ...newPost,
+                          _id: newPost._id.toString(),
+                          createdAt:
+                            typeof newPost.createdAt === "string"
+                              ? newPost.createdAt
+                              : new Date().toISOString(),
+                          likes: Array.isArray(newPost.likes)
+                            ? newPost.likes
+                            : [],
+                          authorName:
+                            newPost.authorName ||
+                            session?.user?.name ||
+                            "Unknown",
+                          profileImage:
+                            newPost.profileImage || session?.user?.image,
+                          createdBy:
+                            typeof newPost.createdBy === "object" &&
+                            newPost.createdBy !== null
+                              ? newPost.createdBy._id?.toString() ||
+                                newPost.createdBy.toString()
+                              : newPost.createdBy || session?.user?.id,
+                        };
+
+                        // Add the new post to the beginning of the posts array
+                        setPosts((prevPosts) => [formattedPost, ...prevPosts]);
+
+                        // Also update filtered posts if we're not searching
+                        if (!searchQuery) {
+                          setFilteredPosts((prevPosts) => [
+                            formattedPost,
+                            ...prevPosts,
+                          ]);
+                        }
                       }}
                     />
                   </Suspense>
@@ -325,35 +549,58 @@ export default function HomeIdPage() {
                             post={postData}
                             onLike={(liked) => {
                               // The Post component will handle the API call
+                              // We'll just update the UI state here
                               setPosts((prev) => {
-                                return prev.map((p) =>
-                                  p._id === post._id
-                                    ? {
-                                        ...p,
-                                        likes: liked
-                                          ? [
-                                              ...(Array.isArray(p.likes)
-                                                ? p.likes
-                                                : []),
-                                              new mongoose.Types.ObjectId(
-                                                session?.user?.id
-                                              ),
-                                            ]
-                                          : (Array.isArray(p.likes)
-                                              ? p.likes
-                                              : []
-                                            ).filter(
-                                              (id) =>
-                                                id.toString() !==
-                                                session?.user?.id
+                                return prev.map((p) => {
+                                  if (p._id === post._id) {
+                                    // Make sure likes is always an array
+                                    const currentLikes = Array.isArray(p.likes)
+                                      ? [...p.likes]
+                                      : [];
+
+                                    if (liked) {
+                                      // Check if user already liked the post to avoid duplicates
+                                      const alreadyLiked = currentLikes.some(
+                                        (id) =>
+                                          id.toString() === session?.user?.id
+                                      );
+
+                                      if (!alreadyLiked && session?.user?.id) {
+                                        // Add the user's ID to likes
+                                        return {
+                                          ...p,
+                                          likes: [
+                                            ...currentLikes,
+                                            new mongoose.Types.ObjectId(
+                                              session.user.id
                                             ),
+                                          ],
+                                        };
+                                      } else {
+                                        // User already liked the post, return unchanged
+                                        return p;
                                       }
-                                    : p
-                                );
+                                    } else {
+                                      // Remove the user's ID from likes
+                                      return {
+                                        ...p,
+                                        likes: currentLikes.filter(
+                                          (id) =>
+                                            id.toString() !== session?.user?.id
+                                        ),
+                                      };
+                                    }
+                                  }
+                                  return p;
+                                });
                               });
                             }}
                             onEdit={(postId) => handleEditPost(postId)}
                             onDelete={(postId) => handleDeletePost(postId)}
+                            onPin={(postId, isPinned) =>
+                              handlePinPost(postId, isPinned)
+                            }
+                            isAdmin={isAdmin || isSubAdmin}
                           />
                         </Suspense>
                       );

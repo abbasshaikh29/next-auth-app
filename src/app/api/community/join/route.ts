@@ -39,6 +39,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Already a member" }, { status: 400 });
     }
 
+    // Check if community requires payment to join
+    if (community.paymentEnabled && community.subscriptionRequired) {
+      return NextResponse.json(
+        {
+          error: "This community requires payment to join",
+          requiresPayment: true,
+          communityId: community._id,
+        },
+        { status: 402 }
+      );
+    }
+
     // Initialize joinRequests array if it doesn't exist
     if (!community.joinRequests) {
       community.joinRequests = [];

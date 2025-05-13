@@ -2,21 +2,25 @@
 
 import { SessionProvider } from "next-auth/react";
 import { NotificationProvider } from "./Notification";
+import { RealtimeProvider } from "./RealtimeProvider";
+import { CaptchaProvider } from "@/contexts/CaptchaContext";
 import { useState, useEffect } from "react";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-  const [s3Config, setS3Config] = useState({
+  const [storageConfig, setStorageConfig] = useState({
     configured: false,
+    provider: "",
   });
 
-  // Check if AWS S3 is configured
+  // Check if Cloudflare R2 is configured
   useEffect(() => {
-    const s3Url = process.env.NEXT_PUBLIC_S3_URL;
-    const cloudfrontDomain = process.env.NEXT_PUBLIC_CLOUDFRONT_DOMAIN;
+    const r2Url = process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
+    const customDomain = process.env.NEXT_PUBLIC_CUSTOM_DOMAIN;
 
-    if (s3Url || cloudfrontDomain) {
-      setS3Config({
+    if (r2Url || customDomain) {
+      setStorageConfig({
         configured: true,
+        provider: "Cloudflare R2",
       });
     }
   }, []);
@@ -28,12 +32,21 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       refetchWhenOffline={false}
     >
       <NotificationProvider>
-        {children}
-        {!s3Config.configured && (
-          <div className="fixed bottom-4 left-4 bg-yellow-100 text-yellow-800 p-2 rounded text-xs">
-            S3 storage not configured
-          </div>
-        )}
+        <CaptchaProvider>
+          <RealtimeProvider>
+            {children}
+            {!storageConfig.configured && (
+              <div className="fixed bottom-4 left-4 bg-yellow-100 text-yellow-800 p-2 rounded text-xs">
+                Storage not configured
+              </div>
+            )}
+            {storageConfig.configured && (
+              <div className="fixed bottom-4 left-4 bg-green-100 text-green-800 p-2 rounded text-xs">
+                Using {storageConfig.provider}
+              </div>
+            )}
+          </RealtimeProvider>
+        </CaptchaProvider>
       </NotificationProvider>
     </SessionProvider>
   );

@@ -5,6 +5,7 @@ import { User } from "../models/User";
 import { dbconnect } from "./db";
 import bcrypt from "bcryptjs";
 import type { JWT } from "next-auth/jwt";
+import { convertS3UrlToR2, isS3Url } from "@/utils/s3-to-r2-migration";
 
 // Environment variable validation
 if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
@@ -55,10 +56,10 @@ export const authOptions: NextAuthConfig = {
             return null;
           }
 
-          // TEMPORARILY DISABLED: Email verification check
-          // if (user.emailVerified === false && user.provider !== "google") {
-          //   throw new Error("Please verify your email before logging in");
-          // }
+          // Check if email is verified for credential login
+          if (user.emailVerified === false && user.provider !== "google") {
+            throw new Error("Please verify your email before logging in");
+          }
 
           return {
             id: user._id.toString(),
@@ -113,7 +114,9 @@ export const authOptions: NextAuthConfig = {
 
             // If the user has uploaded their own profile image (S3), always use that
             if (isDbS3Image) {
-              token.profileImage = dbUser.profileImage;
+              // Convert S3 URL to R2 URL
+              const r2Url = convertS3UrlToR2(dbUser.profileImage);
+              token.profileImage = r2Url;
             }
             // If the user hasn't uploaded their own image but has a Google image, use that as fallback
             else if (isDbGoogleImage && !token.profileImage) {
@@ -121,7 +124,7 @@ export const authOptions: NextAuthConfig = {
             }
           }
         } catch (error) {
-          // Silently handle error
+          // Silent error handling
         }
       }
 
@@ -145,6 +148,7 @@ export const authOptions: NextAuthConfig = {
           try {
             await dbconnect();
             const dbUser = await User.findById(token.id);
+
             if (dbUser?.profileImage) {
               // Check if the profile image is from S3 (user uploaded) or Google
               const isDbS3Image =
@@ -158,7 +162,9 @@ export const authOptions: NextAuthConfig = {
 
               // If the user has uploaded their own profile image (S3), always use that
               if (isDbS3Image) {
-                session.user.profileImage = dbUser.profileImage;
+                // Convert S3 URL to R2 URL
+                const r2Url = convertS3UrlToR2(dbUser.profileImage);
+                session.user.profileImage = r2Url;
               }
               // If the user hasn't uploaded their own image but has a Google image, use that as fallback
               else if (isDbGoogleImage && !session.user.profileImage) {
@@ -166,7 +172,7 @@ export const authOptions: NextAuthConfig = {
               }
             }
           } catch (error) {
-            // Silently handle error
+            // Silent error handling
           }
         }
       }

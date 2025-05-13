@@ -282,6 +282,7 @@ export default function LessonView() {
             <button
               className="btn btn-sm btn-outline"
               onClick={() => setShowSidebar(!showSidebar)}
+              aria-label="Toggle sidebar"
             >
               <List size={16} />
               <span className="hidden sm:inline">Lessons</span>

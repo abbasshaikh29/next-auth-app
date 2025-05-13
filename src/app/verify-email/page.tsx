@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useNotification } from "@/components/Notification";
+import { CheckCircle, XCircle, Loader2, Mail, ArrowRight } from "lucide-react";
 
 // Component that uses searchParams
 function VerificationContent() {
@@ -47,53 +48,63 @@ function VerificationContent() {
   }, [token, showNotification]);
 
   return (
-    <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-      <h1 className="text-2xl font-bold text-center mb-6">
-        Email Verification
-      </h1>
+    <div className="bg-base-100 p-8 rounded-lg shadow-xl max-w-md w-full">
+      <div className="text-center mb-8">
+        <h1 className="text-2xl font-bold mb-2">Email Verification</h1>
+        <p className="text-base-content/70">Confirming your email address</p>
+      </div>
 
       {verificationStatus === "loading" && (
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4">Verifying your email...</p>
+        <div className="flex flex-col items-center justify-center py-8">
+          <div className="relative w-24 h-24 flex items-center justify-center mb-6">
+            <Loader2 size={64} className="animate-spin text-primary" />
+            <Mail size={28} className="absolute text-primary/80" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Verifying your email</h2>
+          <p className="text-base-content/70 text-center">
+            Please wait while we confirm your email address...
+          </p>
         </div>
       )}
 
       {verificationStatus === "success" && (
-        <div className="text-center">
-          <div className="text-green-500 text-5xl mb-4">✓</div>
-          <h2 className="text-xl font-semibold mb-4">
-            Email Verified Successfully!
-          </h2>
-          <p className="mb-6">
-            Your email has been verified. You can now log in to your account.
+        <div className="flex flex-col items-center justify-center py-8">
+          <div className="w-24 h-24 rounded-full bg-success/10 flex items-center justify-center mb-6">
+            <CheckCircle size={64} className="text-success" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Email Verified!</h2>
+          <p className="text-base-content/70 text-center mb-8">
+            Your email has been successfully verified. You can now access all
+            features of your account.
           </p>
           <Link
             href="/login"
-            className="block w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 text-center"
+            className="btn btn-primary w-full flex items-center justify-center gap-2"
           >
-            Go to Login
+            Continue to Login <ArrowRight size={16} />
           </Link>
         </div>
       )}
 
       {verificationStatus === "error" && (
-        <div className="text-center">
-          <div className="text-red-500 text-5xl mb-4">✗</div>
-          <h2 className="text-xl font-semibold mb-4">Verification Failed</h2>
-          <p className="text-red-500 mb-6">{errorMessage}</p>
-          <div className="space-y-4">
+        <div className="flex flex-col items-center justify-center py-8">
+          <div className="w-24 h-24 rounded-full bg-error/10 flex items-center justify-center mb-6">
+            <XCircle size={64} className="text-error" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Verification Failed</h2>
+          <p className="text-base-content/70 text-center mb-8">
+            {errorMessage ||
+              "We couldn't verify your email. The link may have expired or is invalid."}
+          </p>
+          <div className="space-y-4 w-full">
             <Link
               href="/login"
-              className="block w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 text-center"
+              className="btn btn-primary w-full flex items-center justify-center gap-2"
             >
-              Go to Login
+              Go to Login <ArrowRight size={16} />
             </Link>
-            <Link
-              href="/"
-              className="block w-full bg-gray-200 text-gray-800 py-2 px-4 rounded hover:bg-gray-300 text-center"
-            >
-              Go to Home
+            <Link href="/" className="btn btn-outline w-full">
+              Return to Home
             </Link>
           </div>
         </div>
@@ -104,16 +115,19 @@ function VerificationContent() {
 
 export default function VerifyEmail() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-base-200 p-4">
       <Suspense
         fallback={
-          <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-            <h1 className="text-2xl font-bold text-center mb-6">
-              Email Verification
-            </h1>
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-              <p className="mt-4">Loading verification page...</p>
+          <div className="bg-base-100 p-8 rounded-lg shadow-xl max-w-md w-full">
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-bold mb-2">Email Verification</h1>
+              <p className="text-base-content/70">Loading verification page</p>
+            </div>
+            <div className="flex flex-col items-center justify-center py-8">
+              <div className="relative w-24 h-24 flex items-center justify-center mb-6">
+                <Loader2 size={64} className="animate-spin text-primary" />
+              </div>
+              <p className="text-base-content/70">Please wait...</p>
             </div>
           </div>
         }

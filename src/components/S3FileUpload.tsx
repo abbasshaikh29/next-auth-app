@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Loader2, Upload } from "lucide-react";
+import { convertS3UrlToR2, isS3Url } from "@/utils/s3-to-r2-migration";
 
 interface S3FileUploadProps {
   onSuccess: (response: {
@@ -17,12 +18,18 @@ interface S3FileUploadProps {
     | "community"
     | "community-banner"
     | "community-icon"
+    | "community-about-media"
     | "course"
     | "thumbnail"
-    | "post-image";
+    | "post-image"
+    | "message-image";
   entityId?: string; // Community ID, course ID, etc.
 }
 
+/**
+ * S3FileUpload component that actually uses R2 storage
+ * This is a wrapper around the R2 upload functionality for backward compatibility
+ */
 export default function S3FileUpload({
   onSuccess,
   onProgress,
@@ -48,7 +55,7 @@ export default function S3FileUpload({
       setProgress(0);
 
       // Step 1: Get a presigned URL from our API
-      const response = await fetch("/api/upload/s3", {
+      const response = await fetch("/api/upload/r2", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -68,11 +75,10 @@ export default function S3FileUpload({
 
       const { uploadUrl, key, fileUrl } = await response.json();
 
-      // Step 2: Upload the file directly to S3 using the presigned URL
+      // Step 2: Upload the file directly to R2 using the presigned URL
       const xhr = new XMLHttpRequest();
       xhr.open("PUT", uploadUrl);
       xhr.setRequestHeader("Content-Type", file.type);
-      xhr.setRequestHeader("x-amz-acl", "public-read"); // Add ACL header for public access
 
       // Track upload progress
       xhr.upload.onprogress = (event) => {
@@ -90,7 +96,7 @@ export default function S3FileUpload({
       // Handle completion
       xhr.onload = () => {
         if (xhr.status === 200) {
-          console.log("S3 upload successful:", fileUrl);
+          console.log("R2 upload successful:", fileUrl);
           setUploading(false);
           // Call the success callback with the file URL and metadata
           onSuccess({
@@ -106,7 +112,7 @@ export default function S3FileUpload({
           }
         } else {
           console.error(
-            "S3 upload failed with status:",
+            "R2 upload failed with status:",
             xhr.status,
             xhr.statusText
           );
@@ -117,60 +123,59 @@ export default function S3FileUpload({
       };
 
       // Handle errors
-      xhr.onerror = (e) => {
-        console.error("S3 upload network error:", e);
+      xhr.onerror = () => {
+        console.error("R2 upload request failed");
         setUploading(false);
-        setError(
-          "Upload failed due to a network error. Check browser console for details."
-        );
+        setError("Upload failed: Network error");
       };
 
       // Send the file
       xhr.send(file);
-    } catch (err) {
+    } catch (error) {
+      console.error("Error uploading file:", error);
       setUploading(false);
       setError(
-        err instanceof Error ? err.message : "An unknown error occurred"
+        error instanceof Error
+          ? error.message
+          : "An unknown error occurred during upload"
       );
     }
   };
 
   const validateFile = (file: File): boolean => {
-    // File type validation
+    // Different size limits based on file type
+    let maxSize = 5 * 1024 * 1024; // Default 5MB limit
+
+    // For videos, allow larger files (100MB for 10-minute videos)
+    if (fileType === "video") {
+      maxSize = 100 * 1024 * 1024; // 100MB
+    }
+
+    // Check file size
+    if (file.size > maxSize) {
+      const maxSizeMB = maxSize / (1024 * 1024);
+      setError(
+        `File size exceeds ${maxSizeMB}MB limit (${(file.size / 1024 / 1024).toFixed(2)}MB)`
+      );
+      return false;
+    }
+
+    // Validate file type
     if (fileType === "image") {
-      const validTypes = ["image/jpeg", "image/png", "image/webp"];
-      if (!validTypes.includes(file.type)) {
-        setError("Please upload a valid image file (JPEG, PNG, or WebP)");
-        return false;
-      }
-      // Size validation (5MB for images)
-      if (file.size > 5 * 1024 * 1024) {
-        setError("Image size must be less than 5MB");
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        setError("Only JPG, PNG, GIF, and WebP images are allowed");
         return false;
       }
     } else if (fileType === "video") {
-      if (!file.type.startsWith("video/")) {
-        setError("Please upload a valid video file");
-        return false;
-      }
-      // Size validation (100MB for videos)
-      if (file.size > 100 * 1024 * 1024) {
-        setError("Video size must be less than 100MB");
-        return false;
-      }
-    } else if (fileType === "document") {
-      const validTypes = [
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      ];
-      if (!validTypes.includes(file.type)) {
-        setError("Please upload a valid document (PDF, DOC, DOCX)");
-        return false;
-      }
-      // Size validation (10MB for documents)
-      if (file.size > 10 * 1024 * 1024) {
-        setError("Document size must be less than 10MB");
+      const allowedTypes = ["video/mp4", "video/webm", "video/ogg"];
+      if (!allowedTypes.includes(file.type)) {
+        setError("Only MP4, WebM, and OGG videos are allowed");
         return false;
       }
     }
@@ -179,38 +184,63 @@ export default function S3FileUpload({
   };
 
   return (
-    <div className="space-y-2">
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept={
-          fileType === "image"
-            ? "image/jpeg,image/png,image/webp"
-            : fileType === "video"
-            ? "video/*"
-            : "application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        }
-        className="file-input file-input-bordered w-full"
-        disabled={uploading}
-      />
-
-      {uploading && (
-        <div>
-          <div className="flex items-center gap-2 text-sm text-primary mb-1">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Uploading... {progress}%</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-primary h-2 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+    <div className="w-full">
+      {error && (
+        <div className="text-error text-sm mb-2 p-2 bg-error/10 rounded">
+          {error}
         </div>
       )}
 
-      {error && <div className="text-error text-sm">{error}</div>}
+      <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-lg cursor-pointer bg-base-100 border-base-300 hover:bg-base-200 transition-colors duration-200">
+        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+          {uploading ? (
+            <div className="flex flex-col items-center">
+              <Loader2 className="w-6 h-6 text-primary animate-spin mb-2" />
+              <p className="text-sm text-base-content">
+                Uploading... {progress}%
+              </p>
+            </div>
+          ) : (
+            <>
+              <Upload className="w-6 h-6 text-base-content mb-2" />
+              <p className="text-sm text-base-content">
+                <span className="font-medium">Click to upload</span> or drag and
+                drop
+              </p>
+              <p className="text-xs text-base-content/70">
+                {fileType === "image"
+                  ? "JPG, PNG, GIF, WebP (max 5MB)"
+                  : fileType === "video"
+                    ? "MP4, WebM, OGG (max 100MB, 10 min)"
+                    : "Max 5MB"}
+              </p>
+            </>
+          )}
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          accept={
+            fileType === "image"
+              ? "image/jpeg,image/png,image/gif,image/webp"
+              : fileType === "video"
+                ? "video/mp4,video/webm,video/ogg"
+                : undefined
+          }
+          onChange={handleFileChange}
+          disabled={uploading}
+        />
+      </label>
+
+      {progress > 0 && progress < 100 && (
+        <div className="w-full bg-base-300 rounded-full h-1.5 mt-2">
+          <div
+            className="bg-primary h-1.5 rounded-full transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      )}
     </div>
   );
 }

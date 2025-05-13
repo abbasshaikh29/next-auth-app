@@ -1,14 +1,19 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import CommunityJoinPayment from "./community/CommunityJoinPayment";
 
 interface CommunityJoinFormProps {
   communityId: string;
+  communitySlug: string;
+  communityName: string;
   questions: string[];
   onSuccess?: () => void;
 }
 
 export default function CommunityJoinForm({
   communityId,
+  communitySlug,
+  communityName,
   questions,
   onSuccess,
 }: CommunityJoinFormProps) {
@@ -17,10 +22,13 @@ export default function CommunityJoinForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [requiresPayment, setRequiresPayment] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setRequiresPayment(false);
 
     try {
       const response = await fetch("/api/community/join", {
@@ -37,6 +45,11 @@ export default function CommunityJoinForm({
       const data = await response.json();
 
       if (!response.ok) {
+        // Check if payment is required
+        if (response.status === 402 && data.requiresPayment) {
+          setRequiresPayment(true);
+          return;
+        }
         throw new Error(data.error || "Failed to send join request");
       }
 
@@ -58,6 +71,17 @@ export default function CommunityJoinForm({
 
   if (!session) {
     return <div>Please sign in to join this community</div>;
+  }
+
+  // If payment is required, show the payment component
+  if (requiresPayment) {
+    return (
+      <CommunityJoinPayment
+        communityId={communityId}
+        communitySlug={communitySlug}
+        communityName={communityName}
+      />
+    );
   }
 
   return (

@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { X, ImageIcon, LinkIcon, FileText, Smile } from "lucide-react";
+import { X, ImageIcon, LinkIcon, FileText, Smile, Bell } from "lucide-react";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 
 interface PostContent {
@@ -44,6 +44,7 @@ export function EditPostModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [notifyMembers, setNotifyMembers] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
@@ -145,6 +146,7 @@ export function EditPostModal({
           postId: postId,
           title: title,
           content: JSON.stringify(finalContents),
+          notifyMembers: notifyMembers,
         }),
       });
 
@@ -318,6 +320,23 @@ export function EditPostModal({
           </div>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
+
+          <div className="flex items-center gap-3 mt-4">
+            <div className="flex-1">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="checkbox checkbox-sm checkbox-primary"
+                  checked={notifyMembers}
+                  onChange={(e) => setNotifyMembers(e.target.checked)}
+                />
+                <span className="flex items-center text-sm text-gray-600">
+                  <Bell className="h-4 w-4 mr-1" />
+                  Notify community members
+                </span>
+              </label>
+            </div>
+          </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>

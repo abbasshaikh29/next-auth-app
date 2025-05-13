@@ -9,6 +9,7 @@ import { User, ChevronDown, Compass, Plus } from "lucide-react";
 import CommunityIcon from "./communitynav/CommunityIcon";
 import { usePathname } from "next/navigation";
 import MessageIcon from "./messages/MessageIcon";
+import NotificationIcon from "./notifications/NotificationIcon";
 import ThemeSwitcher from "./ThemeSwitcher";
 import ProfileAvatar from "./ProfileAvatar";
 
@@ -121,7 +122,7 @@ export default function Header() {
               showNotification("Welcome to TheTribelab", "success")
             }
           >
-            <span className="relative z-10">SKOOL</span>
+            <span className="relative z-10">TheTribelab</span>
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-halloween-orange transition-all duration-300 group-hover:w-full"></span>
             {/* Halloween decoration */}
             <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-halloween-orange opacity-70"></span>
@@ -222,6 +223,8 @@ export default function Header() {
           <div className="flex items-stretch gap-2">
             {/* Message Icon */}
             {session && <MessageIcon />}
+            {/* Notification Icon */}
+            {session && <NotificationIcon />}
             {/* Theme Switcher */}
             <ThemeSwitcher />
             <div className="dropdown dropdown-end">
@@ -235,7 +238,7 @@ export default function Header() {
                 {session?.user ? (
                   <ProfileAvatar
                     imageUrl={session.user.profileImage}
-                    name={session.user.name}
+                    name={session.user.name || session.user.username}
                     email={session.user.email}
                     size="md"
                   />

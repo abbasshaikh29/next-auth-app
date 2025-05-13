@@ -1,6 +1,7 @@
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Loader2 } from "lucide-react";
+import { convertS3UrlToR2, isS3Url } from "@/utils/s3-to-r2-migration";
 import styles from "./OptimizedImage.module.css";
 
 interface OptimizedImageProps {
@@ -14,7 +15,13 @@ interface OptimizedImageProps {
   onError?: () => void;
   onLoad?: () => void;
   objectFit?: "contain" | "cover" | "fill";
+  sizes?: string;
+  placeholder?: "blur" | "empty";
 }
+
+// Simple placeholder blur data URL (light gray)
+const PLACEHOLDER_BLUR_DATA_URL =
+  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNmMWYxZjEiLz48L3N2Zz4=";
 
 export default function OptimizedImage({
   src,
@@ -27,26 +34,40 @@ export default function OptimizedImage({
   onError,
   onLoad,
   objectFit = "cover",
+  sizes = "100vw",
+  placeholder = "blur",
 }: OptimizedImageProps) {
   const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [imageSrc, setImageSrc] = useState(src);
+  const [loading, setLoading] = useState(!priority); // Don't show loading state for priority images
 
-  // Process the image URL to ensure it's compatible with Next.js Image component
-  useEffect(() => {
-    setError(false);
-    setLoading(true);
+  // Process the image URL - avoid cache busting for better performance
+  // Only add cache busting for development environment
+  const imageSrc = useMemo(() => {
+    if (!src) return "";
 
-    // Add cache busting for non-Google images
-    let processedSrc = src;
-    if (src && !src.includes("googleusercontent.com") && !src.includes("t=")) {
-      const timestamp = Date.now();
-      processedSrc = src.includes("?")
-        ? `${src}&t=${timestamp}`
-        : `${src}?t=${timestamp}`;
+    // Convert S3 URLs to R2 URLs if needed
+    const convertedSrc = isS3Url(src) ? convertS3UrlToR2(src) : src;
+
+    // Skip cache busting for Google images and production environment
+    if (
+      convertedSrc.includes("googleusercontent.com") ||
+      process.env.NODE_ENV === "production"
+    ) {
+      return convertedSrc;
     }
 
-    setImageSrc(processedSrc);
+    // Only add cache busting in development for debugging
+    if (
+      process.env.NODE_ENV === "development" &&
+      !convertedSrc.includes("t=")
+    ) {
+      const timestamp = Date.now();
+      return convertedSrc.includes("?")
+        ? `${convertedSrc}&t=${timestamp}`
+        : `${convertedSrc}?t=${timestamp}`;
+    }
+
+    return convertedSrc;
   }, [src]);
 
   const handleError = () => {
@@ -82,32 +103,30 @@ export default function OptimizedImage({
           </div>
         )}
         <div className={styles.imageContainer}>
+          {/* Use regular img tag for Google images */}
           <img
             src={src}
             alt={alt}
-            className="hidden"
+            className={`${styles.image} ${
+              objectFit === "contain"
+                ? styles.imageContain
+                : objectFit === "fill"
+                  ? styles.imageFill
+                  : styles.imageCover
+            }`}
             onLoad={handleLoad}
             onError={handleError}
-          />
-          <div
-            className={`${styles.backgroundImage} ${
-              objectFit === "contain"
-                ? styles.backgroundContain
-                : styles.backgroundCover
-            } ${styles.googleImage1}`}
-            style={{
-              ["--bg-image-url" as any]: `url(${src})`,
-            }}
+            loading={priority ? "eager" : "lazy"}
           />
         </div>
       </div>
     );
   }
 
-  // For all other images, use Next.js Image component
+  // For all other images, use Next.js Image component with optimizations
   return (
     <div className={`${styles.imageContainer} ${className}`}>
-      {loading && (
+      {loading && placeholder !== "blur" && (
         <div className={styles.loading}>
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
         </div>
@@ -118,15 +137,22 @@ export default function OptimizedImage({
         width={width}
         height={height}
         className={`${styles.image} ${
-          loading ? styles.hidden : styles.visible
+          objectFit === "contain"
+            ? styles.imageContain
+            : objectFit === "fill"
+              ? styles.imageFill
+              : styles.imageCover
         }`}
-        style={{ objectFit }}
         priority={priority}
         onError={handleError}
         onLoad={handleLoad}
-        quality={90}
+        quality={80} // Slightly lower quality for better performance
         loading={priority ? "eager" : "lazy"}
-        unoptimized={src.includes("googleusercontent.com")}
+        sizes={sizes}
+        placeholder={placeholder === "blur" ? "blur" : "empty"}
+        blurDataURL={
+          placeholder === "blur" ? PLACEHOLDER_BLUR_DATA_URL : undefined
+        }
       />
     </div>
   );

@@ -3,6 +3,19 @@ import { ImageFormData } from "../components/ImageUploadForm";
 import { IImage } from "@/models/Image";
 import { IEvent } from "@/models/Event";
 
+// Define pagination response interface
+export interface PaginationResponse<T> {
+  communities: T[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}
+
 export type CommunityFormData = Omit<ICommunity, "_id">;
 export type EventFormData = Omit<IEvent, "_id">;
 
@@ -37,8 +50,11 @@ class ApiClient {
     return response.json();
   }
 
-  async getcommunities() {
-    return this.fetch<ICommunity[]>("/community");
+  async getcommunities(page: number = 1, limit: number = 2) {
+    // Using limit=2 for testing pagination
+    return this.fetch<PaginationResponse<ICommunity>>(
+      `/community?page=${page}&limit=${limit}`
+    );
   }
 
   async getcommunity(slug: string) {

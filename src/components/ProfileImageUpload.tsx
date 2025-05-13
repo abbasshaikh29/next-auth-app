@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useNotification } from "@/components/Notification";
 import DirectFileUpload from "./DirectFileUpload"; // Use the new DirectFileUpload component
+import { convertS3UrlToR2, isS3Url } from "@/utils/s3-to-r2-migration";
 
 interface ProfileImageUploadProps {
   currentImage?: string;
@@ -21,9 +22,17 @@ export default function ProfileImageUpload({
 
   useEffect(() => {
     if (currentImage) {
-      setProfileImage(currentImage);
+      // Convert S3 URLs to R2 URLs if needed
+      const processedImage = isS3Url(currentImage)
+        ? convertS3UrlToR2(currentImage)
+        : currentImage;
+      setProfileImage(processedImage);
     } else if (session?.user?.profileImage) {
-      setProfileImage(session.user.profileImage);
+      // Convert S3 URLs to R2 URLs if needed
+      const processedImage = isS3Url(session.user.profileImage)
+        ? convertS3UrlToR2(session.user.profileImage)
+        : session.user.profileImage;
+      setProfileImage(processedImage);
     }
   }, [currentImage, session?.user?.profileImage]);
 

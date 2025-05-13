@@ -13,6 +13,15 @@ interface MessagingPreferences {
   blockedCommunities: string[]; // Array of community IDs where messaging is blocked
 }
 
+interface PaymentSettings {
+  razorpayCustomerId?: string;
+  razorpayAccountId?: string; // For community admins who can receive payments
+  subscriptionId?: string;
+  subscriptionStatus?: "active" | "canceled" | "past_due" | "unpaid" | "trial";
+  subscriptionEndDate?: Date;
+  enablePayments?: boolean; // For community admins to enable/disable payments
+}
+
 export interface IUser {
   _id: mongoose.Types.ObjectId;
   username: string;
@@ -29,6 +38,7 @@ export interface IUser {
   timezone?: string;
   notificationSettings?: NotificationSettings;
   messagingPreferences?: MessagingPreferences;
+  paymentSettings?: PaymentSettings;
   community: mongoose.Types.ObjectId[];
   followedBy: mongoose.Types.ObjectId[];
   following: mongoose.Types.ObjectId[];
@@ -36,6 +46,7 @@ export interface IUser {
   emailVerified?: boolean;
   verificationToken?: string;
   verificationTokenExpiry?: Date;
+  role?: "user" | "admin" | "platform_admin";
 }
 
 const userSchema = new mongoose.Schema<IUser>(
@@ -62,6 +73,17 @@ const userSchema = new mongoose.Schema<IUser>(
       allowDirectMessages: { type: Boolean, default: true },
       blockedCommunities: [{ type: String }],
     },
+    paymentSettings: {
+      razorpayCustomerId: { type: String },
+      razorpayAccountId: { type: String },
+      subscriptionId: { type: String },
+      subscriptionStatus: {
+        type: String,
+        enum: ["active", "canceled", "past_due", "unpaid", "trial"],
+      },
+      subscriptionEndDate: { type: Date },
+      enablePayments: { type: Boolean, default: false },
+    },
     community: [{ type: Schema.Types.ObjectId, ref: "Community" }],
     followedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
     following: [{ type: Schema.Types.ObjectId, ref: "User" }],
@@ -69,6 +91,11 @@ const userSchema = new mongoose.Schema<IUser>(
     emailVerified: { type: Boolean, default: false },
     verificationToken: { type: String },
     verificationTokenExpiry: { type: Date },
+    role: {
+      type: String,
+      enum: ["user", "admin", "platform_admin"],
+      default: "user",
+    },
   },
   {
     timestamps: true,

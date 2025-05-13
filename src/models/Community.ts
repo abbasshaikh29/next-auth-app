@@ -1,6 +1,13 @@
 import mongoose, { Schema, model, models } from "mongoose";
 import slugify from "slugify"; // Install slugify: npm install slugify
 
+export interface CommunityMediaItem {
+  url: string;
+  type: "image" | "video";
+  title?: string;
+  createdAt: Date;
+}
+
 export interface ICommunity {
   _id?: mongoose.Types.ObjectId;
   name: string;
@@ -8,6 +15,7 @@ export interface ICommunity {
   description?: string;
   bannerImageurl?: string;
   iconImageUrl?: string; // Added icon image URL field
+  aboutMedia?: CommunityMediaItem[]; // Media items for the about page
   createdBy: string;
   createdAt: Date;
   admin: string; // User ID of the admin
@@ -20,6 +28,13 @@ export interface ICommunity {
     createdAt: Date;
   }[];
   adminQuestions: string[]; // Array of questions set by admin
+  paymentEnabled?: boolean; // Whether the community accepts payments
+  paymentPlans?: mongoose.Types.ObjectId[]; // Array of payment plan IDs
+  subscriptionRequired?: boolean; // Whether subscription is required to join
+  isPrivate?: boolean; // Whether the community is private or public
+  price?: number; // Price for joining the community
+  currency?: string; // Currency for the price (USD, INR, etc.)
+  pricingType?: "monthly" | "yearly" | "one_time"; // Type of pricing (monthly, yearly, or one-time)
 }
 
 const communitySchema = new Schema<ICommunity>({
@@ -30,6 +45,14 @@ const communitySchema = new Schema<ICommunity>({
   createdAt: { type: Date, default: Date.now },
   bannerImageurl: { type: String },
   iconImageUrl: { type: String }, // Added icon image URL field
+  aboutMedia: [
+    {
+      url: { type: String, required: true },
+      type: { type: String, enum: ["image", "video"], required: true },
+      title: { type: String },
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
   admin: { type: String, ref: "User", required: true },
   members: [{ type: String, ref: "User" }],
   subAdmins: [{ type: String }],
@@ -46,6 +69,17 @@ const communitySchema = new Schema<ICommunity>({
     },
   ],
   adminQuestions: [{ type: String }],
+  paymentEnabled: { type: Boolean, default: false },
+  paymentPlans: [{ type: mongoose.Schema.Types.ObjectId, ref: "PaymentPlan" }],
+  subscriptionRequired: { type: Boolean, default: false },
+  isPrivate: { type: Boolean, default: true }, // Default to private
+  price: { type: Number, default: 0 }, // Default price is 0 (free)
+  currency: { type: String, default: "USD" }, // Default currency is USD
+  pricingType: {
+    type: String,
+    enum: ["monthly", "yearly", "one_time"],
+    default: "one_time",
+  }, // Default to one-time payment
 });
 
 // Function to generate a slug from a name

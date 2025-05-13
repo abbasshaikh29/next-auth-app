@@ -9,6 +9,7 @@ export interface IPost {
   likes: mongoose.Types.ObjectId[];
   createdAt: Date;
   authorName: string;
+  isPinned?: boolean; // Whether the post is pinned by admin
 }
 
 const postSchema = new mongoose.Schema<IPost>({
@@ -28,6 +29,7 @@ const postSchema = new mongoose.Schema<IPost>({
   },
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   createdAt: { type: Date, default: Date.now },
+  isPinned: { type: Boolean, default: false },
 });
 
 // Check if the model already exists

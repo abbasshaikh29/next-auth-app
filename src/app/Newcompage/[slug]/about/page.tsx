@@ -62,11 +62,11 @@ function Page() {
     <div>
       <CommunityNav />
       <div className="p-3 sm:p-4 flex flex-col gap-3 sm:gap-4 mt-3 sm:mt-6">
-        <div className="flex flex-col lg:flex-row justify-center gap-4 lg:gap-12">
-          <div className="w-full lg:w-1/2 lg:max-w-xl">
+        <div className="flex flex-col lg:flex-row justify-center gap-4 lg:gap-8">
+          <div className="w-full lg:w-2/3 lg:max-w-3xl">
             <About slug={slug} />
           </div>
-          <div className="w-full lg:w-1/3 mt-4 lg:mt-0">
+          <div className="w-full lg:w-1/4 mt-4 lg:mt-0">
             <CommunityAboutcard slug={slug} />
             <div className="mt-3 sm:mt-4 justify-center flex lg:text-left">
               <h4 className="text-sm sm:text-base  ">
