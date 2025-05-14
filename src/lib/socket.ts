@@ -1,12 +1,13 @@
 import { Server as SocketIOServer } from "socket.io";
 
-// Define a type for the global io variable
+// Declare the global io property
 declare global {
-  var io: any;
+  // eslint-disable-next-line no-var
+  var io: SocketIOServer | null;
 }
 
 // Function to get the Socket.io instance
-export function getIO(): SocketIOServer | null {
+export const getIO = () => {
   // In the browser, return null
   if (typeof window !== "undefined") {
     return null;
@@ -14,7 +15,7 @@ export function getIO(): SocketIOServer | null {
 
   // In Node.js, return the global io instance
   return global.io || null;
-}
+};
 
 // Function to emit an event to a room
 export function emitToRoom(room: string, event: string, data: any) {

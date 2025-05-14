@@ -2,34 +2,31 @@
 
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import Header from "@/components/Header";
 
-interface NewPaymentPlanPageProps {
-  params: {
-    slug: string;
-  };
-}
-
-export default function NewPaymentPlanPage({
-  params,
-}: NewPaymentPlanPageProps) {
+export default function NewPaymentPlanPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const params = useParams();
+  const slug = params.slug as string;
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [communityId, setCommunityId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  
+
   // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState<number>(0);
   const [currency, setCurrency] = useState("INR");
-  const [interval, setInterval] = useState<"one_time" | "monthly" | "yearly">("monthly");
+  const [interval, setInterval] = useState<"one_time" | "monthly" | "yearly">(
+    "monthly"
+  );
   const [intervalCount, setIntervalCount] = useState<number>(1);
   const [features, setFeatures] = useState<string[]>([""]);
 
@@ -38,7 +35,9 @@ export default function NewPaymentPlanPage({
       if (status === "loading") return;
 
       if (!session) {
-        router.push(`/api/auth/signin?callbackUrl=/community/${params.slug}/payment-plans/new`);
+        router.push(
+          `/api/auth/signin?callbackUrl=/community/${slug}/payment-plans/new`
+        );
         return;
       }
 
@@ -47,21 +46,21 @@ export default function NewPaymentPlanPage({
 
       try {
         // Fetch community details
-        const response = await fetch(`/api/community/${params.slug}`);
-        
+        const response = await fetch(`/api/community/${slug}`);
+
         if (!response.ok) {
           throw new Error("Failed to fetch community details");
         }
 
         const community = await response.json();
         setCommunityId(community._id);
-        
+
         // Check if user is admin
         const isUserAdmin = community.admin === session.user.id;
         setIsAdmin(isUserAdmin);
 
         if (!isUserAdmin) {
-          router.push(`/community/${params.slug}`);
+          router.push(`/community/${slug}`);
         }
       } catch (error) {
         console.error("Error checking community access:", error);
@@ -76,7 +75,7 @@ export default function NewPaymentPlanPage({
     };
 
     checkCommunityAccess();
-  }, [session, status, params.slug, router]);
+  }, [session, status, slug, router]);
 
   // Add a new feature field
   const addFeature = () => {
@@ -100,17 +99,19 @@ export default function NewPaymentPlanPage({
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!communityId) return;
-    
+
     setIsSaving(true);
     setError(null);
     setSuccess(null);
 
     try {
       // Filter out empty features
-      const filteredFeatures = features.filter(feature => feature.trim() !== "");
-      
+      const filteredFeatures = features.filter(
+        (feature) => feature.trim() !== ""
+      );
+
       // Create payment plan
       const response = await fetch("/api/payments/plans", {
         method: "POST",
@@ -136,17 +137,15 @@ export default function NewPaymentPlanPage({
       }
 
       setSuccess("Payment plan created successfully");
-      
+
       // Redirect to payment settings page after a short delay
       setTimeout(() => {
-        router.push(`/community/${params.slug}/payment-settings`);
+        router.push(`/community/${slug}/payment-settings`);
       }, 1500);
     } catch (error) {
       console.error("Error creating payment plan:", error);
       setError(
-        error instanceof Error
-          ? error.message
-          : "Failed to create payment plan"
+        error instanceof Error ? error.message : "Failed to create payment plan"
       );
     } finally {
       setIsSaving(false);
@@ -201,7 +200,7 @@ export default function NewPaymentPlanPage({
             <p>{error}</p>
           </div>
         )}
-        
+
         {success && (
           <div className="alert alert-success mb-6">
             <p>{success}</p>
@@ -279,7 +278,9 @@ export default function NewPaymentPlanPage({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="form-control">
                 <label htmlFor="interval" className="label">
-                  <span className="label-text font-medium">Billing Interval</span>
+                  <span className="label-text font-medium">
+                    Billing Interval
+                  </span>
                 </label>
                 <select
                   id="interval"
@@ -297,7 +298,9 @@ export default function NewPaymentPlanPage({
               {interval !== "one_time" && (
                 <div className="form-control">
                   <label htmlFor="intervalCount" className="label">
-                    <span className="label-text font-medium">Interval Count</span>
+                    <span className="label-text font-medium">
+                      Interval Count
+                    </span>
                   </label>
                   <input
                     type="number"
@@ -322,7 +325,7 @@ export default function NewPaymentPlanPage({
               <label className="label">
                 <span className="label-text font-medium">Plan Features</span>
               </label>
-              
+
               <div className="space-y-3">
                 {features.map((feature, index) => (
                   <div key={index} className="flex items-center gap-2">
@@ -338,13 +341,14 @@ export default function NewPaymentPlanPage({
                       onClick={() => removeFeature(index)}
                       className="btn btn-ghost btn-square text-red-500"
                       disabled={features.length === 1}
+                      aria-label="Remove feature"
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
                 ))}
               </div>
-              
+
               <button
                 type="button"
                 onClick={addFeature}
@@ -358,7 +362,9 @@ export default function NewPaymentPlanPage({
             <div className="flex justify-end gap-4 mt-8">
               <button
                 type="button"
-                onClick={() => router.push(`/community/${params.slug}/payment-settings`)}
+                onClick={() =>
+                  router.push(`/community/${slug}/payment-settings`)
+                }
                 className="btn btn-ghost"
                 disabled={isSaving}
               >

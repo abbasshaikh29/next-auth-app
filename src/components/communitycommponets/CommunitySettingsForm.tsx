@@ -112,7 +112,7 @@ export default function CommunitySettings() {
 
       // Test if the icon image is accessible
       if (iconImageUrl) {
-        const testImg = new Image();
+        const testImg = document.createElement("img");
         testImg.onload = () =>
           console.log(
             "Icon image is accessible before API request:",
@@ -207,7 +207,7 @@ export default function CommunitySettings() {
 
       // Test if the icon image is accessible
       if (result.iconImageUrl) {
-        const testImg = new Image();
+        const testImg = document.createElement("img");
         testImg.onload = () =>
           console.log(
             "Icon image in response is accessible:",

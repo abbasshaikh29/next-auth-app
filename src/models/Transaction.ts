@@ -25,48 +25,47 @@ const transactionSchema = new Schema<ITransaction>(
     signature: { type: String },
     amount: { type: Number, required: true },
     currency: { type: String, required: true, default: "INR" },
-    status: { 
-      type: String, 
-      required: true, 
+    status: {
+      type: String,
+      required: true,
       enum: ["created", "authorized", "captured", "refunded", "failed"],
-      default: "created"
+      default: "created",
     },
-    paymentType: { 
-      type: String, 
-      required: true, 
-      enum: ["platform", "community"] 
+    paymentType: {
+      type: String,
+      required: true,
+      enum: ["platform", "community"],
     },
-    payerId: { 
-      type: String, 
-      ref: "User", 
-      required: true 
+    payerId: {
+      type: String,
+      ref: "User",
+      required: true,
     },
-    payeeId: { 
-      type: String, 
-      ref: "User" 
+    payeeId: {
+      type: String,
+      ref: "User",
     },
-    communityId: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "Community" 
+    communityId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Community",
     },
-    planId: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "PaymentPlan" 
+    planId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PaymentPlan",
     },
-    metadata: { 
-      type: Schema.Types.Mixed 
-    }
+    metadata: {
+      type: Schema.Types.Mixed,
+    },
   },
   { timestamps: true }
 );
 
 // Create indexes for faster queries
-transactionSchema.index({ orderId: 1 });
-transactionSchema.index({ paymentId: 1 });
 transactionSchema.index({ payerId: 1 });
 transactionSchema.index({ payeeId: 1 });
 transactionSchema.index({ communityId: 1 });
 transactionSchema.index({ status: 1 });
 transactionSchema.index({ createdAt: -1 });
 
-export const Transaction = models.Transaction || model<ITransaction>("Transaction", transactionSchema);
+export const Transaction =
+  models.Transaction || model<ITransaction>("Transaction", transactionSchema);

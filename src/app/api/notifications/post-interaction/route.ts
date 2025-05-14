@@ -280,7 +280,7 @@ export async function POST(request: NextRequest) {
         notificationId: result._id,
         targetUserId: targetUserId,
       });
-    } catch (insertError) {
+    } catch (insertError: any) {
       console.error("Error creating notification:", insertError);
       return NextResponse.json(
         {

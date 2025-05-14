@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import { addCacheBusting, preloadImage } from "@/utils/crossBrowserImageUtils";
-import { convertS3UrlToR2, isS3Url } from "@/utils/s3-to-r2-migration";
+import { convertS3UrlToR2, isR2Url, isS3Url } from "@/utils/s3-to-r2-migration";
 import styles from "./ProfileAvatar.module.css";
 
 // Helper function to get initials from name or email

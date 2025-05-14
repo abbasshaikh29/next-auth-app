@@ -2,23 +2,18 @@
 
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import Header from "@/components/Header";
 import CommunityPaymentSettings from "@/components/payments/CommunityPaymentSettings";
 import TransactionHistory from "@/components/payments/TransactionHistory";
 
-interface CommunityPaymentSettingsPageProps {
-  params: {
-    slug: string;
-  };
-}
-
-export default function CommunityPaymentSettingsPage({
-  params,
-}: CommunityPaymentSettingsPageProps) {
+export default function CommunityPaymentSettingsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const params = useParams();
+  const slug = params.slug as string;
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [communityId, setCommunityId] = useState<string | null>(null);
@@ -29,7 +24,9 @@ export default function CommunityPaymentSettingsPage({
       if (status === "loading") return;
 
       if (!session) {
-        router.push(`/api/auth/signin?callbackUrl=/community/${params.slug}/payment-settings`);
+        router.push(
+          `/api/auth/signin?callbackUrl=/community/${slug}/payment-settings`
+        );
         return;
       }
 
@@ -38,21 +35,21 @@ export default function CommunityPaymentSettingsPage({
 
       try {
         // Fetch community details
-        const response = await fetch(`/api/community/${params.slug}`);
-        
+        const response = await fetch(`/api/community/${slug}`);
+
         if (!response.ok) {
           throw new Error("Failed to fetch community details");
         }
 
         const community = await response.json();
         setCommunityId(community._id);
-        
+
         // Check if user is admin
         const isUserAdmin = community.admin === session.user.id;
         setIsAdmin(isUserAdmin);
 
         if (!isUserAdmin) {
-          router.push(`/community/${params.slug}`);
+          router.push(`/community/${slug}`);
         }
       } catch (error) {
         console.error("Error checking community access:", error);
@@ -67,7 +64,7 @@ export default function CommunityPaymentSettingsPage({
     };
 
     checkCommunityAccess();
-  }, [session, status, params.slug, router]);
+  }, [session, status, slug, router]);
 
   if (isLoading) {
     return (
@@ -116,9 +113,9 @@ export default function CommunityPaymentSettingsPage({
           <>
             <CommunityPaymentSettings
               communityId={communityId}
-              communitySlug={params.slug}
+              communitySlug={slug}
             />
-            
+
             <div className="mt-16">
               <h2 className="text-2xl font-bold mb-6 text-halloween-purple">
                 Transaction History

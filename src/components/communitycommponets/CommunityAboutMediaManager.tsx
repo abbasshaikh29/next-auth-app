@@ -186,7 +186,7 @@ export default function CommunityAboutMediaManager() {
                 <div className="aspect-video">
                   <img
                     src={item.url}
-                    alt={item.title || "Community media"}
+                    alt={item.title || `Community media item - ${item.type}`}
                     className="w-full h-full object-cover"
                   />
                 </div>

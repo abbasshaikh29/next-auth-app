@@ -111,24 +111,23 @@ export const sendVerificationEmail = async (
       console.error("Error sending verification email:", error);
       return {
         success: false,
-        error,
-        errorMessage: error.message,
-        errorCode: error.statusCode || "UNKNOWN",
+        error: error.message || "An unknown error occurred",
+        errorMessage: error.message || "An unknown error occurred",
+        errorCode: (error as any).statusCode || "UNKNOWN",
+        messageId: data?.id,
+        recipient: email,
+        emailType: "verification",
       };
     }
-
-    console.log("Email sent successfully:", {
-      messageId: data?.id,
-      recipient: email,
-      emailType: "verification",
-    });
 
     return { success: true, messageId: data?.id };
   } catch (error: any) {
     console.error("Exception sending verification email:", error);
 
     // Provide more specific error information
-    let errorMessage = "Failed to send verification email";
+    let errorMessage =
+      "Failed to send verification email: " +
+      (error.message || "Unknown error");
     let errorCode = error.code || "UNKNOWN";
 
     return {
@@ -140,10 +139,10 @@ export const sendVerificationEmail = async (
   }
 };
 
-// Generate a random token (keeping the same function from your existing code)
+// Generate a random token
 export const generateVerificationToken = (): string => {
   return Array(32)
     .fill(null)
-    .map(() => Math.round(Math.random() * 16).toString(16))
+    .map(() => ((Math.random() * 16) | 0).toString(16))
     .join("");
 };

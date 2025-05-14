@@ -6,6 +6,8 @@ import { useSession } from "next-auth/react";
 import { ICommunity } from "@/models/Community";
 import { IPost } from "@/models/Posts";
 import CommunityNav from "@/components/communitynav/CommunityNav";
+import { listenForRealtimeEvents } from "@/lib/realtime";
+import { useRealtime } from "@/components/RealtimeProvider";
 
 // Dynamically import components for code splitting
 const CommunityAboutcard = lazy(
@@ -50,6 +52,7 @@ export default function HomeIdPage() {
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [editingPost, setEditingPost] = useState<PostWithAuthor | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const { isEnabled } = useRealtime();
 
   // Function to fetch posts (sorted by date, newest first)
   const fetchPosts = async () => {
@@ -94,11 +97,6 @@ export default function HomeIdPage() {
       );
     }
   };
-
-  // Import realtime functions
-  const { listenForRealtimeEvents } = require("@/lib/realtime");
-  const { useRealtime } = require("@/components/RealtimeProvider");
-  const { isEnabled } = useRealtime();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -357,7 +355,7 @@ export default function HomeIdPage() {
         },
         body: JSON.stringify({
           postId,
-          communityId: community._id,
+          communityId: community!._id,
           isPinned,
         }),
       });

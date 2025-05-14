@@ -1,12 +1,23 @@
 // Script to create MongoDB indexes for better performance
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import { fileURLToPath } from "url";
+import { dirname, resolve } from "path";
 
-// Initialize dotenv
-dotenv.config();
+// Get the directory name of the current module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Initialize dotenv with the correct path to .env.local
+dotenv.config({ path: resolve(__dirname, "../../.env.local") });
 
 async function createIndexes() {
   try {
+    // Check if MONGODB_URI is available
+    if (!process.env.MONGODB_URI) {
+      throw new Error("MONGODB_URI is not defined in environment variables");
+    }
+
     // Connect to MongoDB
     console.log("Connecting to MongoDB...");
     await mongoose.connect(process.env.MONGODB_URI);

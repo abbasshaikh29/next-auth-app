@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth-helpers";
 import { dbconnect } from "@/lib/db";
 import { Notification } from "@/models/Notification";
-import { Community } from "@/models/Community";
+import { Community, ICommunity } from "@/models/Community";
 import mongoose from "mongoose";
 
 // POST /api/notifications/create - Create notifications for community members
@@ -61,8 +61,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Find the community to get members
-    console.log("Looking up community with ID:", communityId);
-    const community = await Community.findById(communityId).lean();
+    const community = (await Community.findById(
+      communityId
+    ).lean()) as unknown as ICommunity;
     if (!community) {
       console.log("Community not found with ID:", communityId);
       return NextResponse.json(
@@ -184,7 +185,7 @@ export async function POST(request: NextRequest) {
       try {
         result = await Notification.insertMany(notifications);
         console.log("Successfully inserted notifications:", result.length);
-      } catch (insertError) {
+      } catch (insertError: any) {
         console.error("Error inserting notifications:", insertError);
         return NextResponse.json(
           {

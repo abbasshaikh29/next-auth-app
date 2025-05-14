@@ -34,7 +34,7 @@ export default function R2ImageTest({ imageUrl }: R2ImageTestProps) {
         console.log("[R2ImageTest] Fetch response:", {
           status: response.status,
           statusText: response.statusText,
-          headers: Object.fromEntries([...response.headers.entries()]),
+          headers: Object.fromEntries(Array.from(response.headers.entries())),
           ok: response.ok,
         });
 

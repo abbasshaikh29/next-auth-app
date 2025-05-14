@@ -76,8 +76,7 @@ const createTransporter = () => {
   if (process.env.EMAIL_SERVER_HOST?.includes("amazonaws.com")) {
     console.log("Using Amazon SES configuration");
     // SES requires TLS
-    transportConfig.requireTLS = true;
-    transportConfig.debug = process.env.NODE_ENV !== "production";
+    transportConfig.secure = true;
   }
 
   return nodemailer.createTransport(transportConfig);
@@ -162,31 +161,31 @@ export const sendVerificationEmail = async (
 
     // Provide more specific error information
     let errorMessage = "Failed to send verification email";
-    if (error.code === "ECONNREFUSED") {
-      errorMessage =
-        "Could not connect to email server. Check your email configuration.";
-    } else if (error.code === "ETIMEDOUT") {
-      errorMessage =
-        "Connection to email server timed out. Check your network settings.";
-    } else if (error.code === "EAUTH") {
-      errorMessage = "Email authentication failed. Check your credentials.";
-    } else if (error.responseCode >= 500) {
-      errorMessage = "Email server error. Try again later.";
+    if (error instanceof Error && error.message) {
+      if (error.message.includes("ECONNREFUSED")) {
+        errorMessage =
+          "Could not connect to email server. Check your email configuration.";
+      } else if (error.message.includes("ETIMEDOUT")) {
+        errorMessage =
+          "Connection to email server timed out. Check your network settings.";
+      } else if (error instanceof Error && error.message.includes("EAUTH")) {
+        errorMessage = "Email authentication failed. Check your credentials.";
+      } else if (
+        error instanceof Error &&
+        error.message.includes("responseCode") &&
+        parseInt(
+          error.message.split(" ")[error.message.split(" ").length - 1]
+        ) >= 500
+      ) {
+        errorMessage = "Email server error. Try again later.";
+      }
     }
 
     return {
       success: false,
-      error,
+      error: error instanceof Error ? error.message : "Unknown error",
       errorMessage,
-      errorCode: error.code || "UNKNOWN",
+      errorCode: "UNKNOWN",
     };
   }
-};
-
-// Generate a random token
-export const generateVerificationToken = (): string => {
-  return Array(32)
-    .fill(null)
-    .map(() => Math.round(Math.random() * 16).toString(16))
-    .join("");
 };

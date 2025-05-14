@@ -21,6 +21,7 @@ import {
 interface UserData {
   _id: string;
   username: string;
+  email?: string;
   image?: string;
   profileImage?: string;
   bio?: string;
