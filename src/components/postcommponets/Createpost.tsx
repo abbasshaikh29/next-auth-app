@@ -260,6 +260,8 @@ export function CreatePost({
                 <Image
                   src={content.content}
                   alt=""
+                  width={500}
+                  height={300}
                   className="max-h-40 sm:max-h-60 object-contain mx-auto"
                 />
               </div>

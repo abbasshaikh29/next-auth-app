@@ -14,6 +14,17 @@ export default function RootLayout({
     <html lang="en" className={poppins.variable}>
       <head>
         <title>TheTribelab - Halloween Edition</title>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+          (function() {
+            const savedTheme = localStorage.getItem('theme') || 'whiteHalloween';
+            const validTheme = savedTheme === 'skoolTheme' ? 'whiteHalloween' : savedTheme;
+            document.documentElement.setAttribute('data-theme', validTheme);
+          })();
+        `,
+          }}
+        />
       </head>
       <body className={poppins.className}>
         <ErrorBoundary>

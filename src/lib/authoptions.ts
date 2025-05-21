@@ -39,28 +39,33 @@ export const authOptions: NextAuthConfig = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
+        console.log("Attempting login with credentials:", credentials);
         if (!credentials?.email || !credentials?.password) {
+          console.log("Missing credentials");
           return null;
         }
         try {
           await dbconnect();
           const user = await User.findOne({ email: credentials.email });
+          console.log("User found:", user);
           if (!user) {
+            console.log("User not found");
             return null;
           }
+          console.log("User password from DB:", user.password);
           const isValid = await bcrypt.compare(
             credentials.password as string,
             user.password as string
           );
+          console.log("Password valid:", isValid);
           if (!isValid) {
+            console.log("Invalid password");
             return null;
           }
-
-          // Check if email is verified for credential login
           if (user.emailVerified === false && user.provider !== "google") {
+            console.log("Email not verified");
             throw new Error("Please verify your email before logging in");
           }
-
           return {
             id: user._id.toString(),
             email: user.email,

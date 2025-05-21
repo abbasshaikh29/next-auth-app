@@ -14,14 +14,12 @@ export default function ThemeSwitcher() {
       savedTheme === "skoolTheme" ? "whiteHalloween" : savedTheme;
     setCurrentTheme(validTheme);
     document.documentElement.setAttribute("data-theme", validTheme);
-    document.body.setAttribute("data-theme", validTheme);
   }, []);
 
   const toggleTheme = (theme: string) => {
     setCurrentTheme(theme);
     localStorage.setItem("theme", theme);
     document.documentElement.setAttribute("data-theme", theme);
-    document.body.setAttribute("data-theme", theme);
   };
 
   return (

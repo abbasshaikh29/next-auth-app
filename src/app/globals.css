@@ -25,6 +25,12 @@ body {
 body[data-theme="whiteHalloween"] {
   background-color: white;
 }
+
+body[data-theme="halloween"] {
+  background-color: #1e1b4b;
+  color: #fff;
+}
+
 .tabs {
   align-items: start;
 }

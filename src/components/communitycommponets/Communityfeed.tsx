@@ -3,6 +3,7 @@
 import React from "react";
 import { ICommunity } from "@/models/Community";
 import { useRouter } from "next/navigation";
+import { Users, DollarSign } from "lucide-react";
 
 interface CommunityfeedProps {
   communitys: ICommunity[];
@@ -13,8 +14,8 @@ function truncateDescription(description: string | undefined): string {
     return "";
   }
   const words = description.split(" ");
-  if (words.length > 20) {
-    return words.slice(0, 20).join(" ") + "...";
+  if (words.length > 30) {
+    return words.slice(0, 30).join(" ") + "...";
   }
   return description;
 }
@@ -22,9 +23,8 @@ function truncateDescription(description: string | undefined): string {
 export default function Communityfeed({ communitys }: CommunityfeedProps) {
   const router = useRouter();
 
-  const handleJoinClick = (communityslug: string) => {
+  const handleCardClick = (communityslug: string) => {
     router.push(`/Newcompage/${communityslug}/about`);
-    console.log("Joining community with ID:", communityslug);
   };
 
   // Function to render the appropriate image component
@@ -32,7 +32,7 @@ export default function Communityfeed({ communitys }: CommunityfeedProps) {
     // Use CSS background image approach which is more reliable
     return (
       <div
-        className="w-full h-full bg-gray-200"
+        className="w-full h-full bg-gray-200 rounded-t-xl"
         style={{
           backgroundImage: community?.bannerImageurl
             ? `url(${community.bannerImageurl})`
@@ -47,32 +47,55 @@ export default function Communityfeed({ communitys }: CommunityfeedProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-12">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {communitys.map((community) => (
-        <div key={community._id?.toString()} className="flex justify-center">
-          <div className="card bg-base-100 w-full max-w-sm shadow-xl overflow-hidden flex flex-col justify-between hover:shadow-neutral transition-shadow duration-300">
-            <div className="w-full h-52 overflow-hidden relative">
-              {renderImage(community)}
+        <div
+          key={community._id?.toString()}
+          className="bg-white rounded-xl shadow-sm border border-gray-200 h-[400px] overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer"
+          onClick={() => community.slug && handleCardClick(community.slug)}
+        >
+          {/* Banner */}
+          <div className="w-full h-40 bg-gray-200 relative overflow-hidden">
+            {renderImage(community)}
+          </div>
+          
+          {/* Community Icon and Name */}
+          <div className="p-5 flex flex-col h-[calc(400px-160px)]">
+            <div className="flex items-center gap-3 mb-3">
+              <img
+                src={
+                  community.iconImageUrl ||
+                  "https://placehold.co/32x32/gray/white?text=Icon"
+                }
+                alt={`${community.name} icon`}
+                className="w-10 h-10 rounded-md object-cover border border-gray-200"
+              />
+              <h2 className="font-bold text-lg truncate">
+                {community.name}
+              </h2>
             </div>
-            <div className="card-body flex flex-col min-h-[4rem]">
-              <h2 className="card-title">{community.name}</h2>
-
-              <div className="flex-grow">
-                <p className="h-20 overflow-hidden">
-                  {truncateDescription(community.description)}
-                </p>
-              </div>
-
-              <div className="card-actions justify-end">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() =>
-                    handleJoinClick(community.slug?.toString() || "")
-                  }
-                >
-                  Join Now
-                </button>
+            
+            <p className="text-sm text-gray-600 mb-4 flex-grow line-clamp-4">
+              {truncateDescription(community.description)}
+            </p>
+            
+            <div className="mt-auto pt-4 border-t border-gray-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <Users className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm font-medium">{community.members.length.toLocaleString()} Members</span>
+                </div>
+                
+                <div className="flex items-center gap-1">
+                  {community.price ? (
+                    <>
+                      <DollarSign className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm font-medium">${community.price}/month</span>
+                    </>
+                  ) : (
+                    <span className="text-sm font-medium text-green-600">Free</span>
+                  )}
+                </div>
               </div>
             </div>
           </div>

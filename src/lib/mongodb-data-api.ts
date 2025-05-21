@@ -5,7 +5,7 @@
 
 const DATA_API_KEY = process.env.MONGODB_DATA_API_KEY;
 const DATA_API_URL = process.env.MONGODB_DATA_API_URL;
-const DATABASE = process.env.MONGODB_DATABASE || "next-auth-app-dev";
+const DATABASE = process.env.MONGODB_DATABASE || "next-auth-app-prod";
 
 if (!DATA_API_KEY) {
   throw new Error("MONGODB_DATA_API_KEY is not defined");

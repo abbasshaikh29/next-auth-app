@@ -146,11 +146,11 @@ export default function Header() {
               >
                 <li className="">
                   <Link
-                    href="/"
+                    href="/community-feed"
                     className="flex items-center gap-2 hover:bg-base-200 rounded-lg py-2"
                   >
                     <div
-                      className={` rounded-md overflow-hidden w-8 h-8 sm:w-10 sm:h-10 min-w-8 min-h-8 sm:min-w-10 sm:min-h-10 flex-shrink-0 hover:scale-105 transition-transform duration-200  flex items-center justify-center`}
+                      className={`rounded-md overflow-hidden w-8 h-8 sm:w-10 sm:h-10 min-w-8 min-h-8 sm:min-w-10 sm:min-h-10 flex-shrink-0 hover:scale-105 transition-transform duration-200 flex items-center justify-center`}
                       title="compass"
                     >
                       <Compass size={25} className="text-primary" />

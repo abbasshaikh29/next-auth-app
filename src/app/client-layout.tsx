@@ -15,7 +15,6 @@ export default function ClientLayout({
     const validTheme =
       savedTheme === "skoolTheme" ? "whiteHalloween" : savedTheme;
     document.documentElement.setAttribute("data-theme", validTheme);
-    document.body.setAttribute("data-theme", validTheme);
   }, []);
 
   return (
