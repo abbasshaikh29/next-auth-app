@@ -22,13 +22,24 @@ body {
   font-family: var(--font-poppins), Arial, Helvetica, sans-serif;
 }
 
-body[data-theme="whiteHalloween"] {
-  background-color: white;
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
-body[data-theme="halloween"] {
-  background-color: #1e1b4b;
-  color: #fff;
+/* Force theme colors on cards */
+.card {
+  background-color: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--card-border) !important;
+}
+
+/* Force theme colors on community feed */
+.community-feed .card,
+.post-card {
+  background-color: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--card-border) !important;
 }
 
 .tabs {

@@ -230,6 +230,7 @@ export default function CommunityAboutMediaManager() {
               onClick={() => setActiveTab("image")}
               aria-label="Switch to image upload"
             >
+              {/* eslint-disable-next-line jsx-a11y/alt-text */}
               <Image className="h-4 w-4 mr-2" />
               Upload Image
             </button>

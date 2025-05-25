@@ -74,6 +74,7 @@ export default function PostCard({
   isAdmin = false,
 }: CommunityCardProps) {
   const [mounted, setMounted] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState<string>("whiteHalloween");
   const [isLiked, setIsLiked] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -112,6 +113,30 @@ export default function PostCard({
 
   const { isEnabled } = useRealtime();
   const { showNotification } = useNotification();
+
+  // Effect to detect theme changes
+  useEffect(() => {
+    const detectTheme = () => {
+      const theme = document.documentElement.getAttribute("data-theme") || "whiteHalloween";
+      setCurrentTheme(theme);
+    };
+    
+    // Initial detection
+    detectTheme();
+    
+    // Listen for theme changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === "data-theme") {
+          detectTheme();
+        }
+      });
+    });
+    
+    observer.observe(document.documentElement, { attributes: true });
+    
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -732,7 +757,14 @@ export default function PostCard({
 
   return (
     <>
-      <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer max-w-4xl w-full mx-auto">
+      <Card 
+        className="post-card hover:shadow-lg transition-all duration-300 cursor-pointer max-w-4xl w-full mx-auto"
+        style={{
+          backgroundColor: currentTheme === "halloween" ? "#2b2b2e" : "#ffffff",
+          color: currentTheme === "halloween" ? "#ffffff" : "#000000",
+          borderColor: currentTheme === "halloween" ? "rgba(255, 117, 24, 0.2)" : "rgba(107, 33, 168, 0.1)"
+        }}
+      >
         <CardHeader className="flex flex-row items-center justify-between py-3 px-4">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-4">
@@ -744,7 +776,7 @@ export default function PostCard({
               />
               <div>
                 <p className="font-medium">{authorName}</p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
                   {formatRelativeTime(post.createdAt)}
                 </p>
               </div>
@@ -782,7 +814,7 @@ export default function PostCard({
                                     href={url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-blue-500 hover:underline"
+                                    className="hover:underline" style={{ color: "var(--halloween-orange)" }}
                                     onClick={(e) => e.stopPropagation()}
                                   >
                                     {part}
@@ -892,7 +924,7 @@ export default function PostCard({
               />
               <div>
                 <h3 className="font-semibold">{post.authorName}</h3>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
                   {formatRelativeTime(post.createdAt)}
                 </p>
               </div>
@@ -1022,9 +1054,8 @@ export default function PostCard({
                 variant="ghost"
                 size="sm"
                 onClick={() => handleLikePost()}
-                className={`flex items-center gap-2 ${
-                  isLiked ? "text-red-500" : ""
-                }`}
+                className="flex items-center gap-2"
+                style={isLiked ? { color: "var(--halloween-orange)" } : {}}
               >
                 <Heart
                   className="h-4 w-4"

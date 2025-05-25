@@ -35,6 +35,23 @@ export interface ICommunity {
   price?: number; // Price for joining the community
   currency?: string; // Currency for the price (USD, INR, etc.)
   pricingType?: "monthly" | "yearly" | "one_time"; // Type of pricing (monthly, yearly, or one-time)
+  
+  // New fields for payment and subscription
+  paymentStatus?: "unpaid" | "trial" | "paid" | "expired"; // Status of payment
+  paymentDate?: Date; // Date when payment was made
+  transactionId?: string; // ID of the payment transaction
+  paymentId?: string; // ID of the payment
+  freeTrialActivated?: boolean; // Whether free trial is activated
+  freeTrialStartDate?: Date; // Start date of free trial
+  freeTrialEndDate?: Date; // End date of free trial
+  subscriptionEndDate?: Date; // End date of subscription
+  
+  // Admin-specific trial information
+  adminTrialInfo?: {
+    activated: boolean;
+    startDate?: Date;
+    endDate?: Date;
+  };
 }
 
 const communitySchema = new Schema<ICommunity>({
@@ -80,6 +97,27 @@ const communitySchema = new Schema<ICommunity>({
     enum: ["monthly", "yearly", "one_time"],
     default: "one_time",
   }, // Default to one-time payment
+  
+  // New fields for payment and subscription
+  paymentStatus: { 
+    type: String, 
+    enum: ["unpaid", "trial", "paid", "expired"], 
+    default: "unpaid" 
+  },
+  paymentDate: { type: Date },
+  transactionId: { type: String },
+  paymentId: { type: String },
+  freeTrialActivated: { type: Boolean, default: false },
+  freeTrialStartDate: { type: Date },
+  freeTrialEndDate: { type: Date },
+  subscriptionEndDate: { type: Date },
+  
+  // Admin-specific trial information
+  adminTrialInfo: {
+    activated: { type: Boolean, default: false },
+    startDate: { type: Date },
+    endDate: { type: Date }
+  }
 });
 
 // Function to generate a slug from a name

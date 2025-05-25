@@ -1,3 +1,4 @@
+
 "use client";
 import mongoose from "mongoose";
 import React, { useState, useEffect, Suspense, lazy } from "react";
@@ -37,6 +38,23 @@ interface PostWithAuthor extends Omit<IPost, "likes"> {
 }
 
 export default function HomeIdPage() {
+  // Force the correct background color for this page
+  useEffect(() => {
+    // Get the current theme
+    const currentTheme = document.documentElement.getAttribute("data-theme") || "whiteHalloween";
+    
+    // Apply the correct background color based on theme
+    if (currentTheme === "halloween") {
+      document.body.style.backgroundColor = "#2b2b2e"; // Dark theme background from CSS variables
+    } else {
+      document.body.style.backgroundColor = "#ffffff"; // Light theme background
+    }
+    
+    // Cleanup function to remove the style when component unmounts
+    return () => {
+      document.body.style.removeProperty("backgroundColor");
+    };
+  }, []);
   const params = useParams();
   const slug = params.slug as string;
   const { data: session } = useSession();
@@ -508,7 +526,7 @@ export default function HomeIdPage() {
                     />
                   </Suspense>
                 </div>
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-4 community-feed">
                   {filteredPosts.length === 0 && searchQuery ? (
                     <div className="text-center p-4 bg-base-200 rounded-lg">
                       <p className="text-lg">

@@ -140,7 +140,12 @@ const RazorpayCheckout: React.FC<RazorpayCheckoutProps> = ({
     signature: string
   ) => {
     try {
-      const verifyResponse = await fetch("/api/payments/verify", {
+      // Use the appropriate verification endpoint based on payment type
+      const endpoint = paymentType === "community" 
+        ? "/api/payments/community/verify-payment" 
+        : "/api/payments/verify";
+      
+      const verifyResponse = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -149,6 +154,7 @@ const RazorpayCheckout: React.FC<RazorpayCheckoutProps> = ({
           orderId,
           paymentId,
           signature,
+          communityId: paymentType === "community" ? communityId : undefined,
         }),
       });
 

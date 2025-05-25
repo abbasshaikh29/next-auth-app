@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 
 function Hero() {
   return (
-    <div className="bg-white py-16 relative overflow-hidden">
+    <div className="py-16 relative overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
       {/* Halloween decorative elements */}
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-halloween-purple via-halloween-orange to-halloween-green opacity-30"></div>
       <div className="absolute -top-10 -right-10 w-40 h-40 bg-halloween-orange opacity-5 rounded-full blur-3xl"></div>
@@ -16,7 +16,7 @@ function Hero() {
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-halloween-purple via-halloween-orange to-halloween-green bg-clip-text text-transparent">
             Monetize Your Audience with Community
           </h1>
-          <p className="text-lg md:text-xl text-halloween-black/70 max-w-2xl mx-auto mb-8">
+          <p className="text-lg md:text-xl max-w-2xl mx-auto mb-8" style={{ color: 'var(--text-secondary)' }}>
             Build, grow, and engage your community with our powerful platform.
             Special Halloween pricing: just $39/month for all premium features!
           </p>

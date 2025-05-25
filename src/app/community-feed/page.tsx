@@ -5,7 +5,9 @@ import Communityfeed from "@/components/communitycommponets/Communityfeed";
 import { ICommunity } from "@/models/Community";
 import { apiClient, PaginationResponse } from "@/lib/api-client";
 import { useSession } from "next-auth/react";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { Search } from "lucide-react";
+import Pagination from "@/components/ui/Pagination";
+import PageFooter from "@/components/PageFooter";
 
 export default function CommunityFeedPage() {
   const { data: session, status } = useSession();
@@ -60,7 +62,7 @@ export default function CommunityFeedPage() {
   }, [currentPage]);
 
   return (
-    <main className="min-h-screen bg-[#eeedeb]">
+    <main className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
       <Header />
 
       <div className="container mx-auto px-4 py-12">
@@ -86,7 +88,8 @@ export default function CommunityFeedPage() {
               placeholder="Search for anything"
               value={searchTerm}
               onChange={handleSearch}
-              className="w-full px-4 py-3 pl-12 pr-10 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-4 py-3 pl-12 pr-10 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-halloween-orange focus:border-transparent"
+              style={{ backgroundColor: 'var(--input-bg)', color: 'var(--text-primary)', borderColor: 'var(--input-border)' }}
             />
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
               <Search className="h-5 w-5 text-white" />
@@ -113,31 +116,15 @@ export default function CommunityFeedPage() {
         )}
 
         {pagination && pagination.pages > 1 && (
-          <div className="flex justify-center mt-12 space-x-4">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-100 hover:shadow-md transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Previous Page"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <span className="flex items-center px-4 text-gray-600">
-              Page {currentPage} of {pagination.pages}
-            </span>
-            <button
-              onClick={() =>
-                setCurrentPage((p) => Math.min(pagination.pages, p + 1))
-              }
-              disabled={currentPage === pagination.pages}
-              className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-100 hover:shadow-md transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Next Page"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={pagination.pages}
+            onPageChange={setCurrentPage}
+            className="mt-12"
+          />
         )}
       </div>
+      <PageFooter />
     </main>
   );
 }

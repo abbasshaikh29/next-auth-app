@@ -258,7 +258,12 @@ function About({ slug }: AboutProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <User size={18} className="text-gray-600" />
+          <img
+            src={communityData.admin?.profileImage || ""}
+            alt={communityData.admin?.username || ""}
+            className="w-6 h-6 rounded-full"
+          />
+          
           <span className="text-sm">By</span>
           <span className="font-medium">
             {communityData.admin?.username ||

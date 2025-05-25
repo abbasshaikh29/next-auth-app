@@ -2,7 +2,8 @@ import Providers from "../components/Provider";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { poppins } from "./fonts";
 import ClientLayout from "./client-layout";
-import "./critical-styles.css"; // Load critical CSS first
+import "../styles/theme-variables.css"; // Load theme variables first
+import "./critical-styles.css"; // Load critical CSS next
 import "./globals.css"; // Load full CSS after
 
 export default function RootLayout({

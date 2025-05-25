@@ -210,7 +210,7 @@ function CommunityNav() {
   };
 
   return (
-    <div className="navbar sticky top-0 bg-base-300 shadow-md z-10">
+    <div className="navbar sticky top-0 shadow-md z-10" style={{ backgroundColor: 'var(--bg-secondary)' }}>
       <div className="flex flex-col justify-center w-full">
         <div className="container mx-auto flex justify-between px-4 sm:px-8 md:px-16 items-center">
           <div className="flex-1 px-2 lg:flex-none flex items-center gap-2">
@@ -257,7 +257,7 @@ function CommunityNav() {
                 >
                   <li className="mt-2">
                     <Link
-                      href="/"
+                      href="/community-feed"
                       className="flex items-center gap-2 hover:bg-base-200 rounded-lg py-2"
                     >
                       <div

@@ -6,9 +6,10 @@ import { useNotification } from "../Notification";
 
 interface CaptchaVerificationWrapperProps {
   children: ReactNode;
-  onVerificationComplete: () => void;
+  onVerificationComplete: (data: any) => void;
   title?: string;
   description?: string;
+  formData?: Record<string, any>;
 }
 
 export default function CaptchaVerificationWrapper({
@@ -16,16 +17,25 @@ export default function CaptchaVerificationWrapper({
   onVerificationComplete,
   title = "Human Verification Required",
   description = "Please complete the verification below to continue",
+  formData,
 }: CaptchaVerificationWrapperProps) {
   const [isVerified, setIsVerified] = useState(false);
   const { showNotification } = useNotification();
 
   const handleCaptchaVerify = (token: string | null) => {
+    console.log('reCAPTCHA verify called with token:', token);
+    console.log('Current formData in wrapper:', formData);
+    
     if (token) {
       setIsVerified(true);
       showNotification("Verification successful", "success");
-      onVerificationComplete();
+      // Pass both the token and formData to the callback
+      onVerificationComplete({
+        ...formData,
+        recaptchaToken: token
+      });
     } else {
+      console.error('reCAPTCHA verification failed');
       setIsVerified(false);
     }
   };

@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
+import { checkTrialStatus } from "./middleware/trial-check";
 
 // This middleware runs in the Edge Runtime and doesn't use any Node.js features
 
 // This function can be marked `async` if using `await` inside
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   // Check for auth cookie instead of using auth() function
   const authCookie =
     request.cookies.get("next-auth.session-token") ||
@@ -39,6 +41,41 @@ export function middleware(request: NextRequest) {
   // If user is already logged in and tries to access login/register pages
   if (isAuthenticated && (path === "/login" || path === "/register")) {
     return NextResponse.redirect(new URL("/", request.url));
+  }
+  
+  // Check for community access paths that require trial activation
+  // Example: /Newcompage/communityslug/...
+  const communityPathMatch = path.match(/\/Newcompage\/([^\/]+)/);
+  
+  if (communityPathMatch && isAuthenticated) {
+    const communitySlug = communityPathMatch[1];
+    
+    // Skip billing pages - these should always be accessible
+    if (path.includes('/billing/') || path.includes('/communitysetting/1-Billing')) {
+      return NextResponse.next();
+    }
+    
+    try {
+      // Get the user token to extract the user ID
+      const token = await getToken({ req: request });
+      
+      if (!token || !token.sub) {
+        return NextResponse.next();
+      }
+      
+      // Check if the user has an active trial or payment
+      const hasActiveTrialOrPayment = await checkTrialStatus(request, token.sub, communitySlug);
+      
+      if (!hasActiveTrialOrPayment) {
+        // Redirect to billing page if no active trial or payment
+        console.log(`Redirecting user ${token.sub} to billing page for community ${communitySlug} - no active trial`);
+        return NextResponse.redirect(new URL(`/billing/${communitySlug}`, request.url));
+      }
+    } catch (error) {
+      console.error('Error in trial check middleware:', error);
+      // In case of error, allow access (fail open)
+      return NextResponse.next();
+    }
   }
 
   return NextResponse.next();

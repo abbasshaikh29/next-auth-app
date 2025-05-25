@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNotification } from "../Notification";
 import { apiClient } from "@/lib/api-client";
@@ -30,9 +30,10 @@ export default function CommunityCreateForm() {
   const { showNotification } = useNotification();
   const { isCaptchaVerified, setIsCaptchaVerified } = useCaptcha();
 
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
-
+  
+  // Move useForm hook before any conditional returns
   const {
     register,
     handleSubmit,
@@ -47,36 +48,98 @@ export default function CommunityCreateForm() {
       adminQuestions: [
         "Why do you want to join this community?",
         "What can you contribute to this community?",
-        "How did you hear about us?",
       ],
     },
   });
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      const callbackUrl = window ? encodeURIComponent(window.location.pathname) : '';
+      router.push(`/api/auth/signin${callbackUrl ? `?callbackUrl=${callbackUrl}` : ''}`);
+    }
+  }, [status, router]);
+
+  // Show loading state while checking session
+  if (status === 'loading' || !session) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
+
+  // useForm hook moved to the top of the component
 
   const handleUploadProgress = (progress: number) => {
     setCreateProgress(progress);
   };
 
   const onSubmit = async (data: CommunityFormData) => {
-    if (!data.name) {
-      showNotification("Please enter a community name", "error");
-      return;
-    }
+    try {
+      // Double-check session
+      if (!session?.user?.id) {
+        throw new Error('No active session found');
+      }
 
-    // Store form data and show CAPTCHA verification
-    setFormData(data);
-    setShowCaptcha(true);
+      if (!data.name?.trim()) {
+        showNotification("Please enter a community name", "error");
+        return;
+      }
+
+      // Store form data with user info and show CAPTCHA
+      setFormData({
+        ...data,
+        name: data.name.trim(),
+        description: data.description?.trim(),
+        createdBy: session.user.id,
+        admin: session.user.id,
+        adminQuestions: [
+          "Why do you want to join this community?",
+          "What can you contribute to this community?",
+          "How did you hear about us?",
+        ],
+      });
+      setShowCaptcha(true);
+    } catch (error) {
+      console.error('Error in form submission:', error);
+      showNotification("An error occurred. Please try again.", "error");
+      if (!session?.user?.id) {
+        const callbackUrl = window ? encodeURIComponent(window.location.pathname) : '';
+        router.push(`/api/auth/signin${callbackUrl ? `?callbackUrl=${callbackUrl}` : ''}`);
+      }
+    }
   };
 
-  const handleCaptchaComplete = async () => {
-    if (!formData || !session?.user?.id) {
-      console.error("Form data or user ID not found");
-      return;
-    }
-
+  const handleCaptchaComplete = async (captchaFormData: CommunityFormData | null = formData) => {
     setLoading(true);
+    
     try {
+      console.log('handleCaptchaComplete called with:', { captchaFormData, formData, session });
+      
+      // Ensure we have all required data
+      if (!session?.user?.id) {
+        throw new Error('No active user session found');
+      }
+      
+      const dataToUse = captchaFormData || formData;
+      if (!dataToUse) {
+        throw new Error('Form data is missing');
+      }
+      
+      // Validate required fields
+      if (!dataToUse.name?.trim()) {
+        throw new Error('Community name is required');
+      }
+      
+      if (!dataToUse.description?.trim()) {
+        throw new Error('Community description is required');
+      }
+
+      // If we get here, all validations passed
+      try {
       const communityData = {
-        ...formData,
+        ...dataToUse,
         createdAt: new Date(),
         createdBy: session.user.id,
         admin: session.user.id,
@@ -84,27 +147,32 @@ export default function CommunityCreateForm() {
         joinRequests: [],
       };
 
-      const createdCommunity = await apiClient.createCommunity(communityData);
-      showNotification("Community created successfully!", "success");
-      router.push(`/Newcompage/${createdCommunity.slug}`);
+          const createdCommunity = await apiClient.createCommunity(communityData);
+          showNotification("Community created successfully! Redirecting to billing...", "success");
+          router.push(`/billing/${createdCommunity.slug}`);
 
-      // Reset form
-      setValue("name", "");
-      setValue("description", "");
-      setValue("createdAt", undefined);
-      setCreateProgress(0);
-      setShowCaptcha(false);
-      setFormData(null);
-      setIsCaptchaVerified(false);
-    } catch (error) {
-      showNotification(
-        error instanceof Error ? error.message : "Failed to create community",
-        "error"
-      );
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
+          // Reset form
+          setValue("name", "");
+          setValue("description", "");
+          setValue("createdAt", undefined);
+          setCreateProgress(0);
+          setShowCaptcha(false);
+          setFormData(null);
+          setIsCaptchaVerified(false);
+        } catch (error) {
+          console.error('Error creating community:', error);
+          showNotification(
+            error instanceof Error ? error.message : "Failed to create community",
+            "error"
+          );
+        }
+      } catch (error) {
+        console.error('Error in CAPTCHA verification:', error);
+        showNotification(
+          error instanceof Error ? error.message : "Verification failed. Please try again.",
+          "error"
+        );
+      }
   };
 
   return (
@@ -129,6 +197,7 @@ export default function CommunityCreateForm() {
         <div className="card w-full max-w-md shadow-lg">
           <CaptchaVerificationWrapper
             onVerificationComplete={handleCaptchaComplete}
+            formData={formData || undefined}
             title="Human Verification Required"
             description="Please verify that you are human before creating a community"
           >

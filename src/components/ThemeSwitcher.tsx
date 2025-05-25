@@ -13,13 +13,29 @@ export default function ThemeSwitcher() {
     const validTheme =
       savedTheme === "skoolTheme" ? "whiteHalloween" : savedTheme;
     setCurrentTheme(validTheme);
-    document.documentElement.setAttribute("data-theme", validTheme);
+    applyTheme(validTheme);
   }, []);
+
+  const applyTheme = (theme: string) => {
+    // Set the theme at document level
+    document.documentElement.setAttribute("data-theme", theme);
+    // Also set it on body to ensure full application coverage
+    document.body.setAttribute("data-theme", theme);
+    
+    // Apply specific background colors based on theme
+    if (theme === "halloween") {
+      document.body.style.backgroundColor = "#1e1b4b"; // Dark theme background
+      document.body.style.color = "#ffffff"; // Dark theme text color
+    } else {
+      document.body.style.backgroundColor = "#ffffff"; // Light theme background
+      document.body.style.color = "#1e1b4b"; // Light theme text color
+    }
+  };
 
   const toggleTheme = (theme: string) => {
     setCurrentTheme(theme);
     localStorage.setItem("theme", theme);
-    document.documentElement.setAttribute("data-theme", theme);
+    applyTheme(theme);
   };
 
   return (

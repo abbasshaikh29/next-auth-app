@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Explicitly list file extensions for pages
+  pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
+  // Specify external packages for server components
+  serverExternalPackages: [],
   images: {
     // For Next.js 13+ compatibility
     remotePatterns: [

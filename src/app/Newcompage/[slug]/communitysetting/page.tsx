@@ -6,6 +6,7 @@ import AdminPanelSettings from "@/components/communitycommponets/AdminPanelSetti
 import UserCommunitySettings from "@/components/communitycommponets/UserCommunitySettings";
 import CommunityAboutMediaManager from "@/components/communitycommponets/CommunityAboutMediaManager";
 import CommunityAccessSettings from "@/components/communitycommponets/CommunityAccessSettings";
+import CommunityBillingInfo from "@/components/communitycommponets/CommunityBillingInfo";
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useParams, useSearchParams } from "next/navigation";
@@ -113,6 +114,19 @@ function CommunitySetting() {
                     Access & Pricing
                   </Link>
                 )}
+                {isAdmin && (
+                  <Link
+                    href="?t=Billing"
+                    className={
+                      "py-3 font-semibold px-6 w-full text-lg transition-colors duration-200 hover:bg-base-300 " +
+                      (t === "Billing"
+                        ? "bg-primary text-primary-content border-l-4 border-primary-focus"
+                        : "")
+                    }
+                  >
+                    Billing & Trial
+                  </Link>
+                )}
                 {/* Admin only link */}
                 {isAdmin && (
                   <Link
@@ -158,6 +172,10 @@ function CommunitySetting() {
                 {/* Access & Pricing settings */}
                 {isAdmin && t === "AccessSettings" && (
                   <CommunityAccessSettings />
+                )}
+                {/* Billing & Trial information */}
+                {isAdmin && t === "Billing" && (
+                  <CommunityBillingInfo />
                 )}
                 {/* Payment settings moved to dedicated page */}
                 {isAdmin && t === "AdminPanel" && <AdminPanelSettings />}

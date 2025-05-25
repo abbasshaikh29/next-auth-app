@@ -6,7 +6,7 @@ import Link from "next/link";
 
 export default function CommunityPage() {
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
       <Header />
 
       <div className="container mx-auto px-4 py-8">

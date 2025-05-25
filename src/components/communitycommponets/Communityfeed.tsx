@@ -51,7 +51,12 @@ export default function Communityfeed({ communitys }: CommunityfeedProps) {
       {communitys.map((community) => (
         <div
           key={community._id?.toString()}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 h-[400px] overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer"
+          className="rounded-xl shadow-sm border h-[400px] overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer community-card"
+          style={{
+            backgroundColor: 'var(--card-bg)',
+            color: 'var(--text-primary)',
+            borderColor: 'var(--card-border)'
+          }}
           onClick={() => community.slug && handleCardClick(community.slug)}
         >
           {/* Banner */}
@@ -75,21 +80,21 @@ export default function Communityfeed({ communitys }: CommunityfeedProps) {
               </h2>
             </div>
             
-            <p className="text-sm text-gray-600 mb-4 flex-grow line-clamp-4">
+            <p className="text-sm mb-4 flex-grow line-clamp-4" style={{ color: 'var(--text-secondary)' }}>
               {truncateDescription(community.description)}
             </p>
             
-            <div className="mt-auto pt-4 border-t border-gray-100">
+            <div className="mt-auto pt-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1">
-                  <Users className="h-4 w-4 text-gray-400" />
+                  <Users className="h-4 w-4" style={{ color: 'var(--text-secondary)' }} />
                   <span className="text-sm font-medium">{community.members.length.toLocaleString()} Members</span>
                 </div>
                 
                 <div className="flex items-center gap-1">
                   {community.price ? (
                     <>
-                      <DollarSign className="h-4 w-4 text-gray-400" />
+                      <DollarSign className="h-4 w-4" style={{ color: 'var(--text-secondary)' }} />
                       <span className="text-sm font-medium">${community.price}/month</span>
                     </>
                   ) : (

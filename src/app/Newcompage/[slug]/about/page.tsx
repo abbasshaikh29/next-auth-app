@@ -59,7 +59,7 @@ function Page() {
   }
 
   return (
-    <div>
+    <div style={{ backgroundColor: 'var(--bg-primary)' }}>
       <CommunityNav />
       <div className="p-3 sm:p-4 flex flex-col gap-3 sm:gap-4 mt-3 sm:mt-6">
         <div className="flex flex-col lg:flex-row justify-center gap-4 lg:gap-8">

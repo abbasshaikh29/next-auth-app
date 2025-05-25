@@ -19,6 +19,14 @@ interface CommunityType {
   currency?: string;
   paymentEnabled?: boolean;
   subscriptionRequired?: boolean;
+  adminTrialInfo?: {
+    activated: boolean;
+    startDate?: Date;
+    endDate?: Date;
+  };
+  paymentStatus?: string;
+  subscriptionEndDate?: Date;
+  freeTrialActivated?: boolean;
 }
 
 // In Next.js 15, the params object is a Promise
@@ -65,7 +73,7 @@ export async function GET(
       slug,
     })
       .select(
-        "_id name slug description bannerImageurl iconImageUrl members admin subAdmins adminQuestions isPrivate price currency paymentEnabled subscriptionRequired"
+        "_id name slug description bannerImageurl iconImageUrl members admin subAdmins adminQuestions isPrivate price currency paymentEnabled subscriptionRequired adminTrialInfo paymentStatus subscriptionEndDate freeTrialActivated"
       )
       .lean<{
         _id: mongoose.Types.ObjectId;
@@ -83,6 +91,14 @@ export async function GET(
         currency?: string;
         paymentEnabled?: boolean;
         subscriptionRequired?: boolean;
+        adminTrialInfo?: {
+          activated: boolean;
+          startDate?: Date;
+          endDate?: Date;
+        };
+        paymentStatus?: string;
+        subscriptionEndDate?: Date;
+        freeTrialActivated?: boolean;
       }>()
       .hint({ slug: 1 }); // Use the slug index for better performance
 
@@ -122,6 +138,10 @@ export async function GET(
       currency: communityDoc.currency || "USD",
       paymentEnabled: communityDoc.paymentEnabled || false,
       subscriptionRequired: communityDoc.subscriptionRequired || false,
+      adminTrialInfo: communityDoc.adminTrialInfo,
+      paymentStatus: communityDoc.paymentStatus,
+      subscriptionEndDate: communityDoc.subscriptionEndDate,
+      freeTrialActivated: communityDoc.freeTrialActivated,
     };
 
     // Community found, continue with processing

@@ -7,7 +7,7 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--bg-tertiary);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -61,14 +61,29 @@
 
 /* Halloween-themed card styles */
 .card {
-  border: 1px solid rgba(107, 33, 168, 0.1) !important;
-  box-shadow: 0 4px 14px 0 rgba(107, 33, 168, 0.1) !important;
+  background-color: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--card-border) !important;
+  box-shadow: var(--shadow-md) !important;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Theme-specific card styles */
+[data-theme="halloween"] .card {
+  background-color: #2b2b2e !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 117, 24, 0.2) !important;
+}
+
+[data-theme="whiteHalloween"] .card {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: rgba(107, 33, 168, 0.1) !important;
 }
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px 0 rgba(255, 117, 24, 0.15) !important;
+  box-shadow: var(--shadow-lg) !important;
 }
 
 /* Halloween-themed button styles */
@@ -102,7 +117,9 @@
 input,
 textarea,
 select {
-  border: 1px solid rgba(107, 33, 168, 0.2) !important;
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--input-border) !important;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -115,6 +132,7 @@ select:focus {
 
 /* Halloween-themed link styles */
 a {
+  color: var(--text-primary);
   transition: color 0.3s ease;
 }
 
@@ -149,7 +167,8 @@ a:hover {
 
 /* Halloween-themed navbar */
 .navbar {
-  border-bottom: 1px solid rgba(107, 33, 168, 0.1);
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
 }
 
 /* Halloween-themed badge */
@@ -161,14 +180,18 @@ a:hover {
 
 /* Halloween-themed dropdown */
 .dropdown-content {
-  border: 1px solid rgba(107, 33, 168, 0.1);
-  box-shadow: 0 4px 14px 0 rgba(107, 33, 168, 0.1);
+  background-color: var(--dropdown-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
 }
 
 /* Halloween-themed modal */
 .modal {
-  border: 1px solid rgba(107, 33, 168, 0.1);
-  box-shadow: 0 10px 25px 0 rgba(107, 33, 168, 0.2);
+  background-color: var(--modal-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
 }
 
 /* Chat modal specific styles */
@@ -183,6 +206,7 @@ a:hover {
 .tab {
   position: relative;
   overflow: hidden;
+  color: var(--text-primary);
 }
 
 .tab.tab-active::after {
@@ -198,10 +222,10 @@ a:hover {
 
 /* Halloween-themed tooltip */
 .tooltip::before {
-  background-color: var(--halloween-black);
-  color: white;
+  background-color: var(--tooltip-bg);
+  color: var(--tooltip-text);
 }
 
 .tooltip::after {
-  border-color: var(--halloween-black) transparent transparent transparent;
+  border-color: var(--tooltip-bg) transparent transparent transparent;
 }

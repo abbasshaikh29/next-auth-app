@@ -84,6 +84,59 @@ const createTransporter = () => {
 
 const transporter = createTransporter();
 
+/**
+ * Generic email sending function
+ */
+export interface EmailOptions {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+  from?: string;
+}
+
+export async function sendEmail(options: EmailOptions) {
+  const { to, subject, text, html, from } = options;
+  const appName = process.env.NEXT_PUBLIC_APP_NAME || "Our App";
+  
+  const mailOptions = {
+    from: from || `"${appName}" <${process.env.EMAIL_FROM}>`,
+    to,
+    subject,
+    text,
+    html,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully:", {
+      messageId: info.messageId,
+      recipient: to,
+      subject,
+    });
+
+    // If using Ethereal in development, log the preview URL
+    if (
+      process.env.NODE_ENV === "development" &&
+      process.env.EMAIL_SERVER_HOST === "smtp.ethereal.email" &&
+      info.messageId
+    ) {
+      console.log(
+        "Ethereal email preview URL:",
+        nodemailer.getTestMessageUrl(info)
+      );
+    }
+
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error("Error sending email:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
 // Email verification template
 export const sendVerificationEmail = async (
   email: string,

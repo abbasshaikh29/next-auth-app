@@ -1,41 +1,56 @@
-import React from "react";
+"use client";
 
-// This is a server component that fetches R2 info on the server side
-async function getR2Info() {
-  try {
-    // Use absolute URL for server-side fetch
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+import React, { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 
-    const response = await fetch(`${baseUrl}/api/r2-info`, {
-      cache: "no-store",
-    });
+// Client component that fetches R2 info on the client side
+export default function R2InfoPage() {
+  const [r2Info, setR2Info] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch R2 info: ${response.status} ${response.statusText}`
-      );
+  useEffect(() => {
+    async function fetchR2Info() {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/r2-info');
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch R2 info: ${response.status} ${response.statusText}`
+          );
+        }
+
+        const data = await response.json();
+        setR2Info(data);
+      } catch (error) {
+        console.error("Error fetching R2 info:", error);
+        setError(error instanceof Error ? error.message : "Unknown error");
+      } finally {
+        setLoading(false);
+      }
     }
 
-    return response.json();
-  } catch (error) {
-    console.error("Error fetching R2 info:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
-}
-
-export default async function R2InfoPage() {
-  const r2Info = await getR2Info();
+    fetchR2Info();
+  }, []);
 
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">R2 Bucket Information</h1>
 
-      {r2Info.success ? (
+      {loading ? (
+        <div className="flex justify-center items-center p-12">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+          <span className="ml-2">Loading R2 information...</span>
+        </div>
+      ) : error ? (
+        <div className="p-4 border rounded-lg bg-red-50 text-red-600">
+          <h2 className="text-xl font-semibold mb-2">
+            Error Fetching R2 Information
+          </h2>
+          <div>{error}</div>
+        </div>
+      ) : r2Info?.success ? (
         <div className="space-y-6">
           <div className="p-4 border rounded-lg">
             <h2 className="text-xl font-semibold mb-4">Bucket Configuration</h2>

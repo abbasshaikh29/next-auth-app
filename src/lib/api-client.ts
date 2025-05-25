@@ -50,7 +50,7 @@ class ApiClient {
     return response.json();
   }
 
-  async getcommunities(page: number = 1, limit: number = 30) {
+  async getcommunities(page: number = 1, limit: number = 4) {
     // Using limit=30 for pagination
     return this.fetch<PaginationResponse<ICommunity>>(
       `/community?page=${page}&limit=${limit}`
@@ -115,6 +115,24 @@ class ApiClient {
   async deleteEvent(id: string) {
     return this.fetch<{ message: string }>(`/community/events/${id}`, {
       method: "DELETE",
+    });
+  }
+
+  // Community payment methods
+  async completeCommunityPayment(communityId: string, paymentData: any) {
+    return this.fetch<{ success: boolean }>(`/payments/community/payment-complete`, {
+      method: "POST",
+      body: {
+        ...paymentData,
+        communityId
+      },
+    });
+  }
+
+  async activateCommunityTrial(communityId: string, userId: string) {
+    return this.fetch<{ success: boolean }>(`/payments/community/activate-trial`, {
+      method: "POST",
+      body: { userId, communityId },
     });
   }
 }

@@ -6,18 +6,14 @@ import { Community } from "@/models/Community";
 import mongoose from "mongoose";
 
 // Get a specific event
-export async function GET(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest) {
+  // Extract the ID from the URL path
+  const id = request.nextUrl.pathname.split('/').pop();
   try {
     const session = await getServerSession();
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const resolvedParams = await context.params;
-    const { id } = resolvedParams;
 
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
@@ -64,18 +60,15 @@ export async function GET(
 }
 
 // Update an event
-export async function PUT(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest) {
+  // Extract the ID from the URL path
+  const id = request.nextUrl.pathname.split('/').pop();
   try {
     const session = await getServerSession();
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const resolvedParams = await context.params;
-    const { id } = resolvedParams;
     const updateData = await request.json();
 
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
@@ -134,18 +127,14 @@ export async function PUT(
 }
 
 // Delete an event
-export async function DELETE(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: NextRequest) {
+  // Extract the ID from the URL path
+  const id = request.nextUrl.pathname.split('/').pop();
   try {
     const session = await getServerSession();
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const resolvedParams = await context.params;
-    const { id } = resolvedParams;
 
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
