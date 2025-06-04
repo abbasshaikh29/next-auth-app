@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .hello-parent {
+    @apply flex bg-white bg-radial-gradient;
+  }
+
+  .hello-word {
+    @apply m-auto;
+  }
+
+  .H-left-stroke {
+    stroke-dasharray: 124px;
+    stroke-dashoffset: 124px;
+    animation: H-left-move 20s ease forwards;
+  }
+
+  .H-mid-stroke {
+    stroke-dasharray: 37px;
+    stroke-dashoffset: 37px;
+    animation: H-mid-move 9s ease forwards;
+  }
+
+  .H-right-stroke {
+    stroke-dasharray: 124px;
+    stroke-dashoffset: 124px;
+    animation: H-right-move 13s ease forwards;
+  }
+
+  @keyframes H-left-move {
+    0% {
+      stroke-dashoffset: 124px;
+    }
+    5% {
+      stroke-dashoffset: 0px;
+    }
+    100% {
+      stroke-dashoffset: 0px;
+    }
+  }
+
+  @keyframes H-mid-move {
+    0% {
+      stroke-dashoffset: 37px;
+    }
+    5% {
+      stroke-dashoffset: 37px;
+    }
+    10% {
+      stroke-dashoffset: 0px;
+    }
+    100% {
+      stroke-dashoffset: 0px;
+    }
+  }
+
+  @keyframes H-right-move {
+    0% {
+      stroke-dashoffset: 124px;
+    }
+    5% {
+      stroke-dashoffset: 124px;
+    }
+    10% {
+      stroke-dashoffset: 0px;
+    }
+    100% {
+      stroke-dashoffset: 0px;
+    }
+  }
+
+  // Add similar styles and animations for E, L, O, and red-dot
+}

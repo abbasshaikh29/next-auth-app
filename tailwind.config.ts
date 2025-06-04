@@ -11,8 +11,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-poppins)', 'sans-serif'], // Assuming Poppins is your default sans-serif
-        thunder: ['var(--font-thunder)', 'sans-serif'],
+        sans: ["var(--font-poppins)", "sans-serif"], // Assuming Poppins is your default sans-serif
+        thunder: ["var(--font-thunder)", "sans-serif"],
       },
       colors: {
         background: "var(--background)",
@@ -47,7 +47,7 @@ export default {
           "accent-focus": "#166534", // Darker green
           "accent-content": "#ffffff", // White text on accent
 
-          neutral: "#1e1b4b", // Dark indigo (almost black)
+          neutral: "black", // Dark indigo (almost black)
           "neutral-focus": "#18163a", // Darker indigo
           "neutral-content": "#ffffff", // White text on neutral
 

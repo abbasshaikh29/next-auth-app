@@ -11,9 +11,9 @@ export const poppins = Poppins({
 export const thunder = localFont({
   src: [
     {
-      path: '../../public/fonts/Thunder-BoldLCItalic.woff2', // Corrected filename
+      path: '../../public/fonts/Thunder-BoldLC.woff2', // Corrected filename
       weight: '700',
-      style: 'italic',
+      style: 'bold ',
     },
   ],
   variable: '--font-thunder',

@@ -4,53 +4,95 @@ import Link from "next/link";
 
 function Hero() {
   const animatedWords = ["Empire", "Tribe", "Community", "Group"];
-  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [wordIndex, setWordIndex] = useState(0);
+  const [displayedText, setDisplayedText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
   const [currentTheme, setCurrentTheme] = useState<string | null>(null);
 
   useEffect(() => {
     const detectTheme = () => {
-      const theme = document.documentElement.getAttribute('data-theme') || 'whiteHalloween';
+      const theme =
+        document.documentElement.getAttribute("data-theme") || "whiteHalloween";
       setCurrentTheme(theme);
     };
-    
+
     detectTheme();
-    window.addEventListener('theme-change', detectTheme);
+    window.addEventListener("theme-change", detectTheme);
 
     return () => {
-      window.removeEventListener('theme-change', detectTheme);
+      window.removeEventListener("theme-change", detectTheme);
     };
   }, []);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      setCurrentWordIndex((prevIndex) => (prevIndex + 1) % animatedWords.length);
-    }, 1000); // Change word every 1 second
+    let timer: NodeJS.Timeout;
+    const currentWord = animatedWords[wordIndex];
 
-    return () => clearInterval(intervalId); // Cleanup interval on component unmount
-  }, [animatedWords.length]);
+    const handleType = () => {
+      setDisplayedText((prev) => currentWord.substring(0, prev.length + 1));
+      if (displayedText.length === currentWord.length) {
+        setIsDeleting(true);
+        timer = setTimeout(() => {}, 1000); // Pause at end of word
+      }
+    };
+
+    const handleDelete = () => {
+      setDisplayedText((prev) => currentWord.substring(0, prev.length - 1));
+      if (displayedText.length === 0) {
+        setIsDeleting(false);
+        setWordIndex((prev) => (prev + 1) % animatedWords.length);
+        timer = setTimeout(() => {}, 500); // Pause before typing next word
+      }
+    };
+
+    if (!isDeleting) {
+      timer = setTimeout(handleType, 150); // Typing speed
+    } else {
+      timer = setTimeout(handleDelete, 100); // Deleting speed
+    }
+
+    return () => clearTimeout(timer);
+  }, [displayedText, isDeleting, wordIndex, animatedWords]);
 
   // Animation variants
   const headerVariants = {
     hidden: { opacity: 0, y: -50 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } }
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.8, ease: "easeOut" },
+    },
   };
 
   const textVariants = {
     hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, delay: 0.3, ease: "easeOut" } }
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, delay: 0.3, ease: "easeOut" },
+    },
   };
 
   const buttonVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, delay: 0.6, ease: "easeOut" } }
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, delay: 0.6, ease: "easeOut" },
+    },
   };
 
   const floatingCircleVariants = {
     animate: {
       x: [0, 10, -10, 0],
       y: [0, -10, 10, 0],
-      transition: { repeat: Infinity, repeatType: "reverse" as const, duration: 8, ease: "easeInOut" }
-    }
+      transition: {
+        repeat: Infinity,
+        repeatType: "reverse" as const,
+        duration: 8,
+        ease: "easeInOut",
+      },
+    },
   };
 
   // Auto-moving particles
@@ -60,37 +102,44 @@ function Hero() {
         opacity: 0.1,
         x: [0, 20, -20, 0],
         y: [0, -15, 15, 0],
-        transition: { repeat: Infinity, repeatType: "reverse" as const, duration: 12, ease: "easeInOut" }
-      }
+        transition: {
+          repeat: Infinity,
+          repeatType: "reverse" as const,
+          duration: 12,
+          ease: "easeInOut",
+        },
+      },
     },
     purple: {
       animate: {
         opacity: 0.1,
         x: [0, -25, 25, 0],
         y: [0, 20, -20, 0],
-        transition: { repeat: Infinity, repeatType: "reverse" as const, duration: 15, ease: "easeInOut" }
-      }
-    }
+        transition: {
+          repeat: Infinity,
+          repeatType: "reverse" as const,
+          duration: 15,
+          ease: "easeInOut",
+        },
+      },
+    },
   };
 
   return (
     <div className="min-h-[calc(100vh-var(--header-height,80px)-var(--footer-height,80px))] flex flex-col items-center justify-center relative bg-[#F5F0E8] text-[#1E1B4B] py-10 px-4">
-
-
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16 relative">
-          <h1 
-            className="font-thunder text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold leading-none tracking-tight text-center text-[#000000]"
-          >
+          <h1 className="text-9xl font-bold text-black uppercase text-center leading-tight font-thunder">
             Monetize Your Audience,
             <br />
-            Build Your <span className="inline-block text-left w-60 sm:w-72 md:w-96 lg:w-128">{animatedWords[currentWordIndex]}.</span>
+            Build Your <span className="w-auto">{displayedText}</span>
           </h1>
-          
-          <p 
-            className="mt-6 text-xl md:text-2xl text-left text-[#000000] max-w-2xl mx-auto">
-For creators, influencers: Build, connect, monetize your exclusive community. Your audience, your growth.
-
+          <h2 className="text-5xl font-bold text-black uppercase text-center leading-tight font-thunder">
+            for creators by creators.
+          </h2>
+          <p className="text-neutral text-center font-sans text-xl font-normal mt-4">
+            For creators, influencers: Build, connect, monetize <br />
+            your exclusive community. Your audience, your growth.
           </p>
 
           {/* Buttons Section */}
@@ -106,8 +155,6 @@ For creators, influencers: Build, connect, monetize your exclusive community. Yo
               </button>
             </Link>
           </div>
-          
-
         </div>
       </div>
     </div>
