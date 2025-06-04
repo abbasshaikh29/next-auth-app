@@ -9,7 +9,7 @@ interface PageFooterProps {
 
 const PageFooter: React.FC<PageFooterProps> = ({ className = '' }) => {
   return (
-    <footer className={`py-4 border-t border-gray-200 ${className}`}>
+    <footer className={`py-4 border-t border-gray-200 mt-auto ${className}`}>
       <div className="container mx-auto px-4">
         <div className="flex flex-wrap justify-center items-center gap-8">
           <div className="flex items-center gap-6 text-gray-600">

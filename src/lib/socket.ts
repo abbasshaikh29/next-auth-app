@@ -1,9 +1,46 @@
 import { Server as SocketIOServer } from "socket.io";
+import { Server as HttpServer } from "http";
 
 // Declare the global io property
 declare global {
   // eslint-disable-next-line no-var
   var io: SocketIOServer | null;
+}
+
+// Initialize Socket.io and attach it to our HTTP server
+export function initSocketIO(httpServer: HttpServer) {
+  // Don't re-initialize if already set up
+  if (global.io) {
+    console.log("Socket.io already initialized");
+    return global.io;
+  }
+
+  try {
+    const io = new SocketIOServer(httpServer, {
+      cors: {
+        origin: process.env.NEXTAUTH_URL || "*",
+        methods: ["GET", "POST"],
+        credentials: true
+      }
+    });
+
+    // Set up connection event handler
+    io.on("connection", (socket) => {
+      console.log(`Socket connected: ${socket.id}`);
+      
+      socket.on("disconnect", () => {
+        console.log(`Socket disconnected: ${socket.id}`);
+      });
+    });
+
+    // Store io instance globally
+    global.io = io;
+    console.log("Socket.io initialized successfully");
+    return io;
+  } catch (error) {
+    console.error("Failed to initialize Socket.io:", error);
+    return null;
+  }
 }
 
 // Function to get the Socket.io instance

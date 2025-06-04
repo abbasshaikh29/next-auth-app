@@ -9,6 +9,7 @@ export interface IComment {
   likes: mongoose.Types.ObjectId[];
   createdAt: Date;
   authorName: string;
+  profileImage?: string;
 }
 
 const commentSchema = new mongoose.Schema<IComment>({
@@ -31,6 +32,7 @@ const commentSchema = new mongoose.Schema<IComment>({
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   createdAt: { type: Date, default: Date.now },
   authorName: { type: String, required: true },
+  profileImage: { type: String },
 });
 
 export const Comment =

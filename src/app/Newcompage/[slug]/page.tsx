@@ -47,7 +47,7 @@ export default function HomeIdPage() {
     if (currentTheme === "halloween") {
       document.body.style.backgroundColor = "#2b2b2e"; // Dark theme background from CSS variables
     } else {
-      document.body.style.backgroundColor = "#ffffff"; // Light theme background
+      document.body.style.backgroundColor = "#f5f5ee"; // Light theme background
     }
     
     // Cleanup function to remove the style when component unmounts
@@ -77,7 +77,7 @@ export default function HomeIdPage() {
     if (!slug || !isMember) return;
 
     try {
-      console.log(`Fetching posts for community: ${slug}`);
+
       const postsResponse = await fetch(
         `/api/community/posts?communitySlug=${slug}`
       );
@@ -91,7 +91,7 @@ export default function HomeIdPage() {
       }
 
       const postsData = await postsResponse.json();
-      console.log(`Fetched ${postsData.length} posts successfully`);
+
 
       // Ensure each post has a properly formatted likes array
       const processedPosts = postsData.map((post: any) => ({
@@ -102,7 +102,7 @@ export default function HomeIdPage() {
 
       // Log likes for debugging
       processedPosts.forEach((post: any) => {
-        console.log(`Post ${post._id} has ${post.likes.length} likes`);
+
       });
 
       // Posts are already sorted by the API (newest first)
@@ -130,14 +130,6 @@ export default function HomeIdPage() {
         setCommunity(communityData);
 
         // Debug membership check
-        console.log("Community data:", {
-          communityId: communityData._id,
-          name: communityData.name,
-          hasMembers: !!communityData.members,
-          membersLength: communityData.members?.length || 0,
-          userId: session?.user?.id,
-          isMember: communityData.members?.includes(session?.user?.id) || false,
-        });
 
         const membershipStatus =
           communityData.members?.includes(session?.user?.id) || false;
@@ -182,7 +174,7 @@ export default function HomeIdPage() {
       return;
     }
 
-    console.log("Setting up real-time listeners for community:", community._id);
+
 
     // Listen for new posts
     const newPostCleanup = listenForRealtimeEvents(
@@ -463,7 +455,7 @@ export default function HomeIdPage() {
 
   return (
     <>
-      <div>
+      <div style={{ backgroundColor: "var(--bg-primary)" }}>
         <CommunityNav />
         {isMember ? (
           <div className="container mt-6 mx-auto px-4 py-8">
@@ -484,6 +476,7 @@ export default function HomeIdPage() {
                     <CreatePost
                       communitySlug={slug}
                       authorId={session?.user?.id as string}
+                      isAdmin={isAdmin}
                       onPostCreated={(newPost) => {
                         console.log("New post created:", newPost);
 
@@ -705,6 +698,7 @@ export default function HomeIdPage() {
                 ? JSON.parse(editingPost.content)
                 : editingPost.content
             }
+            isAdmin={isAdmin}
             onPostUpdated={handlePostUpdated}
           />
         </Suspense>

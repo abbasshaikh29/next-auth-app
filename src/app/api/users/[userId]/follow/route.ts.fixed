@@ -1,0 +1,114 @@
+import { NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { dbconnect } from "@/lib/db";
+import { User } from "@/models/User";
+import { Notification } from "@/models/Notification";
+import mongoose from "mongoose";
+
+export async function POST(
+  req: Request,
+  { params }: { params: { userId: string } }
+) {
+  try {
+    const session = await auth();
+
+    if (!session?.user) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    await dbconnect();
+    
+    const currentUserId = session.user.id;
+    const targetUserId = params.userId;
+
+    if (currentUserId === targetUserId) {
+      return new NextResponse("Cannot follow yourself", { status: 400 });
+    }
+
+    // Convert string IDs to ObjectIds
+    const currentUserObjectId = new mongoose.Types.ObjectId(currentUserId);
+    const targetUserObjectId = new mongoose.Types.ObjectId(targetUserId);
+
+    // Check if already following
+    const currentUser = await User.findById(currentUserId);
+    
+    if (currentUser.following.some((id: any) => 
+      id.toString() === targetUserId
+    )) {
+      return new NextResponse("Already following this user", { status: 400 });
+    }
+
+    // Add target user to current user's following list
+    await User.findByIdAndUpdate(
+      currentUserId,
+      { $addToSet: { following: targetUserObjectId } }
+    );
+
+    // Add current user to target user's followedBy list
+    await User.findByIdAndUpdate(
+      targetUserId,
+      { $addToSet: { followedBy: currentUserObjectId } }
+    );
+
+    // Create notification for the user who got followed
+    const followerUser = await User.findById(currentUserObjectId).select('username');
+    if (followerUser && followerUser.username) {
+      await Notification.create({
+        userId: targetUserObjectId,
+        type: "follow",
+        title: "New Follower",
+        content: `${followerUser.username} started following you.`,
+        sourceId: currentUserObjectId, // ID of the user who initiated the follow
+        sourceType: "user",
+        createdBy: currentUserObjectId, // ID of the user who initiated the follow
+        // communityId is optional and not needed here
+      });
+    } else {
+      console.error("[FOLLOW_NOTIFICATION_ERROR] Could not find follower's username for notification.");
+    }
+
+    return new NextResponse("Successfully followed user", { status: 200 });
+  } catch (error) {
+    console.error("[FOLLOW_ERROR]", error);
+    return new NextResponse("Internal error", { status: 500 });
+  }
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: { userId: string } }
+) {
+  try {
+    const session = await auth();
+
+    if (!session?.user) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    await dbconnect();
+
+    const currentUserId = session.user.id;
+    const targetUserId = params.userId;
+
+    // Convert string IDs to ObjectIds
+    const currentUserObjectId = new mongoose.Types.ObjectId(currentUserId);
+    const targetUserObjectId = new mongoose.Types.ObjectId(targetUserId);
+
+    // Remove target user from current user's following list
+    await User.findByIdAndUpdate(
+      currentUserId,
+      { $pull: { following: targetUserObjectId } }
+    );
+
+    // Remove current user from target user's followedBy list
+    await User.findByIdAndUpdate(
+      targetUserId,
+      { $pull: { followedBy: currentUserObjectId } }
+    );
+
+    return new NextResponse("Successfully unfollowed user", { status: 200 });
+  } catch (error) {
+    console.error("[UNFOLLOW_ERROR]", error);
+    return new NextResponse("Internal error", { status: 500 });
+  }
+}

@@ -53,8 +53,14 @@ export async function PUT(request: NextRequest) {
     post.content = content;
     await post.save();
 
-    // If notifyMembers is true, create notifications for all community members
-    if (notifyMembers === true) {
+    // Check if the user is an admin of the community
+    const isCommunityAdmin = await mongoose.model('Community').exists({
+      _id: post.communityId,
+      admins: { $in: [session.user.id] }
+    });
+
+    // If notifyMembers is true AND user is an admin, create notifications for all community members
+    if (notifyMembers === true && isCommunityAdmin) {
       try {
         // Get the origin for absolute URLs
         const origin =

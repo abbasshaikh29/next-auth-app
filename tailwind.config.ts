@@ -10,6 +10,10 @@ export default {
 
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-poppins)', 'sans-serif'], // Assuming Poppins is your default sans-serif
+        thunder: ['var(--font-thunder)', 'sans-serif'],
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",

@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
         "title content createdBy createdAt authorName isPinned likes communityId"
       )
       .sort({ isPinned: -1, createdAt: -1 }) // Sort pinned posts first, then by date
-      .populate("createdBy", "name profileImage")
+      .populate("createdBy", "name profileImage bio") // Added bio to populate
       .lean();
 
     if (!posts || posts.length === 0) {
@@ -77,10 +77,19 @@ export async function GET(request: NextRequest) {
           : undefined;
 
       // Since we're using .lean(), post is already a plain object and doesn't have toObject()
+      // Get the bio from the populated createdBy field
+      const bio = 
+        post.createdBy &&
+        typeof post.createdBy === "object" &&
+        "bio" in post.createdBy
+          ? post.createdBy.bio
+          : undefined;
+
       return {
         ...post,
         content: parsedContent,
-        profileImage: profileImage,
+        authorProfileImage: profileImage, // Renamed for clarity
+        authorBio: bio, // Added author's bio
       };
     });
 
@@ -166,8 +175,14 @@ export async function POST(request: NextRequest) {
     // Create the post
     const newPost = await Post.create(postData);
 
-    // If notifyMembers is true, create notifications for all community members
-    if (notifyMembers === true) {
+    // Check if the user is an admin of the community
+    const isCommunityAdmin = await Community.exists({
+      _id: community._id,
+      admins: { $in: [session.user.id] }
+    });
+
+    // If notifyMembers is true AND user is an admin, create notifications for all community members
+    if (notifyMembers === true && isCommunityAdmin) {
       try {
         // Get the origin for absolute URLs
         const origin =

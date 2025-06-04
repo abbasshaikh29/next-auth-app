@@ -8,13 +8,15 @@ export interface IPost {
   communityId: mongoose.Types.ObjectId;
   likes: mongoose.Types.ObjectId[];
   createdAt: Date;
-  authorName: string;
+  authorName?: string;
+  authorProfileImage?: string; // Populated from User model
+  authorBio?: string;          // Populated from User model
   isPinned?: boolean; // Whether the post is pinned by admin
 }
 
 const postSchema = new mongoose.Schema<IPost>({
   title: { type: String, required: true },
-  authorName: { type: String, required: true },
+  authorName: { type: String, required: false },
   content: { type: String, required: true },
 
   createdBy: {

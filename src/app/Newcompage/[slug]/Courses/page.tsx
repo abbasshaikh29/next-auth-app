@@ -13,7 +13,7 @@ function Course() {
     if (currentTheme === "halloween") {
       document.body.style.backgroundColor = "#2b2b2e"; // Dark theme background from CSS variables
     } else {
-      document.body.style.backgroundColor = "#ffffff"; // Light theme background
+      document.body.style.backgroundColor = "#f5f5ee"; // Light theme background
     }
     
     // Cleanup function to remove the style when component unmounts

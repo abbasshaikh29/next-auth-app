@@ -4,9 +4,8 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useNotification } from "@/components/Notification";
 import ProfileImageUpload from "@/components/ProfileImageUpload";
-import ProfileImageDisplay from "./ProfileImageDisplay";
-import styles from "./UserProfileForm.module.css";
-import { CheckCircle, XCircle, AlertCircle, Mail } from "lucide-react";
+// ProfileImageDisplay might not be needed if ProfileImageUpload handles display
+import { CheckCircle, XCircle, AlertCircle, Mail, Settings2Icon, UserCircle2 } from "lucide-react";
 
 interface UserProfileData {
   username: string;
@@ -22,7 +21,7 @@ export default function UserProfileForm() {
   const { data: session, update: updateSession } = useSession();
   const { showNotification } = useNotification();
   const [isLoading, setIsLoading] = useState(false);
-  // No longer need uploadResponse state with the new ProfileImageUpload component
+
   const [formData, setFormData] = useState<UserProfileData>({
     username: "",
     email: "",
@@ -47,7 +46,6 @@ export default function UserProfileForm() {
     email: false,
   });
 
-  // Fetch user data when component mounts
   useEffect(() => {
     const fetchUserData = async () => {
       if (!session?.user?.id) return;
@@ -251,133 +249,100 @@ export default function UserProfileForm() {
       // Force a reload to ensure the session is updated everywhere
       window.location.reload();
 
-      showNotification("Profile updated successfully", "success");
-    } catch (error: any) {
-      console.error("Error updating profile:", error);
-      showNotification(error.message || "Failed to update profile", "error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+showNotification("Profile updated successfully", "success");
+} catch (error: any) {
+console.error("Error updating profile:", error);
+showNotification(error.message || "Failed to update profile", "error");
+} finally {
+setIsLoading(false);
+}
+};
 
-  return (
-    <div className="max-w-3xl mx-auto">
-      <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-        Profile Settings
-      </h2>
+return (
+<div className="space-y-6 p-4 sm:p-6 bg-base-100 rounded-lg shadow-md">
+<div className="flex items-center gap-3 mb-6">
+<UserCircle2 className="w-7 h-7 text-primary" /> {/* Changed icon to UserCircle2 for user settings */}
+<h2 className="text-2xl font-semibold">User Settings</h2>
+</div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+
+      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+        {/* Profile Image Section */}
         <div className="form-control">
           <label className="label">
             <span className="label-text">Profile Picture</span>
           </label>
-
-          <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-4">
-            <ProfileImageDisplay
-              imageUrl={formData.profileImage}
-              username={formData.username}
-              size="md"
-            />
-
-            <div className="flex-1 w-full sm:w-auto">
+          <div className="mt-1 flex items-center gap-4">
+            <div className="flex-shrink-0">
+              {formData.profileImage ? (
+                <img
+                  className="h-20 w-20 rounded-full object-cover border border-base-300"
+                  src={formData.profileImage}
+                  alt="Current profile"
+                />
+              ) : (
+                <div className="h-20 w-20 rounded-full bg-base-200 flex items-center justify-center text-base-content/50">
+                  <UserCircle2 className="w-10 h-10" />
+                </div>
+              )}
+            </div>
+            <div className="flex-grow">
               <ProfileImageUpload
                 currentImage={formData.profileImage}
                 onImageUpdated={(imageUrl) => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    profileImage: imageUrl,
-                  }));
+                  setFormData((prev) => ({ ...prev, profileImage: imageUrl }));
+                  // ProfileImageUpload handles DB and session updates
                 }}
               />
+               {/* The ProfileImageUpload component includes its own upload button and guidance text */}
             </div>
           </div>
+           {formData.profileImage && (
+            <p className="text-xs text-gray-500 mt-2 break-all">
+              Current image URL: {formData.profileImage}
+            </p>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">First Name</span>
-            </label>
-            <input
-              type="text"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              className="input input-bordered w-full"
-              placeholder="Your first name"
-            />
-          </div>
-
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Last Name</span>
-            </label>
-            <input
-              type="text"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              className="input input-bordered w-full"
-              placeholder="Your last name"
-            />
-          </div>
-        </div>
-
+        {/* Username Input */}
         <div className="form-control">
-          <label className="label">
-            <span className="label-text">Bio</span>
-          </label>
-          <textarea
-            name="bio"
-            value={formData.bio}
-            onChange={handleChange}
-            className="textarea textarea-bordered h-24"
-            placeholder="Tell us about yourself"
-          />
-        </div>
-
-        <div className="form-control">
-          <label className="label">
+          <label className="label" htmlFor="username">
             <span className="label-text">Username</span>
           </label>
           <input
             type="text"
             name="username"
+            id="username"
             value={formData.username}
             onChange={handleChange}
-            className={`input input-bordered w-full ${
-              errors.username ? "input-error" : ""
-            }`}
-            placeholder="Your username"
+            className={`input input-bordered w-full ${errors.username ? "input-error" : ""}`}
+            placeholder="Your unique username"
           />
           {errors.username && (
             <label className="label">
-              <span className="label-text-alt text-error">
-                {errors.username}
-              </span>
+              <span className="label-text-alt text-error">{errors.username}</span>
             </label>
           )}
           <label className="label">
             <span className="label-text-alt text-gray-500">
-              Choose a unique username with letters, numbers, and underscores
-              only
+              Must be 3+ characters. Letters, numbers, and underscores only.
             </span>
           </label>
         </div>
 
+        {/* Email Input & Verification Status */}
         <div className="form-control">
-          <label className="label">
+          <label className="label" htmlFor="email">
             <span className="label-text">Email</span>
           </label>
           <input
             type="email"
             name="email"
+            id="email"
             value={formData.email}
             onChange={handleChange}
-            className={`input input-bordered w-full ${
-              errors.email ? "input-error" : ""
-            }`}
-            placeholder="Your email address"
+            className={`input input-bordered w-full ${errors.email ? "input-error" : ""}`}
+            placeholder="your.email@example.com"
           />
           {errors.email && (
             <label className="label">
@@ -386,56 +351,114 @@ export default function UserProfileForm() {
           )}
           <label className="label">
             <span className="label-text-alt text-gray-500">
-              Make sure to use a valid email address you can access
+              Make sure to use a valid email address you can access.
             </span>
           </label>
 
-          {/* Email Verification Status */}
-          <div className="mt-2 p-3 rounded-lg border border-base-300 bg-base-200">
-            <div className="flex items-center gap-2">
-              {formData.emailVerified ? (
-                <>
-                  <CheckCircle className="text-success w-5 h-5" />
-                  <span className="font-medium">Email verified</span>
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="text-warning w-5 h-5" />
-                  <span className="font-medium">Email not verified</span>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline btn-warning ml-auto"
-                    onClick={handleResendVerification}
-                    disabled={resendingVerification}
-                  >
-                    {resendingVerification ? (
-                      <span className="loading loading-spinner loading-xs"></span>
-                    ) : (
-                      <Mail className="w-4 h-4 mr-1" />
-                    )}
-                    {resendingVerification
-                      ? "Sending..."
-                      : "Resend Verification"}
-                  </button>
-                </>
+          <div className="mt-3 p-3 rounded-lg border border-base-300 bg-base-200/50">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                {formData.emailVerified ? (
+                  <>
+                    <CheckCircle className="text-success w-5 h-5 flex-shrink-0" />
+                    <span className="font-medium text-sm">Email verified</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="text-warning w-5 h-5 flex-shrink-0" />
+                    <span className="font-medium text-sm">Email not verified</span>
+                  </>
+                )}
+              </div>
+              {!formData.emailVerified && (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline btn-warning ml-auto"
+                  onClick={handleResendVerification}
+                  disabled={resendingVerification}
+                >
+                  {resendingVerification ? (
+                    <span className="loading loading-spinner loading-xs"></span>
+                  ) : (
+                    <Mail className="w-3.5 h-3.5 mr-1" />
+                  )}
+                  {resendingVerification ? "Sending..." : "Resend Email"}
+                </button>
               )}
             </div>
             {!formData.emailVerified && (
-              <p className="text-sm mt-2 text-gray-500">
-                Please verify your email address to ensure account security and
-                receive important notifications.
+              <p className="text-xs mt-2 text-gray-500">
+                Please verify your email to ensure account security and receive important notifications.
               </p>
             )}
           </div>
         </div>
 
-        <div className="form-control mt-4 sm:mt-6 flex flex-col sm:flex-row gap-2">
+        {/* First Name Input */}
+        <div className="form-control">
+          <label className="label" htmlFor="firstName">
+            <span className="label-text">First Name</span>
+          </label>
+          <input
+            type="text"
+            name="firstName"
+            id="firstName"
+            value={formData.firstName}
+            onChange={handleChange}
+            className="input input-bordered w-full"
+            placeholder="Your first name"
+          />
+        </div>
+
+        {/* Last Name Input */}
+        <div className="form-control">
+          <label className="label" htmlFor="lastName">
+            <span className="label-text">Last Name</span>
+          </label>
+          <input
+            type="text"
+            name="lastName"
+            id="lastName"
+            value={formData.lastName}
+            onChange={handleChange}
+            className="input input-bordered w-full"
+            placeholder="Your last name"
+          />
+        </div>
+
+        {/* Bio Textarea */}
+        <div className="form-control">
+          <label className="label" htmlFor="bio">
+            <span className="label-text">Bio</span>
+          </label>
+          <textarea
+            name="bio"
+            id="bio"
+            value={formData.bio}
+            onChange={handleChange}
+            className="textarea textarea-bordered w-full h-28 resize-none" // Adjusted height
+            placeholder="Tell us a bit about yourself (optional)"
+            rows={3} // semantic rows
+          ></textarea>
+          <label className="label">
+            <span className="label-text-alt text-gray-500">
+              A short description about you or your interests.
+            </span>
+          </label>
+        </div>
+
+        {/* Form Actions */}
+        <div className="form-control mt-8 flex flex-col sm:flex-row gap-3 pt-4 border-t border-base-300">
           <button
             type="submit"
             className="btn btn-primary w-full sm:w-auto"
-            disabled={isLoading}
+            disabled={isLoading || (!modified.username && !modified.email && !formData.firstName && !formData.lastName && !formData.bio && !formData.profileImage) } // Disable if no changes
           >
-            {isLoading ? "Saving..." : "Save Changes"}
+            {isLoading ? (
+              <><span className="loading loading-spinner loading-sm"></span> Saving...</>
+            ) : (
+              "Save Changes"
+            )}
           </button>
 
           <button
@@ -444,18 +467,21 @@ export default function UserProfileForm() {
             onClick={async () => {
               try {
                 showNotification("Refreshing session...", "info");
-                await updateSession();
+                await updateSession(); // This should re-fetch user data via session
+                // Re-fetch user data explicitly if session update doesn't reflect immediately or for non-session fields
+                // const updatedUserData = await fetchUserData(); // Assuming fetchUserData can be called and returns data
+                // if (updatedUserData) setFormData(updatedUserData);
                 showNotification("Session refreshed successfully", "success");
               } catch (error) {
                 console.error("Error refreshing session:", error);
                 showNotification("Failed to refresh session", "error");
               }
             }}
-          >
-            Refresh Session
-          </button>
-        </div>
-      </form>
-    </div>
-  );
+        >
+          Refresh Session
+        </button>
+      </div>
+    </form>
+  </div>
+);
 }

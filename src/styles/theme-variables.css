@@ -12,9 +12,9 @@
 /* Light Theme (whiteHalloween) */
 [data-theme="whiteHalloween"] {
   /* Background colors */
-  --bg-primary: #f5f5ee;
-  --bg-secondary: #f8f9fc;
-  --bg-tertiary: #f1f5f9;
+  --bg-primary: #f5f0e8;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f5f0e8;
   
   /* Text colors */
   --text-primary: #000000;

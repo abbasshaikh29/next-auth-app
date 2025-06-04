@@ -35,6 +35,7 @@ export interface IUser {
   createdAt: Date;
   firstName?: string;
   lastName?: string;
+  bio?: string;
   timezone?: string;
   notificationSettings?: NotificationSettings;
   messagingPreferences?: MessagingPreferences;
@@ -63,6 +64,7 @@ const userSchema = new mongoose.Schema<IUser>(
     createdAt: { type: Date, default: Date.now },
     firstName: { type: String },
     lastName: { type: String },
+    bio: { type: String },
     timezone: { type: String },
     notificationSettings: {
       email: { type: Boolean, default: true },

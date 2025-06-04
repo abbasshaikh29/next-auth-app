@@ -30,7 +30,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "lh3.googleusercontent.com",
+        hostname: "*.googleusercontent.com", // Changed to wildcard
         port: "",
         pathname: "/**",
       },
@@ -67,7 +67,7 @@ const nextConfig = {
     minimumCacheTTL: 3600, // 1 hour cache
     // Only disable optimization for Google profile images
     dangerouslyAllowSVG: true,
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    contentSecurityPolicy: "default-src 'self'; img-src 'self' *.googleusercontent.com data:; script-src 'none'; sandbox;",
   },
   // Improve performance with compression
   compress: true,

@@ -30,10 +30,10 @@ export default function NotificationDropdown({
 
       try {
         setLoading(true);
-        const response = await fetch("/api/notifications/user?limit=20");
+        const response = await fetch("/api/notifications?limit=20"); // Use the new endpoint
         if (response.ok) {
           const data = await response.json();
-          setNotifications(data.notifications);
+          setNotifications(data); // API returns an array directly
         }
       } catch (error) {
         console.error("Error fetching notifications:", error);

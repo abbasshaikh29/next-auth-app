@@ -1,6 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import CommunityNav from "./CommunityNav";
+import dynamic from 'next/dynamic';
+
+const CommunityNav = dynamic(() => import('./CommunityNav'), {
+  loading: () => <div className="h-16 bg-base-200"></div>, // Simple placeholder for nav height
+  ssr: false // Optional: if CommunityNav relies heavily on client-side things like window
+});
 import CourseList from "../course/CourseList";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";

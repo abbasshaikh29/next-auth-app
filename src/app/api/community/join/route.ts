@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth-helpers";
 import { Community } from "@/models/Community";
+import { Notification } from "@/models/Notification";
+import { User } from "@/models/User";
 
 import { dbconnect } from "@/lib/db";
+import mongoose from "mongoose";
 
 interface JoinRequest {
   userId: string;
@@ -77,6 +80,23 @@ export async function POST(req: Request) {
     });
 
     await community.save();
+
+    // Get user information for the notification
+    const user = await User.findById(session.user.id, "username name email");
+    const username = user?.username || user?.name || user?.email || "A user";
+
+    // Create notification for the admin
+    await Notification.create({
+      userId: community.admin,
+      type: "join-request",
+      title: "New Join Request",
+      content: `${username} has requested to join your community.`,
+      sourceId: community._id,
+      sourceType: "community",
+      communityId: community._id,
+      read: false,
+      createdBy: new mongoose.Types.ObjectId(session.user.id),
+    });
 
     return NextResponse.json({ message: "Join request sent successfully" });
   } catch (error) {

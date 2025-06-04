@@ -80,6 +80,8 @@ export async function GET(
         website: user.website || "",
         createdAt: user.createdAt,
         emailVerified: user.emailVerified || false,
+        followersCount: user.followedBy?.length || 0,
+        followingCount: user.following?.length || 0,
       },
       communities: userCommunities,
       posts: posts.map((post) => ({
@@ -92,6 +94,9 @@ export async function GET(
           name: post.communityId?.name || "Unknown Community",
           slug: post.communityId?.slug || "",
         },
+        authorName: user.username, // Already fetching user, so authorName is user.username
+        authorProfileImage: user.profileImage || "", // Add author's profile image
+        authorBio: user.bio || "", // Add author's bio
       })),
     });
   } catch (error) {

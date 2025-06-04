@@ -10,7 +10,7 @@ export default function Home() {
   const { data: session } = useSession();
 
   return (
-    <main className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+    <main className="flex flex-col flex-grow" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
       <Header />
       <Hero />
       <PageFooter />

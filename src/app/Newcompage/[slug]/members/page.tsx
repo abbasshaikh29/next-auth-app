@@ -2,7 +2,12 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import CommunityNav from "@/components/communitynav/CommunityNav";
+import dynamic from 'next/dynamic';
+
+const CommunityNav = dynamic(() => import('@/components/communitynav/CommunityNav'), {
+  loading: () => <div className="h-16 bg-base-200"></div>, // Simple placeholder for nav height
+  ssr: false // Optional: if CommunityNav relies heavily on client-side things like window
+});
 import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";

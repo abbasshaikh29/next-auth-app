@@ -112,7 +112,7 @@ export default function Header() {
   };
   return (
     <div className="navbar sticky top-0 z-40 shadow-sm border-b border-halloween-purple/10" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-      <div className="container mx-auto">
+      <div className="container mx-auto flex items-center justify-between">
         <div className="flex-1 lg:flex-none flex items-center gap-2">
           <Link
             href="/"

@@ -63,8 +63,9 @@ export async function PUT(
     const requestBody = await request.json();
     console.log("Received profile update request:", requestBody);
 
-    const { firstName, lastName, bio, profileImage } = requestBody;
-    console.log("Extracted profile image URL:", profileImage);
+    const { firstName, lastName, bio, profileImage, ...rest } = requestBody;
+    console.log("Extracted fields for update - firstName:", firstName, ", lastName:", lastName, ", bio:", bio, ", profileImage:", profileImage, ", other fields:", rest);
+    console.log("Value of 'bio' variable before DB update:", bio);
 
     await dbconnect();
 
@@ -82,6 +83,7 @@ export async function PUT(
       { new: true }
     );
 
+    console.log("Document after findByIdAndUpdate:", updatedUser);
     if (!updatedUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }

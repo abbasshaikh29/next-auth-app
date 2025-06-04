@@ -85,6 +85,13 @@ export default function NotificationList({
     if (notification.sourceType === "post") {
       return `/Newcompage/${notification.communityId.slug}?postId=${notification.sourceId}`;
     }
+    // For join request notifications, direct to the admin panel with the join requests tab
+    if (notification.type === "follow" && notification.sourceType === "user") {
+      return `/profile/${notification.sourceId}`; // Link to the follower's profile
+    }
+    if (notification.type === "join-request") {
+      return `/Newcompage/${notification.communityId.slug}/communitysetting?t=AdminPanel`;
+    }
     return `/Newcompage/${notification.communityId.slug}`;
   };
 
@@ -138,18 +145,20 @@ export default function NotificationList({
                 <p className="text-sm text-gray-600 line-clamp-2">
                   {notification.content}
                 </p>
-                <div className="flex items-center mt-1 text-xs text-gray-500">
-                  <span className="flex items-center">
-                    {notification.communityId?.iconImageUrl ? (
-                      <img 
-                        src={notification.communityId.iconImageUrl} 
-                        alt={notification.communityId.name}
-                        className="w-3 h-3 rounded-full mr-1"
-                      />
-                    ) : null}
-                    {notification.communityId?.name || "Community"}
-                  </span>
-                </div>
+                {notification.communityId && (
+                  <div className="flex items-center mt-1 text-xs text-gray-500">
+                    <span className="flex items-center">
+                      {notification.communityId.iconImageUrl ? (
+                        <img 
+                          src={notification.communityId.iconImageUrl} 
+                          alt={notification.communityId.name}
+                          className="w-3 h-3 rounded-full mr-1"
+                        />
+                      ) : null}
+                      {notification.communityId.name}
+                    </span>
+                  </div>
+                )}
               </div>
               {!notification.read && (
                 <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>

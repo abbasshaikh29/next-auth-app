@@ -1,47 +1,113 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 
 function Hero() {
-  return (
-    <div className="py-16 relative overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-      {/* Halloween decorative elements */}
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-halloween-purple via-halloween-orange to-halloween-green opacity-30"></div>
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-halloween-orange opacity-5 rounded-full blur-3xl"></div>
-      <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-halloween-purple opacity-5 rounded-full blur-3xl"></div>
+  const animatedWords = ["Empire", "Tribe", "Community", "Group"];
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [currentTheme, setCurrentTheme] = useState<string | null>(null);
 
-      <div className="container mx-auto px-4">
+  useEffect(() => {
+    const detectTheme = () => {
+      const theme = document.documentElement.getAttribute('data-theme') || 'whiteHalloween';
+      setCurrentTheme(theme);
+    };
+    
+    detectTheme();
+    window.addEventListener('theme-change', detectTheme);
+
+    return () => {
+      window.removeEventListener('theme-change', detectTheme);
+    };
+  }, []);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setCurrentWordIndex((prevIndex) => (prevIndex + 1) % animatedWords.length);
+    }, 1000); // Change word every 1 second
+
+    return () => clearInterval(intervalId); // Cleanup interval on component unmount
+  }, [animatedWords.length]);
+
+  // Animation variants
+  const headerVariants = {
+    hidden: { opacity: 0, y: -50 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } }
+  };
+
+  const textVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, delay: 0.3, ease: "easeOut" } }
+  };
+
+  const buttonVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, delay: 0.6, ease: "easeOut" } }
+  };
+
+  const floatingCircleVariants = {
+    animate: {
+      x: [0, 10, -10, 0],
+      y: [0, -10, 10, 0],
+      transition: { repeat: Infinity, repeatType: "reverse" as const, duration: 8, ease: "easeInOut" }
+    }
+  };
+
+  // Auto-moving particles
+  const autoMovingVariants = {
+    orange: {
+      animate: {
+        opacity: 0.1,
+        x: [0, 20, -20, 0],
+        y: [0, -15, 15, 0],
+        transition: { repeat: Infinity, repeatType: "reverse" as const, duration: 12, ease: "easeInOut" }
+      }
+    },
+    purple: {
+      animate: {
+        opacity: 0.1,
+        x: [0, -25, 25, 0],
+        y: [0, 20, -20, 0],
+        transition: { repeat: Infinity, repeatType: "reverse" as const, duration: 15, ease: "easeInOut" }
+      }
+    }
+  };
+
+  return (
+    <div className="min-h-[calc(100vh-var(--header-height,80px)-var(--footer-height,80px))] flex flex-col items-center justify-center relative bg-[#F5F0E8] text-[#1E1B4B] py-10 px-4">
+
+
+      <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16 relative">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-halloween-purple via-halloween-orange to-halloween-green bg-clip-text text-transparent">
-            Monetize Your Audience with Community
+          <h1 
+            className="font-thunder text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold leading-none tracking-tight text-center text-[#000000]"
+          >
+            Monetize Your Audience,
+            <br />
+            Build Your <span className="inline-block text-left w-60 sm:w-72 md:w-96 lg:w-128">{animatedWords[currentWordIndex]}.</span>
           </h1>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto mb-8" style={{ color: 'var(--text-secondary)' }}>
-            Build, grow, and engage your community with our powerful platform.
-            Special Halloween pricing: just $39/month for all premium features!
+          
+          <p 
+            className="mt-6 text-xl md:text-2xl text-left text-[#000000] max-w-2xl mx-auto">
+For creators, influencers: Build, connect, monetize your exclusive community. Your audience, your growth.
+
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/pricing">
-              <button
-                type="button"
-                className="btn btn-halloween px-8 py-3 text-lg group relative overflow-hidden"
-              >
-                <span className="relative z-10 flex items-center gap-2">
-                  View Pricing{" "}
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
-                </span>
-                <span className="absolute inset-0 bg-halloween-orange opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
-              </button>
-            </Link>
+
+          {/* Buttons Section */}
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/communityform">
-              <button
-                type="button"
-                className="btn btn-outline border-halloween-purple text-halloween-purple hover:bg-halloween-purple/5 px-8 py-3 text-lg"
-              >
+              <button className="btn bg-[#1E1B4B] text-white hover:bg-[#302d69] border-transparent px-8 py-3 rounded-md text-lg font-medium">
                 Get Started
               </button>
             </Link>
+            <Link href="/community-feed">
+              <button className="btn btn-outline border-[#1E1B4B] text-[#1E1B4B] hover:bg-[#1E1B4B] hover:text-white px-8 py-3 rounded-md text-lg font-medium">
+                Explore
+              </button>
+            </Link>
           </div>
+          
+
         </div>
       </div>
     </div>

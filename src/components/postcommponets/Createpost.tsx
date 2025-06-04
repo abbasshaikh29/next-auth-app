@@ -15,12 +15,13 @@ interface CreatePostProps {
   communitySlug: string;
   authorId: string;
   onPostCreated?: (newPost: any) => void;
+  isAdmin?: boolean;
 }
 
 export function CreatePost({
   communitySlug,
-
   onPostCreated,
+  isAdmin = false,
 }: CreatePostProps) {
   const [title, setTitle] = useState("");
   const [contents, setContents] = useState<PostContent[]>([]);
@@ -421,20 +422,22 @@ export function CreatePost({
         </div>
 
         <div className="flex items-center gap-3 mt-2">
-          <div className="flex-1">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                className="checkbox checkbox-sm checkbox-primary"
-                checked={notifyMembers}
-                onChange={(e) => setNotifyMembers(e.target.checked)}
-              />
-              <span className="flex items-center text-xs sm:text-sm text-amber-700">
-                <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1" />
-                Notify community members
-              </span>
-            </label>
-          </div>
+          {isAdmin && (
+            <div className="flex-1">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="checkbox checkbox-sm checkbox-primary"
+                  checked={notifyMembers}
+                  onChange={(e) => setNotifyMembers(e.target.checked)}
+                />
+                <span className="flex items-center text-xs sm:text-sm text-amber-700">
+                  <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1" />
+                  Notify community members
+                </span>
+              </label>
+            </div>
+          )}
           {submitError && (
             <div className="text-red-500 text-xs mr-2">{submitError}</div>
           )}

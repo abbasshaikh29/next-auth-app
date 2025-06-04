@@ -25,6 +25,7 @@ interface EditPostModalProps {
   initialTitle: string;
   initialContent: PostContent[];
   onPostUpdated: (updatedPost: any) => void;
+  isAdmin?: boolean;
 }
 
 export function EditPostModal({
@@ -34,6 +35,7 @@ export function EditPostModal({
   initialTitle,
   initialContent,
   onPostUpdated,
+  isAdmin = false,
 }: EditPostModalProps) {
   const [title, setTitle] = useState(initialTitle);
   const [contents, setContents] = useState<PostContent[]>(initialContent || []);
@@ -321,22 +323,24 @@ export function EditPostModal({
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
-          <div className="flex items-center gap-3 mt-4">
-            <div className="flex-1">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="checkbox checkbox-sm checkbox-primary"
-                  checked={notifyMembers}
-                  onChange={(e) => setNotifyMembers(e.target.checked)}
-                />
-                <span className="flex items-center text-sm text-gray-600">
-                  <Bell className="h-4 w-4 mr-1" />
-                  Notify community members
-                </span>
-              </label>
+          {isAdmin && (
+            <div className="flex items-center gap-3 mt-4">
+              <div className="flex-1">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="checkbox checkbox-sm checkbox-primary"
+                    checked={notifyMembers}
+                    onChange={(e) => setNotifyMembers(e.target.checked)}
+                  />
+                  <span className="flex items-center text-sm text-gray-600">
+                    <Bell className="h-4 w-4 mr-1" />
+                    Notify community members
+                  </span>
+                </label>
+              </div>
             </div>
-          </div>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>

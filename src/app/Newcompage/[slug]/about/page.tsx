@@ -4,8 +4,13 @@ import { useParams, useRouter } from "next/navigation";
 import type { ICommunity } from "@/models/Community";
 import CommunityAboutcard from "@/components/communitycommponets/CommunityAboutcard";
 import About from "@/components/communitynav/About";
-import CommunityNav from "@/components/communitynav/CommunityNav";
 import { useSession } from "next-auth/react";
+import dynamic from 'next/dynamic';
+
+const CommunityNav = dynamic(() => import('@/components/communitynav/CommunityNav'), {
+  loading: () => <div className="h-16 bg-base-200"></div>, // Simple placeholder for nav height
+  ssr: false // Optional: if CommunityNav relies heavily on client-side things like window
+});
 async function getCommunity(slug: string): Promise<ICommunity | null> {
   try {
     const response = await fetch(`/api/community/${slug}`);

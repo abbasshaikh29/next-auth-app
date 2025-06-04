@@ -22,11 +22,11 @@ export default function NotificationIcon() {
 
     try {
       const response = await fetch(
-        "/api/notifications/user?unreadOnly=true&limit=1"
+        "/api/notifications?unread=true" // Use new endpoint
       );
       if (response.ok) {
         const data = await response.json();
-        setUnreadCount(data.pagination.total);
+        setUnreadCount(data.length); // API returns an array, count its length
       }
     } catch (error) {
       console.error("Error fetching unread notifications count:", error);
@@ -51,16 +51,10 @@ export default function NotificationIcon() {
       return;
     }
 
-    console.log(
-      "Setting up real-time notification listener for user:",
-      session.user.id
-    );
-
     // Listen for new notifications
     const notificationCleanup = listenForRealtimeEvents(
       "notification-created",
       (data: any) => {
-        console.log("Received new notification event:", data);
 
         // Only process if it's for this user
         if (data.userId === session.user.id) {

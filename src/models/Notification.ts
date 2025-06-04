@@ -24,7 +24,7 @@ const notificationSchema = new Schema<INotification>(
     type: {
       type: String,
       required: true,
-      enum: ["post", "admin-post", "mention", "comment", "like"],
+      enum: ["post", "admin-post", "mention", "comment", "like", "join-request", "follow"],
     },
     title: {
       type: String,
@@ -41,12 +41,12 @@ const notificationSchema = new Schema<INotification>(
     sourceType: {
       type: String,
       required: true,
-      enum: ["post", "comment", "community"],
+      enum: ["post", "comment", "community", "user"],
     },
     communityId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Community",
-      required: true,
+      required: false,
     },
     read: {
       type: Boolean,

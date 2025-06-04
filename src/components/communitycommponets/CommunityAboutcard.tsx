@@ -82,10 +82,6 @@ function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
         const data = await getCommunity(slug);
 
         if (data.community) {
-          console.log(
-            "CommunityAboutcard - Fetched community data:",
-            data.community
-          );
           setCommunityData({
             community: data.community,
           });

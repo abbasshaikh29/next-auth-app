@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
     const comments = await Comment.find(query)
       .sort({ createdAt: -1 })
-      .populate("author", "username name");
+      .populate("author", "username name profileImage");
 
     return NextResponse.json(comments);
   } catch (error) {
@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
         : null,
       author: new mongoose.Types.ObjectId(session.user.id),
       authorName: user.username || user.name,
+      profileImage: user.profileImage,
     };
 
     const newComment = await Comment.create(commentData);

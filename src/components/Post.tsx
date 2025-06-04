@@ -35,6 +35,7 @@ import { useNotification } from "./Notification";
 import { convertS3UrlToR2, isS3Url } from "@/utils/s3-to-r2-migration";
 
 import ProfileAvatar from "./ProfileAvatar";
+import UserHoverCard from "./UserHoverCard";
 
 interface Comment {
   _id: string;
@@ -44,6 +45,7 @@ interface Comment {
   createdAt: string;
   likes: mongoose.Types.ObjectId[];
   parentCommentId: string | null;
+  profileImage?: string;
 }
 
 import { IPost } from "@/models/Posts";
@@ -51,9 +53,13 @@ import { IPost } from "@/models/Posts";
 interface Post extends Omit<IPost, "likes" | "createdAt" | "createdBy"> {
   likes: mongoose.Types.ObjectId[];
   createdAt: string | Date;
-  profileImage?: string;
+  profileImage?: string; // This seems to be for the post's main image, if any, not the author's avatar.
+  authorProfileImage?: string; // Author's profile image
+  authorBio?: string; // Author's bio
   createdBy: mongoose.Types.ObjectId | string;
   isPinned?: boolean;
+  authorName?: string;
+  authorId?: string;
 }
 
 interface CommunityCardProps {
@@ -65,6 +71,8 @@ interface CommunityCardProps {
   isAdmin?: boolean;
 }
 
+import MessageModal from "./messages/MessageModal";
+
 export default function PostCard({
   post,
   onLike,
@@ -73,9 +81,33 @@ export default function PostCard({
   onPin,
   isAdmin = false,
 }: CommunityCardProps) {
+  // --- Messaging modal state ---
+  const [chatUserId, setChatUserId] = useState<string | null>(null);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const handleChatClick = (userId: string) => {
+    console.log('handleChatClick fired for user:', userId);
+    setChatUserId(userId);
+    setShowMessageModal(true);
+  }
   const [mounted, setMounted] = useState(false);
   const [currentTheme, setCurrentTheme] = useState<string>("whiteHalloween");
+  
+  // Enhanced theme detection functionality
+  useEffect(() => {
+    const detectThemeChange = () => {
+      const theme = document.documentElement.getAttribute('data-theme') || 'whiteHalloween';
+      setCurrentTheme(theme);
+    };
+    
+    detectThemeChange();
+    window.addEventListener('theme-change', detectThemeChange);
+    
+    return () => {
+      window.removeEventListener('theme-change', detectThemeChange);
+    };
+  }, []);
   const [isLiked, setIsLiked] = useState(false);
+  const [localLikeCount, setLocalLikeCount] = useState(0);
   const [showComments, setShowComments] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -92,10 +124,14 @@ export default function PostCard({
 
   // Ensure post.likes is always an array
   const likesArray = Array.isArray(post.likes) ? post.likes : [];
-
-  // Debug likes
+  
+  // Initialize local like count from props
   useEffect(() => {
-    console.log(`Post ${post._id} likes:`, likesArray);
+    setLocalLikeCount(likesArray.length);
+  }, [likesArray.length]);
+
+  useEffect(() => {
+
   }, [post._id, likesArray]);
 
   // Define fetchComments before using it in useEffect
@@ -167,7 +203,7 @@ export default function PostCard({
       return;
     }
 
-    console.log("Setting up realtime listeners for post:", post._id);
+
 
     // Listen for like updates
     const likeCleanup = listenForRealtimeEvents(
@@ -187,6 +223,11 @@ export default function PostCard({
               // Only update the like state if it's from another user
               if (data.userId !== session?.user?.id) {
                 setIsLiked(isCurrentUserLiked);
+                
+                // Update local like count from server data
+                if (data.likeCount !== undefined) {
+                  setLocalLikeCount(data.likeCount);
+                }
               }
             } else {
               // Fallback to the old behavior if we don't have likes data
@@ -492,6 +533,9 @@ export default function PostCard({
       // Toggle the like state immediately for better UX
       const newLikedState = !isLiked;
       setIsLiked(newLikedState);
+      
+      // Update local like count immediately for responsive UI
+      setLocalLikeCount(prevCount => newLikedState ? prevCount + 1 : Math.max(0, prevCount - 1));
 
       console.log(
         `Sending like request for post ${post._id}, action: ${
@@ -521,6 +565,11 @@ export default function PostCard({
       // Get the updated likes from the server response
       const data = await response.json();
       console.log(`Server response for like update:`, data);
+      
+      // Sync with server data
+      if (data.likeCount !== undefined) {
+        setLocalLikeCount(data.likeCount);
+      }
 
       // Only update the parent component's state after successful server update
       // Pass the server's likes data to ensure consistency
@@ -645,6 +694,19 @@ export default function PostCard({
 
       console.log("Liking comment:", comment);
 
+      // Optimistic UI update - update the state immediately
+      const userId = new mongoose.Types.ObjectId(session.user.id);
+      const updatedComments = comments.map((c) => {
+        if (c._id === commentId) {
+          const newLikes = isLiked
+            ? c.likes.filter((likeId) => likeId.toString() !== userId.toString())
+            : [...c.likes, userId];
+          return { ...c, likes: newLikes };
+        }
+        return c;
+      });
+      setComments(updatedComments);
+
       const response = await fetch("/api/comments", {
         method: "PUT",
         headers: {
@@ -713,11 +775,18 @@ export default function PostCard({
           }
         }
 
-        // Refresh all comments to ensure we have the latest data
-        fetchComments();
+        // Update the comment with the server response to ensure data consistency
+        // but only update the specific comment that changed, not reload all comments
+        setComments(prevComments => 
+          prevComments.map(c => 
+            c._id === commentId ? { ...c, likes: updatedComment.likes } : c
+          )
+        );
       }
     } catch (error) {
       console.error("Error liking comment:", error);
+      // If there's an error, revert back to the original state by fetching comments
+      fetchComments();
     }
   };
 
@@ -752,31 +821,48 @@ export default function PostCard({
         })()
       : [];
 
-  // Ensure  post.authorName exist
+  // Ensure post.authorName exists
   const authorName = post.authorName || "Unknown Author";
 
   return (
     <>
+      {showMessageModal && chatUserId && (
+        <MessageModal
+          userId={chatUserId}
+          onClose={() => setShowMessageModal(false)}
+          onMessageSent={() => {}}
+        />
+      )}
       <Card 
-        className="post-card hover:shadow-lg transition-all duration-300 cursor-pointer max-w-4xl w-full mx-auto"
+        className="post-card hover:shadow-lg transition-all duration-300 cursor-pointer max-w-4xl w-full mx-auto overflow-visible"
         style={{
-          backgroundColor: currentTheme === "halloween" ? "#2b2b2e" : "#ffffff",
-          color: currentTheme === "halloween" ? "#ffffff" : "#000000",
-          borderColor: currentTheme === "halloween" ? "rgba(255, 117, 24, 0.2)" : "rgba(107, 33, 168, 0.1)"
+          backgroundColor: 'var(--card-bg)',
+          color: 'var(--text-primary)',
+          borderColor: 'var(--border-color)'
         }}
       >
         <CardHeader className="flex flex-row items-center justify-between py-3 px-4">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-4">
               <ProfileAvatar
-                imageUrl={post.profileImage}
+                imageUrl={post.authorProfileImage} // Changed to authorProfileImage
                 name={authorName}
                 size="md"
                 className="flex-shrink-0"
               />
               <div>
-                <p className="font-medium">{authorName}</p>
-                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                {(() => {
+                  if (post.createdBy) {
+                    return (
+                      <UserHoverCard userId={post.createdBy.toString()} username={authorName} profileImage={post.authorProfileImage} bio={post.authorBio} onChatClick={handleChatClick}>
+                        {authorName}
+                      </UserHoverCard>
+                    );
+                  } else {
+                    return <p className="font-medium">{authorName}</p>;
+                  }
+                })()}
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                   {formatRelativeTime(post.createdAt)}
                 </p>
               </div>
@@ -802,7 +888,7 @@ export default function PostCard({
                   (item: { type: string; content: string }, index: number) => (
                     <div key={index}>
                       {item?.type === "text" && (
-                        <p className="leading-relaxed">
+                        <p className="" style={{ color: 'var(--text-secondary)' }}>
                           {item.content
                             .split(/(https?:\/\/[^\s]+|www\.[^\s]+)/g)
                             .map((part, i) => {
@@ -814,7 +900,8 @@ export default function PostCard({
                                     href={url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="hover:underline" style={{ color: "var(--halloween-orange)" }}
+                                    className="hover:underline" 
+                                    style={{ color: 'var(--halloween-orange)' }}
                                     onClick={(e) => e.stopPropagation()}
                                   >
                                     {part}
@@ -825,8 +912,8 @@ export default function PostCard({
                             })}
                         </p>
                       )}
-                      {item?.type === "link" &&
-                        (item.content.startsWith("http") ? (
+                      {item?.type === "link" && (
+                        item.content.startsWith("http") ? (
                           <a
                             href={item.content}
                             target="_blank"
@@ -844,7 +931,17 @@ export default function PostCard({
                           >
                             {item.content}
                           </Link>
-                        ))}
+                        )
+                      )}
+                      {/* {item?.type === "image" && (
+                        <div className="my-3 rounded-lg overflow-hidden">
+                          <img 
+                            src={isS3Url(item.content) ? convertS3UrlToR2(item.content) : item.content} 
+                            alt="Post image" 
+                            className="w-full h-auto max-h-96 object-contain"
+                          />
+                        </div>
+                      )} */}
                       {item?.type === "file" && (
                         <a
                           href={item.content}
@@ -862,20 +959,20 @@ export default function PostCard({
               </div>
             </div>
             <div className="w-1/4 flex justify-center">
-              {content.map(
-                (item: { type: string; content: string }, index: number) =>
-                  item?.type === "image" && (
-                    <img
-                      key={index}
-                      src={
-                        isS3Url(item.content)
-                          ? convertS3UrlToR2(item.content)
-                          : item.content
-                      }
-                      alt=""
-                      className="w-20 h-auto rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
-                    />
-                  )
+              {content.filter(item => item?.type === "image").length > 0 && (
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {content
+                    .filter(item => item?.type === "image")
+                    .slice(0, 1)
+                    .map((item, index) => (
+                      <img
+                        key={index}
+                        src={isS3Url(item.content) ? convertS3UrlToR2(item.content) : item.content}
+                        alt=""
+                        className="w-20 h-20 object-cover rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
+                      />
+                    ))}
+                </div>
               )}
             </div>
           </div>
@@ -895,7 +992,7 @@ export default function PostCard({
                 className="h-4 w-4"
                 fill={isLiked ? "currentColor" : "none"}
               />
-              <span>{likesArray.length}</span>
+              <span>{localLikeCount}</span>
             </Button>
 
             <Button
@@ -911,6 +1008,8 @@ export default function PostCard({
         </CardFooter>
       </Card>
 
+  
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-6xl w-[800px] max-h-[80vh] backdrop-filter backdrop-blur-lg bg-opacity-30 bg-white/10 overflow-y-auto p-4">
           <DialogTitle className="sr-only">Post Details</DialogTitle>
@@ -923,8 +1022,18 @@ export default function PostCard({
                 className="flex-shrink-0"
               />
               <div>
-                <h3 className="font-semibold">{post.authorName}</h3>
-                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                {(() => {
+                  if (post.createdBy) {
+                    return (
+                      <UserHoverCard userId={post.createdBy.toString()} username={authorName} profileImage={post.authorProfileImage} bio={post.authorBio} onChatClick={handleChatClick}>
+                        {authorName}
+                      </UserHoverCard>
+                    );
+                  } else {
+                    return <h3 className="font-semibold">{authorName}</h3>;
+                  }
+                })()}
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                   {formatRelativeTime(post.createdAt)}
                 </p>
               </div>
@@ -986,7 +1095,7 @@ export default function PostCard({
               (item: { type: string; content: string }, index: number) => (
                 <div key={index}>
                   {item.type === "text" && (
-                    <p className="text-gray-600">
+                    <p className="" style={{ color: 'var(--text-secondary)' }}>
                       {item.content
                         .split(/(https?:\/\/[^\s]+|www\.[^\s]+)/g)
                         .map((part, i) => {
@@ -1055,7 +1164,7 @@ export default function PostCard({
                 size="sm"
                 onClick={() => handleLikePost()}
                 className="flex items-center gap-2"
-                style={isLiked ? { color: "var(--halloween-orange)" } : {}}
+                style={isLiked ? { color: 'var(--halloween-orange)' } : {}}
               >
                 <Heart
                   className="h-4 w-4"
@@ -1080,16 +1189,30 @@ export default function PostCard({
                 {comments.map((comment) => (
                   <div
                     key={comment._id}
-                    className="flex gap-2 p-3 bg-[#FFF5E6] rounded"
+                    className="border rounded-lg p-4" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}
                   >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-medium">
-                          {comment.authorName}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {formatRelativeTime(comment.createdAt)}
-                        </span>
+                    <div className="flex flex-col space-y-1">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                          <ProfileAvatar 
+                            imageUrl={comment.profileImage} 
+                            name={comment.authorName} 
+                            size="sm" 
+                          />
+                          <UserHoverCard 
+                            userId={comment.author.toString()} 
+                            username={comment.authorName} 
+                            profileImage={comment.profileImage}
+                            onChatClick={handleChatClick}
+                          >
+                            <p className="font-semibold text-sm">
+                              {comment.authorName} •{" "}
+                              <span className="font-normal text-gray-500">
+                                {formatRelativeTime(new Date(comment.createdAt))}
+                              </span>
+                            </p>
+                          </UserHoverCard>
+                        </div>
                       </div>
                       <p className="text-sm">
                         {comment.text
@@ -1130,7 +1253,8 @@ export default function PostCard({
                               );
                             }
                           }}
-                          className={`flex items-center gap-2 ${
+                          className={`flex items-center gap-2`}
+                          style={
                             session?.user?.id &&
                             comment.likes.some(
                               (likeId) =>
@@ -1139,9 +1263,9 @@ export default function PostCard({
                                   session.user.id
                                 ).toString()
                             )
-                              ? "text-red-500"
-                              : ""
-                          }`}
+                              ? { color: "var(--halloween-orange)" }
+                              : {}
+                          }
                         >
                           <Heart
                             className="h-4 w-4"
@@ -1176,7 +1300,7 @@ export default function PostCard({
                               placeholder="Write a reply..."
                               value={newComment}
                               onChange={(e) => setNewComment(e.target.value)}
-                              className="flex-1 bg-white"
+                              className="flex-1" style={{ backgroundColor: 'var(--input-bg)' }}
                             />
                             {showReplyEmojiPicker && (
                               <div
@@ -1222,7 +1346,7 @@ export default function PostCard({
                       placeholder="Write a comment..."
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
-                      className="flex-1 bg-white"
+                      className="flex-1" style={{ backgroundColor: 'var(--input-bg)' }}
                     />
                     {showEmojiPicker && (
                       <div
@@ -1259,3 +1383,4 @@ export default function PostCard({
     </>
   );
 }
+

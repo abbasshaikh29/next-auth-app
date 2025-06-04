@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "@/lib/auth-helpers";
+import { auth } from "@/auth"; // Using auth() for App Router
 import { dbconnect } from "@/lib/db";
 import { Notification } from "@/models/Notification";
+import { Community } from "@/models/Community";
 import mongoose from "mongoose";
 
 // GET /api/notifications/user - Get notifications for the current user
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
 // PATCH /api/notifications/user - Mark notifications as read
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
