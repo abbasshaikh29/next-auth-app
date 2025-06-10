@@ -4,16 +4,13 @@ import { useState, useEffect } from "react";
 import { Moon, Sun } from "lucide-react";
 
 export default function ThemeSwitcher() {
-  const [currentTheme, setCurrentTheme] = useState<string>("whiteHalloween");
+  const [currentTheme, setCurrentTheme] = useState<string>("light");
 
   useEffect(() => {
     // Get the theme from localStorage or use default
-    const savedTheme = localStorage.getItem("theme") || "whiteHalloween";
-    // If the saved theme was skoolTheme, default to whiteHalloween
-    const validTheme =
-      savedTheme === "skoolTheme" ? "whiteHalloween" : savedTheme;
-    setCurrentTheme(validTheme);
-    applyTheme(validTheme);
+    const savedTheme = localStorage.getItem("theme") || "light";
+    setCurrentTheme(savedTheme);
+    applyTheme(savedTheme);
   }, []);
 
   const applyTheme = (theme: string) => {
@@ -21,15 +18,6 @@ export default function ThemeSwitcher() {
     document.documentElement.setAttribute("data-theme", theme);
     // Also set it on body to ensure full application coverage
     document.body.setAttribute("data-theme", theme);
-    
-    // Apply specific background colors based on theme
-    if (theme === "halloween") {
-      document.body.style.backgroundColor = "#1e1b4b"; // Dark theme background
-      document.body.style.color = "#ffffff"; // Dark theme text color
-    } else {
-      document.body.style.backgroundColor = "#ffffff"; // Light theme background
-      document.body.style.color = "#1e1b4b"; // Light theme text color
-    }
   };
 
   const toggleTheme = (theme: string) => {
@@ -41,10 +29,10 @@ export default function ThemeSwitcher() {
   return (
     <div className="dropdown dropdown-end">
       <div tabIndex={0} role="button" className="btn btn-ghost btn-circle">
-        {currentTheme === "halloween" ? (
+        {currentTheme === "dark" ? (
           <Moon className="h-5 w-5" />
         ) : (
-          <Sun className="h-5 w-5 text-halloween-orange" />
+          <Sun className="h-5 w-5" />
         )}
       </div>
       <ul
@@ -57,21 +45,21 @@ export default function ThemeSwitcher() {
         <li>
           <button
             type="button"
-            onClick={() => toggleTheme("whiteHalloween")}
+            onClick={() => toggleTheme("light")}
             className={`flex items-center gap-2 ${
-              currentTheme === "whiteHalloween" ? "active" : ""
+              currentTheme === "light" ? "active" : ""
             }`}
           >
-            <span className="w-4 h-4 rounded-full bg-halloween-orange"></span>
+            <span className="w-4 h-4 rounded-full bg-primary"></span>
             Light Theme
           </button>
         </li>
         <li>
           <button
             type="button"
-            onClick={() => toggleTheme("halloween")}
+            onClick={() => toggleTheme("dark")}
             className={`flex items-center gap-2 ${
-              currentTheme === "halloween" ? "active" : ""
+              currentTheme === "dark" ? "active" : ""
             }`}
           >
             <span className="w-4 h-4 rounded-full bg-neutral"></span>

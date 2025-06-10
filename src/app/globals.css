@@ -3,20 +3,11 @@
 
 /* Import component-specific styles */
 @import "../styles/post-creation.css";
-@import "../styles/halloween-theme.css";
 @import "../styles/chat-modal.css";
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-:root {
-  /* Halloween Theme Variables */
-  --halloween-orange: #ff7518;
-  --halloween-purple: #6b21a8;
-  --halloween-green: #15803d;
-  --halloween-black: #1e1b4b;
-}
 
 body {
   font-family: var(--font-poppins), Arial, Helvetica, sans-serif;

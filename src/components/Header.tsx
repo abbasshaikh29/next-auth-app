@@ -111,12 +111,15 @@ export default function Header() {
     }
   };
   return (
-    <div className="navbar sticky top-0 z-40 shadow-sm border-b border-halloween-purple/10" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+    <div
+      className="navbar sticky top-0 z-40 shadow-sm border-b border-halloween-purple/10"
+      style={{ backgroundColor: "var(--bg-secondary)" }}
+    >
       <div className="container mx-auto flex items-center justify-between">
         <div className="flex-1 lg:flex-none flex items-center gap-2">
           <Link
             href="/"
-            className="btn btn-ghost text-xl normal-case font-bold text-halloween-purple relative group"
+            className="btn btn-ghost text-xl normal-case font-bold text-rose-900 relative group"
             prefetch={true}
             onClick={() =>
               showNotification("Welcome to TheTribelab", "success")
@@ -124,8 +127,6 @@ export default function Header() {
           >
             <span className="relative z-10">TheTribelab</span>
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-halloween-orange transition-all duration-300 group-hover:w-full"></span>
-            {/* Halloween decoration */}
-            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-halloween-orange opacity-70"></span>
           </Link>
 
           {/* Communities Dropdown */}
@@ -143,7 +144,10 @@ export default function Header() {
               <ul
                 tabIndex={0}
                 className="dropdown-content z-[1] text-lg menu p-2 shadow-halloween rounded-box w-72 border border-halloween-purple/10"
-                style={{ backgroundColor: 'var(--dropdown-bg)', color: 'var(--text-primary)' }}
+                style={{
+                  backgroundColor: "var(--dropdown-bg)",
+                  color: "var(--text-primary)",
+                }}
               >
                 <li className="">
                   <Link
@@ -250,7 +254,12 @@ export default function Header() {
               <ul
                 tabIndex={0}
                 className="dropdown-content z-[1] menu p-2 shadow-lg rounded-box w-64 mt-4"
-                style={{ backgroundColor: 'var(--dropdown-bg)', color: 'var(--text-primary)', maxWidth: '300px', overflow: 'hidden' }}
+                style={{
+                  backgroundColor: "var(--dropdown-bg)",
+                  color: "var(--text-primary)",
+                  maxWidth: "300px",
+                  overflow: "hidden",
+                }}
               >
                 {session ? (
                   <>

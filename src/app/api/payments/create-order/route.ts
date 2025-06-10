@@ -17,12 +17,12 @@ export async function POST(request: NextRequest) {
     }
 
     await dbconnect();
-    const { 
-      amount, 
-      currency = "INR", 
-      planId, 
-      paymentType, 
-      communityId 
+    const {
+      amount,
+      currency = "INR",
+      planId,
+      paymentType,
+      communityId,
     } = await request.json();
 
     if (!amount || amount <= 0) {
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create a receipt ID
-    const receiptId = `receipt_${Date.now()}_${session.user.id}`;
+    const receiptId = `receipt_${session.user.id.substring(0, 8)}`;
 
     // Create metadata for the order
     const metadata: Record<string, any> = {
@@ -105,7 +105,9 @@ export async function POST(request: NextRequest) {
       paymentType,
       payerId: session.user.id,
       payeeId,
-      communityId: communityId ? new mongoose.Types.ObjectId(communityId) : undefined,
+      communityId: communityId
+        ? new mongoose.Types.ObjectId(communityId)
+        : undefined,
       planId: planId ? new mongoose.Types.ObjectId(planId) : undefined,
       metadata,
     });
