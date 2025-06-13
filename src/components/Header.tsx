@@ -2,6 +2,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useNotification } from "./Notification";
+import { useSettingsModal } from "./modals/SettingsModalProvider";
 import Link from "next/link";
 import Image from "next/image";
 import { User, ChevronDown, Compass, Plus } from "lucide-react";
@@ -24,6 +25,7 @@ interface Community {
 export default function Header() {
   const { data: session } = useSession();
   const { showNotification } = useNotification();
+  const { openUserSettings } = useSettingsModal();
 
   const [userCommunities, setUserCommunities] = useState<Community[]>([]);
   const [currentCommunity, setCurrentCommunity] = useState<Community | null>(
@@ -334,9 +336,9 @@ export default function Header() {
                       </Link>
                     </li>
                     <li>
-                      <Link
-                        href={"/UserSettings"}
-                        className="px-4 py-2 block w-full transition-colors duration-200 rounded-lg"
+                      <button
+                        type="button"
+                        className="px-4 py-2 block w-full transition-colors duration-200 rounded-lg text-left"
                         style={{ color: "var(--text-primary)" }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.backgroundColor = "var(--hover-bg)";
@@ -344,12 +346,13 @@ export default function Header() {
                         onMouseLeave={(e) => {
                           e.currentTarget.style.backgroundColor = "transparent";
                         }}
-                        onClick={() =>
-                          showNotification("Going to Settings", "info")
-                        }
+                        onClick={() => {
+                          openUserSettings();
+                          showNotification("Opening Settings", "info");
+                        }}
                       >
                         Settings
-                      </Link>
+                      </button>
                     </li>
                     <li className="divider my-1" style={{ borderColor: "var(--border-color)" }}></li>
                     <li className="items-center px-4 flex justify-center">

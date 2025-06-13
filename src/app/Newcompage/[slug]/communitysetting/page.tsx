@@ -6,6 +6,7 @@ import UserCommunitySettingsComponent from "@/components/communitycommponets/Use
 import CommunityAboutMediaManagerComponent from "@/components/communitycommponets/CommunityAboutMediaManager";
 import CommunityAccessSettingsComponent from "@/components/communitycommponets/CommunityAccessSettings";
 import CommunityBillingInfoComponent from "@/components/communitycommponets/CommunityBillingInfo";
+import AnalyticsDashboard from "@/components/communitycommponets/AnalyticsDashboard";
 import React, { useState, useEffect } from "react";
 import dynamic from 'next/dynamic';
 
@@ -108,12 +109,23 @@ function CommunitySettingPage() {
                   href="?t=AboutMedia"
                   className={
                     "py-3 font-semibold px-6 w-full text-lg transition-colors duration-200 rounded-lg hover:bg-base-100 " +
-                    (t === "AboutMedia" 
+                    (t === "AboutMedia"
                       ? "bg-primary text-primary-content "
                       : "")
                   }
                 >
                   About Media
+                </Link>
+                <Link
+                  href="?t=Analytics"
+                  className={
+                    "py-3 font-semibold px-6 w-full text-lg transition-colors duration-200 rounded-lg hover:bg-base-100 " +
+                    (t === "Analytics"
+                      ? "bg-primary text-primary-content "
+                      : "")
+                  }
+                >
+                  Analytics
                 </Link>
                 <Link
                   href={`/community/${slug}/payment-settings`}
@@ -188,6 +200,9 @@ function CommunitySettingPage() {
                     </p>
                     <CommunityAboutMediaManager />
                   </div>
+                )}
+                {(isAdmin || isSubAdmin) && t === "Analytics" && (
+                  <AnalyticsDashboard />
                 )}
                 {/* Access & Pricing settings */}
                 {isAdmin && t === "AccessSettings" && (

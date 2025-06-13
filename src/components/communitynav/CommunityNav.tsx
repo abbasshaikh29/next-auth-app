@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { User, ChevronDown, Compass, Plus } from "lucide-react";
 import { useNotification } from "@/components/Notification";
+import { useSettingsModal } from "@/components/modals/SettingsModalProvider";
 import { useSession, signOut } from "next-auth/react";
 import CommunityIcon from "./CommunityIcon";
 import MessageIcon from "../messages/MessageIcon";
@@ -23,6 +24,7 @@ function CommunityNav() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const { showNotification } = useNotification();
+  const { openUserSettings, openCommunitySettings } = useSettingsModal();
   const [Name, setName] = useState("");
   const [isMember, setIsMember] = useState(false);
   const [iconImage, setIconImage] = useState("");
@@ -376,16 +378,31 @@ function CommunityNav() {
                         </Link>
                       </li>
                       <li>
-                        <Link
-                          href={"/UserSettings"}
-                          className="px-4 py-2 hover:bg-base-200 block w-full"
-                          onClick={() =>
-                            showNotification("GOing to Setting", "info")
-                          }
+                        <button
+                          type="button"
+                          className="px-4 py-2 hover:bg-base-200 block w-full text-left"
+                          onClick={() => {
+                            openUserSettings();
+                            showNotification("Opening Settings", "info");
+                          }}
                         >
                           Settings
-                        </Link>
+                        </button>
                       </li>
+                      {isMember && (
+                        <li>
+                          <button
+                            type="button"
+                            className="px-4 py-2 hover:bg-base-200 block w-full text-left"
+                            onClick={() => {
+                              openCommunitySettings(slug);
+                              showNotification("Opening Community Settings", "info");
+                            }}
+                          >
+                            Community Settings
+                          </button>
+                        </li>
+                      )}
                       <li className="divider my-1"></li>
                       <li>
                         <button
@@ -468,16 +485,6 @@ function CommunityNav() {
                 >
                   Members
                 </Link>
-                <Link
-                  href={`/Newcompage/${slug}/communitysetting`}
-                  className={`btn text-lg btn-ghost ${
-                    isLinkActive(`/Newcompage/${slug}/communitysetting`)
-                      ? "bg-primary text-primary-content"
-                      : "hover:text-primary"
-                  }`}
-                >
-                  Settings
-                </Link>
               </div>
 
               {/* Mobile navigation - scrollable, centered content */}
@@ -531,16 +538,6 @@ function CommunityNav() {
                   }`}
                 >
                   Members
-                </Link>
-                <Link
-                  href={`/Newcompage/${slug}/communitysetting`}
-                  className={`btn btn-sm text-sm btn-ghost whitespace-nowrap ${
-                    isLinkActive(`/Newcompage/${slug}/communitysetting`)
-                      ? "bg-primary text-primary-content"
-                      : "hover:text-primary"
-                  }`}
-                >
-                  Settings
                 </Link>
               </div>
             </>

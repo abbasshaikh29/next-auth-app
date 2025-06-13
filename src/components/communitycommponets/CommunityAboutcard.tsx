@@ -4,6 +4,7 @@ import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { ICommunity } from "@/models/Community";
 import { useSession } from "next-auth/react";
+import { useSettingsModal } from "@/components/modals/SettingsModalProvider";
 import CommunityJoinForm from "../CommunityJoinForm";
 import { Users, Link as LinkIcon, Copy, Check } from "lucide-react";
 
@@ -64,6 +65,7 @@ interface NewCommmunityPageProps {
 
 function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
   const { data: session } = useSession();
+  const { openCommunitySettings } = useSettingsModal();
   const [communityData, setCommunityData] = useState<{
     community: ICommunity | null;
   }>({ community: null });
@@ -237,10 +239,12 @@ function CommunityAboutcard({ slug }: NewCommmunityPageProps) {
           </div>
           {isMember ? (
             <div className="card-actions mt-4 flex-col w-full gap-2">
-              <button type="button" className="btn btn-secondary w-full">
-                <Link href={`/Newcompage/${slug}/communitysetting`}>
-                  Community Setting
-                </Link>
+              <button
+                type="button"
+                className="btn btn-secondary w-full"
+                onClick={() => openCommunitySettings(slug)}
+              >
+                Community Settings
               </button>
               <button
                 type="button"

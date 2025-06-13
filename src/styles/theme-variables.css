@@ -56,6 +56,12 @@
   --hover-bg: #f8fafc;
   --active-bg: #f1f5f9;
   --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.1);
+
+  /* Chart colors */
+  --chart-primary: var(--brand-primary);
+  --chart-secondary: var(--brand-secondary);
+  --chart-grid: #e2e8f0;
+  --chart-text: #64748b;
 }
 
 /* Dark Theme */
@@ -100,4 +106,10 @@
   --hover-bg: #334155;
   --active-bg: #475569;
   --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.2);
+
+  /* Chart colors */
+  --chart-primary: var(--brand-primary);
+  --chart-secondary: var(--brand-secondary);
+  --chart-grid: #475569;
+  --chart-text: #94a3b8;
 }

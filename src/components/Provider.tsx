@@ -4,6 +4,7 @@ import { SessionProvider } from "next-auth/react";
 import { NotificationProvider } from "./Notification";
 import { RealtimeProvider } from "./RealtimeProvider";
 import { CaptchaProvider } from "@/contexts/CaptchaContext";
+import SettingsModalProvider from "./modals/SettingsModalProvider";
 import { useState, useEffect } from "react";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
@@ -34,17 +35,19 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       <NotificationProvider>
         <CaptchaProvider>
           <RealtimeProvider>
-            {children}
-            {!storageConfig.configured && (
-              <div className="fixed bottom-4 left-4 bg-yellow-100 text-yellow-800 p-2 rounded text-xs">
-                Storage not configured
-              </div>
-            )}
-            {storageConfig.configured && (
-              <div className="fixed bottom-4 left-4 bg-green-100 text-green-800 p-2 rounded text-xs">
-                Using {storageConfig.provider}
-              </div>
-            )}
+            <SettingsModalProvider>
+              {children}
+              {!storageConfig.configured && (
+                <div className="fixed bottom-4 left-4 bg-yellow-100 text-yellow-800 p-2 rounded text-xs">
+                  Storage not configured
+                </div>
+              )}
+              {storageConfig.configured && (
+                <div className="fixed bottom-4 left-4 bg-green-100 text-green-800 p-2 rounded text-xs">
+                  Using {storageConfig.provider}
+                </div>
+              )}
+            </SettingsModalProvider>
           </RealtimeProvider>
         </CaptchaProvider>
       </NotificationProvider>
