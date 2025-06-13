@@ -154,7 +154,7 @@ const CommunityPaymentSettings: React.FC<CommunityPaymentSettingsProps> = ({
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-halloween-orange" />
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: "var(--brand-primary)" }} />
       </div>
     );
   }
@@ -188,7 +188,7 @@ const CommunityPaymentSettings: React.FC<CommunityPaymentSettingsProps> = ({
               Enable paid membership for this community
             </span>
           </label>
-          <p className="text-sm text-halloween-black/60 ml-14">
+          <p className="text-sm ml-14" style={{ color: "var(--text-secondary)" }}>
             Require members to pay to join this community
           </p>
         </div>
@@ -204,7 +204,7 @@ const CommunityPaymentSettings: React.FC<CommunityPaymentSettingsProps> = ({
             />
             <span className="label-text">Require payment to join</span>
           </label>
-          <p className="text-sm text-halloween-black/60 ml-14">
+          <p className="text-sm ml-14" style={{ color: "var(--text-secondary)" }}>
             Members must pay to join this community (no free join option)
           </p>
         </div>
@@ -215,7 +215,7 @@ const CommunityPaymentSettings: React.FC<CommunityPaymentSettingsProps> = ({
           <h3 className="text-xl font-bold">Payment Plans</h3>
           <a
             href={`/community/${communitySlug}/payment-plans/new`}
-            className="btn btn-sm bg-halloween-orange text-white hover:bg-halloween-orange/90 border-none"
+            className="btn btn-sm bg-primary text-white hover:bg-primary/90 border-none"
           >
             <Plus className="w-4 h-4 mr-1" />
             Add Plan
@@ -224,7 +224,7 @@ const CommunityPaymentSettings: React.FC<CommunityPaymentSettingsProps> = ({
 
         {plans.length === 0 ? (
           <div className="bg-base-200 rounded-lg p-6 text-center">
-            <p className="text-halloween-black/70">
+            <p style={{ color: "var(--text-secondary)" }}>
               No payment plans created yet. Create your first plan to start
               accepting payments.
             </p>
@@ -248,7 +248,7 @@ const CommunityPaymentSettings: React.FC<CommunityPaymentSettingsProps> = ({
                       <div>
                         <div className="font-medium">{plan.name}</div>
                         {plan.description && (
-                          <div className="text-xs text-halloween-black/60">
+                          <div className="text-xs" style={{ color: "var(--text-secondary)" }}>
                             {plan.description}
                           </div>
                         )}

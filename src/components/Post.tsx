@@ -90,18 +90,18 @@ export default function PostCard({
     setShowMessageModal(true);
   }
   const [mounted, setMounted] = useState(false);
-  const [currentTheme, setCurrentTheme] = useState<string>("whiteHalloween");
-  
+  const [currentTheme, setCurrentTheme] = useState<string>("light");
+
   // Enhanced theme detection functionality
   useEffect(() => {
     const detectThemeChange = () => {
-      const theme = document.documentElement.getAttribute('data-theme') || 'whiteHalloween';
+      const theme = document.documentElement.getAttribute('data-theme') || 'light';
       setCurrentTheme(theme);
     };
-    
+
     detectThemeChange();
     window.addEventListener('theme-change', detectThemeChange);
-    
+
     return () => {
       window.removeEventListener('theme-change', detectThemeChange);
     };
@@ -153,10 +153,10 @@ export default function PostCard({
   // Effect to detect theme changes
   useEffect(() => {
     const detectTheme = () => {
-      const theme = document.documentElement.getAttribute("data-theme") || "whiteHalloween";
+      const theme = document.documentElement.getAttribute("data-theme") || "light";
       setCurrentTheme(theme);
     };
-    
+
     // Initial detection
     detectTheme();
     
@@ -901,7 +901,7 @@ export default function PostCard({
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="hover:underline" 
-                                    style={{ color: 'var(--halloween-orange)' }}
+                                    style={{ color: 'var(--brand-primary)' }}
                                     onClick={(e) => e.stopPropagation()}
                                   >
                                     {part}
@@ -1164,7 +1164,7 @@ export default function PostCard({
                 size="sm"
                 onClick={() => handleLikePost()}
                 className="flex items-center gap-2"
-                style={isLiked ? { color: 'var(--halloween-orange)' } : {}}
+                style={isLiked ? { color: 'var(--brand-primary)' } : {}}
               >
                 <Heart
                   className="h-4 w-4"
@@ -1263,7 +1263,7 @@ export default function PostCard({
                                   session.user.id
                                 ).toString()
                             )
-                              ? { color: "var(--halloween-orange)" }
+                              ? { color: "var(--brand-primary)" }
                               : {}
                           }
                         >

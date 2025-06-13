@@ -1,76 +1,103 @@
-/* Theme Variables CSS */
+/* Modern Theme Variables CSS */
 
 /* Common variables for both themes */
 :root {
-  /* Base Halloween Theme Variables */
-  --halloween-orange: #ff7518;
-  --halloween-purple: #6b21a8;
-  --halloween-green: #15803d;
-  --halloween-black: #1e1b4b;
+  /* Brand Colors - Modern and Professional */
+  --brand-primary: #3b82f6;
+  --brand-secondary: #8b5cf6;
+  --brand-accent: #06b6d4;
+  --brand-success: #10b981;
+  --brand-warning: #f59e0b;
+  --brand-error: #ef4444;
+
+  /* Theme transition */
+  --theme-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Light Theme (whiteHalloween) */
-[data-theme="whiteHalloween"] {
+/* Light Theme */
+[data-theme="light"] {
   /* Background colors */
-  --bg-primary: #f5f0e8;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #f5f0e8;
-  
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-accent: #e2e8f0;
+
   /* Text colors */
-  --text-primary: #000000;
+  --text-primary: #0f172a;
   --text-secondary: #475569;
-  --text-tertiary: #1d1d1e;
-  
+  --text-tertiary: #64748b;
+  --text-muted: #94a3b8;
+
   /* Border colors */
-  --border-color: rgba(107, 33, 168, 0.1);
-  --border-hover: rgba(255, 117, 24, 0.3);
-  
+  --border-color: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --border-focus: var(--brand-primary);
+
   /* Shadow */
-  --shadow-sm: 0 1px 2px 0 rgba(107, 33, 168, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(107, 33, 168, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(107, 33, 168, 0.1);
-  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
   /* Component specific */
   --card-bg: #ffffff;
-  --card-border: rgba(9, 9, 9, 0.1);
+  --card-border: #e2e8f0;
   --input-bg: #ffffff;
-  --input-border: rgba(107, 33, 168, 0.2);
-  --button-hover-overlay: rgba(255, 255, 255, 0.2);
+  --input-border: #d1d5db;
+  --input-focus: var(--brand-primary);
+  --button-hover-overlay: rgba(0, 0, 0, 0.05);
   --dropdown-bg: #ffffff;
   --modal-bg: #ffffff;
-  --tooltip-bg: #1f1f1f;
+  --modal-overlay: rgba(0, 0, 0, 0.5);
+  --tooltip-bg: #1f2937;
   --tooltip-text: #ffffff;
+
+  /* Interactive states */
+  --hover-bg: #f8fafc;
+  --active-bg: #f1f5f9;
+  --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Dark Theme (halloween) */
-[data-theme="halloween"] {
+/* Dark Theme */
+[data-theme="dark"] {
   /* Background colors */
-  --bg-primary: #212020;
-  --bg-secondary: #1e1e1e;
-  --bg-tertiary: #242424;
-  
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-accent: #475569;
+
   /* Text colors */
-  --text-primary: #ffffff;
-  --text-secondary: #cbd5e1;
-  --text-tertiary: #cecece;
-  
+  --text-primary: #f8fafc;
+  --text-secondary: #e2e8f0;
+  --text-tertiary: #cbd5e1;
+  --text-muted: #94a3b8;
+
   /* Border colors */
-  --border-color: rgba(174, 174, 174, 0.2);
-  --border-hover: rgba(255, 117, 24, 0.5);
-  
+  --border-color: #334155;
+  --border-hover: #475569;
+  --border-focus: var(--brand-primary);
+
   /* Shadow */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-  
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
+
   /* Component specific */
-  --card-bg: #39393a;
-  --card-border: rgba(132, 132, 132, 0.2);
-  --input-bg: #2b2b2e;
-  --input-border: rgba(255, 117, 24, 0.3);
-  --button-hover-overlay: rgba(0, 0, 0, 0.2);
-  --dropdown-bg: #2b2b2e;
-  --modal-bg: #2b2b2e;
-  --tooltip-bg: #ff7518;
-  --tooltip-text: #2b2b2e;
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  --input-bg: #1e293b;
+  --input-border: #475569;
+  --input-focus: var(--brand-primary);
+  --button-hover-overlay: rgba(255, 255, 255, 0.1);
+  --dropdown-bg: #1e293b;
+  --modal-bg: #1e293b;
+  --modal-overlay: rgba(0, 0, 0, 0.8);
+  --tooltip-bg: #374151;
+  --tooltip-text: #f9fafb;
+
+  /* Interactive states */
+  --hover-bg: #334155;
+  --active-bg: #475569;
+  --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }

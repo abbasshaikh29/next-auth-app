@@ -14,7 +14,7 @@ const StartTrialButton: React.FC<StartTrialButtonProps> = ({
   buttonText = "Start 14-Day Free Trial",
   onSuccess,
   onError,
-  className = "btn bg-halloween-orange text-white hover:bg-halloween-orange/90 border-none",
+  className = "btn bg-primary text-primary-content hover:bg-primary/90 border-none",
 }) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);

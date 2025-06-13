@@ -38,22 +38,31 @@ export default function BillingPage() {
   const [remainingDays, setRemainingDays] = useState<number | null>(null);
   const [trialActive, setTrialActive] = useState(false);
   const [isPaymentActive, setIsPaymentActive] = useState(false);
+  const [trialEligible, setTrialEligible] = useState(true);
+  const [trialEligibilityReason, setTrialEligibilityReason] = useState<string | null>(null);
+  const [communitySuspended, setCommunitySuspended] = useState(false);
 
   const slug = params?.slug as string;
 
   useEffect(() => {
     const fetchCommunity = async () => {
       if (!slug) return;
-      
+
       try {
         setLoading(true);
+
+        // Check URL parameters for suspension status
+        const urlParams = new URLSearchParams(window.location.search);
+        const suspended = urlParams.get('suspended') === 'true';
+        setCommunitySuspended(suspended);
+
         const communityData = await apiClient.getcommunity(slug);
-        
+
         // Convert the ICommunity data to CommunityData format
         // Ensure _id is a string (it might be an ObjectId from MongoDB)
         const communityId = communityData._id;
         let idAsString = '';
-        
+
         if (communityId) {
           if (typeof communityId === 'object' && communityId.toString) {
             idAsString = communityId.toString();
@@ -61,43 +70,67 @@ export default function BillingPage() {
             idAsString = communityId;
           }
         }
-        
+
+        // Check trial eligibility if user is authenticated
+        if (session?.user?.id) {
+          try {
+            const eligibilityResponse = await fetch(`/api/trial/check-eligibility`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                trialType: 'community',
+                communityId: idAsString
+              })
+            });
+
+            if (eligibilityResponse.ok) {
+              const eligibilityData = await eligibilityResponse.json();
+              setTrialEligible(eligibilityData.eligible);
+              setTrialEligibilityReason(eligibilityData.reason);
+            }
+          } catch (err) {
+            console.error('Error checking trial eligibility:', err);
+          }
+        }
+
         // Convert any Date objects to strings
-        const subscriptionEndDateStr = communityData.subscriptionEndDate 
+        const subscriptionEndDateStr = communityData.subscriptionEndDate
           ? typeof communityData.subscriptionEndDate === 'string'
             ? communityData.subscriptionEndDate
             : communityData.subscriptionEndDate.toString()
           : undefined;
-        
+
         // Check if admin trial is active and calculate remaining days
         let remainingTrialDays = null;
         let isTrialActive = false;
         let isPaid = communityData.paymentStatus === 'paid';
-        
+
         if (communityData.adminTrialInfo?.activated && communityData.adminTrialInfo?.endDate) {
           const endDate = new Date(communityData.adminTrialInfo.endDate);
           const today = new Date();
           const diffTime = endDate.getTime() - today.getTime();
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          
+
           if (diffDays > 0) {
             remainingTrialDays = diffDays;
             isTrialActive = true;
           }
         }
-        
+
         setIsPaymentActive(isPaid);
-        
+
         setRemainingDays(remainingTrialDays);
         setTrialActive(isTrialActive);
-        
+
         // Convert Date objects to strings for the adminTrialInfo
         const adminTrialInfoFormatted = communityData.adminTrialInfo ? {
           activated: communityData.adminTrialInfo.activated,
           startDate: communityData.adminTrialInfo.startDate ? communityData.adminTrialInfo.startDate.toString() : undefined,
           endDate: communityData.adminTrialInfo.endDate ? communityData.adminTrialInfo.endDate.toString() : undefined
         } : undefined;
-        
+
         setCommunity({
           _id: idAsString,
           name: communityData.name || '',
@@ -119,7 +152,7 @@ export default function BillingPage() {
     if (slug) {
       fetchCommunity();
     }
-  }, [slug]);
+  }, [slug, session]);
 
   const handlePaymentSuccess = async (data: any) => {
     try {
@@ -268,7 +301,7 @@ export default function BillingPage() {
       <main className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
         <Header />
         <div className="container mx-auto px-4 py-16 flex justify-center items-center">
-          <Loader2 className="w-10 h-10 animate-spin text-halloween-orange" />
+          <Loader2 className="w-10 h-10 animate-spin" style={{ color: "var(--brand-primary)" }} />
         </div>
       </main>
     );
@@ -303,8 +336,11 @@ export default function BillingPage() {
     <main className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
       <Header />
       <div className="container mx-auto px-4 py-16">
-        <div className="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-lg">
-          <h1 className="text-3xl font-bold text-halloween-purple text-center mb-8">
+        <div
+          className="max-w-3xl mx-auto p-8 rounded-lg shadow-lg transition-colors duration-300"
+          style={{ backgroundColor: "var(--card-bg)" }}
+        >
+          <h1 className="text-3xl font-bold text-center mb-8" style={{ color: "var(--text-primary)" }}>
             Complete Your Community Setup
           </h1>
           
@@ -314,11 +350,34 @@ export default function BillingPage() {
               {community.description && (
                 <p className="text-gray-600">{community.description}</p>
               )}
+
+              {/* Show suspension notice if community was suspended */}
+              {communitySuspended && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <div>
+                      <h3 className="text-red-800 font-semibold">Community Suspended</h3>
+                      <p className="text-red-700 text-sm mt-1">
+                        Your community has been suspended due to trial expiration. Subscribe now to reactivate access for all members.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           
-          <div className="bg-orange-50 border-l-4 border-halloween-orange p-4 mb-8">
-            <h3 className="font-bold text-halloween-orange">Subscription Details</h3>
+          <div
+            className="border-l-4 p-4 mb-8 transition-colors duration-300"
+            style={{
+              backgroundColor: "var(--bg-accent)",
+              borderColor: "var(--brand-primary)"
+            }}
+          >
+            <h3 className="font-bold" style={{ color: "var(--brand-primary)" }}>Subscription Details</h3>
             <p className="mt-2">
               Your community subscription costs ₹39/month, but as the admin, you can start with a 14-day free trial.
               After the trial period, your payment method will be automatically charged.
@@ -328,14 +387,17 @@ export default function BillingPage() {
               <div className="mt-4">
                 <div className="flex justify-between text-sm mb-1">
                   <span className="font-semibold">Trial Period</span>
-                  <span className="font-semibold text-halloween-orange">{remainingDays} days remaining</span>
+                  <span className="font-semibold" style={{ color: "var(--brand-primary)" }}>{remainingDays} days remaining</span>
                 </div>
                 {/* Enhanced progress bar with day markers */}
                 <div className="relative pt-1 pb-3">
                   <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div 
-                      className="bg-halloween-orange h-3 rounded-full" 
-                      style={{ width: `${(remainingDays / 14) * 100}%` }}
+                    <div
+                      className="h-3 rounded-full transition-all duration-300"
+                      style={{
+                        width: `${(remainingDays / 14) * 100}%`,
+                        backgroundColor: "var(--brand-primary)"
+                      }}
                     ></div>
                   </div>
                   
@@ -379,9 +441,16 @@ export default function BillingPage() {
           ) : (
             <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
               <div className="w-full md:w-1/2">
-                <div className="card bg-white border border-halloween-orange/20 shadow-halloween p-6 h-full">
+                <div
+                  className="card border p-6 h-full transition-all duration-300 hover:shadow-lg"
+                  style={{
+                    backgroundColor: "var(--card-bg)",
+                    borderColor: "var(--brand-primary)",
+                    boxShadow: "var(--shadow-md)"
+                  }}
+                >
                   <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-bold text-halloween-orange">Start with 14-Day Free Trial</h3>
+                    <h3 className="text-xl font-bold" style={{ color: "var(--brand-primary)" }}>Start with 14-Day Free Trial</h3>
                     <span className="badge bg-blue-100 text-blue-800 border-none">Recommended</span>
                   </div>
                   <p className="mb-6">
@@ -421,11 +490,23 @@ export default function BillingPage() {
                         Cancel Trial
                       </button>
                     </div>
+                  ) : !trialEligible ? (
+                    <div className="space-y-3 mt-auto">
+                      <div className="text-center p-3 bg-orange-50 rounded-lg border border-orange-200">
+                        <p className="text-orange-700 font-medium">Trial Not Available</p>
+                        <p className="text-sm text-orange-600 mt-1">{trialEligibilityReason}</p>
+                      </div>
+                      <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-blue-700 text-sm">
+                          <strong>Subscribe now</strong> to access all premium features
+                        </p>
+                      </div>
+                    </div>
                   ) : (
                     <button
                       onClick={handleSkipPayment}
                       disabled={skipPayment || loading}
-                      className="btn bg-halloween-orange text-white hover:bg-halloween-orange/90 border-none w-full mt-auto"
+                      className="btn bg-primary text-white hover:bg-primary/90 border-none w-full mt-auto"
                     >
                       {skipPayment ? (
                         <span className="loading loading-spinner loading-sm"></span>
@@ -442,8 +523,15 @@ export default function BillingPage() {
               </div>
               
               <div className="w-full md:w-1/2">
-                <div className="card bg-white border border-halloween-orange/20 shadow-halloween p-6 h-full">
-                  <h3 className="text-xl font-bold text-halloween-orange mb-4">Pay Now</h3>
+                <div
+                  className="card border p-6 h-full transition-all duration-300 hover:shadow-lg"
+                  style={{
+                    backgroundColor: "var(--card-bg)",
+                    borderColor: "var(--border-color)",
+                    boxShadow: "var(--shadow-md)"
+                  }}
+                >
+                  <h3 className="text-xl font-bold mb-4" style={{ color: "var(--brand-primary)" }}>Pay Now</h3>
                   <p className="mb-6">
                     Skip the trial and start your subscription immediately. You'll be charged $29/month
                     starting today. Payment will be processed in INR equivalent (approx. ₹2,523).

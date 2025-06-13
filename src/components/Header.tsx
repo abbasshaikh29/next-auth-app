@@ -112,21 +112,28 @@ export default function Header() {
   };
   return (
     <div
-      className="navbar sticky top-0 z-40 shadow-sm border-b border-halloween-purple/10"
-      style={{ backgroundColor: "var(--bg-secondary)" }}
+      className="navbar sticky top-0 z-40 shadow-sm border-b transition-colors duration-300"
+      style={{
+        backgroundColor: "var(--bg-secondary)",
+        borderColor: "var(--border-color)"
+      }}
     >
       <div className="container mx-auto flex items-center justify-between">
         <div className="flex-1 lg:flex-none flex items-center gap-2">
           <Link
             href="/"
-            className="btn btn-ghost text-xl normal-case font-bold text-rose-900 relative group"
+            className="btn btn-ghost text-xl normal-case font-bold relative group transition-colors duration-200"
             prefetch={true}
+            style={{ color: "var(--text-primary)" }}
             onClick={() =>
               showNotification("Welcome to TheTribelab", "success")
             }
           >
             <span className="relative z-10">TheTribelab</span>
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-halloween-orange transition-all duration-300 group-hover:w-full"></span>
+            <span
+              className="absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full"
+              style={{ backgroundColor: "var(--brand-primary)" }}
+            ></span>
           </Link>
 
           {/* Communities Dropdown */}
@@ -137,16 +144,28 @@ export default function Header() {
                 role="button"
                 aria-label="My communities"
                 title="My communities"
-                className="btn btn-ghost btn-sm normal-case flex items-center gap-1 hover:bg-halloween-purple/5 rounded-lg text-halloween-purple"
+                className="btn btn-ghost btn-sm normal-case flex items-center gap-1 rounded-lg transition-colors duration-200"
+                style={{
+                  color: "var(--text-secondary)",
+                  backgroundColor: "transparent"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "var(--hover-bg)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }}
               >
-                <ChevronDown size={20} className="text-halloween-orange" />
+                <ChevronDown size={20} style={{ color: "var(--brand-primary)" }} />
               </div>
               <ul
                 tabIndex={0}
-                className="dropdown-content z-[1] text-lg menu p-2 shadow-halloween rounded-box w-72 border border-halloween-purple/10"
+                className="dropdown-content z-[1] text-lg menu p-2 rounded-box w-72 border transition-all duration-200"
                 style={{
                   backgroundColor: "var(--dropdown-bg)",
                   color: "var(--text-primary)",
+                  borderColor: "var(--border-color)",
+                  boxShadow: "var(--shadow-lg)"
                 }}
               >
                 <li className="">
@@ -238,7 +257,16 @@ export default function Header() {
                 role="button"
                 aria-label="User menu"
                 title="User menu"
-                className="btn btn-ghost btn-circle avatar border-2 border-halloween-purple/10 hover:border-halloween-orange/30 transition-colors duration-300"
+                className="btn btn-ghost btn-circle avatar border-2 transition-colors duration-300"
+                style={{
+                  borderColor: "var(--border-color)"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "var(--brand-primary)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "var(--border-color)";
+                }}
               >
                 {session?.user ? (
                   <ProfileAvatar
@@ -248,7 +276,7 @@ export default function Header() {
                     size="md"
                   />
                 ) : (
-                  <User className="w-5 h-5 text-halloween-purple" />
+                  <User className="w-5 h-5" style={{ color: "var(--text-secondary)" }} />
                 )}
               </div>
               <ul
@@ -272,48 +300,70 @@ export default function Header() {
                     <li>
                       <Link
                         href={"/profile"}
-                        className="px-4 py-2 hover:bg-halloween-purple/5 block w-full text-halloween-purple transition-colors duration-200 group relative"
+                        className="px-4 py-2 block w-full transition-colors duration-200 rounded-lg"
+                        style={{ color: "var(--text-primary)" }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "var(--hover-bg)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                        }}
                         onClick={() =>
                           showNotification("Create your Community", "info")
                         }
                       >
-                        <span className="relative z-10">Profile</span>
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 w-0 h-0 bg-halloween-orange/10 rounded-full transition-all duration-300 group-hover:w-full group-hover:h-full group-hover:left-0"></span>
+                        Profile
                       </Link>
                     </li>
                     <li>
                       <Link
                         href={"/communityform"}
-                        className="px-4 py-2 hover:bg-halloween-purple/5 block w-full text-halloween-purple transition-colors duration-200 group relative"
+                        className="px-4 py-2 block w-full transition-colors duration-200 rounded-lg"
+                        style={{ color: "var(--text-primary)" }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "var(--hover-bg)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                        }}
                         onClick={() =>
                           showNotification("Create your Community", "info")
                         }
                       >
-                        <span className="relative z-10">Create Community</span>
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 w-0 h-0 bg-halloween-orange/10 rounded-full transition-all duration-300 group-hover:w-full group-hover:h-full group-hover:left-0"></span>
+                        Create Community
                       </Link>
                     </li>
                     <li>
                       <Link
                         href={"/UserSettings"}
-                        className="px-4 py-2 hover:bg-halloween-purple/5 block w-full text-halloween-purple transition-colors duration-200 group relative"
+                        className="px-4 py-2 block w-full transition-colors duration-200 rounded-lg"
+                        style={{ color: "var(--text-primary)" }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "var(--hover-bg)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                        }}
                         onClick={() =>
                           showNotification("Going to Settings", "info")
                         }
                       >
-                        <span className="relative z-10">Settings</span>
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 w-0 h-0 bg-halloween-orange/10 rounded-full transition-all duration-300 group-hover:w-full group-hover:h-full group-hover:left-0"></span>
+                        Settings
                       </Link>
                     </li>
-                    <li className="divider my-1 before:bg-halloween-purple/10 after:bg-halloween-purple/10"></li>
+                    <li className="divider my-1" style={{ borderColor: "var(--border-color)" }}></li>
                     <li className="items-center px-4 flex justify-center">
                       <button
                         type="button"
                         onClick={handleSignOut}
-                        className="btn btn-halloween relative overflow-hidden group"
+                        className="btn btn-primary relative overflow-hidden transition-all duration-200"
+                        style={{
+                          backgroundColor: "var(--brand-primary)",
+                          color: "var(--primary-content)",
+                          border: "none"
+                        }}
                       >
-                        <span className="relative z-10">Log Out</span>
-                        <span className="absolute inset-0 bg-halloween-orange opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
+                        Log Out
                       </button>
                     </li>
                   </>
@@ -321,13 +371,19 @@ export default function Header() {
                   <li>
                     <Link
                       href="/login"
-                      className="px-4 py-2 hover:bg-halloween-purple/5 block w-full text-halloween-purple transition-colors duration-200 group relative"
+                      className="px-4 py-2 block w-full transition-colors duration-200 rounded-lg"
+                      style={{ color: "var(--text-primary)" }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "var(--hover-bg)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                      }}
                       onClick={() =>
                         showNotification("Please sign in to continue", "info")
                       }
                     >
-                      <span className="relative z-10">Login</span>
-                      <span className="absolute left-2 top-1/2 -translate-y-1/2 w-0 h-0 bg-halloween-orange/10 rounded-full transition-all duration-300 group-hover:w-full group-hover:h-full group-hover:left-0"></span>
+                      Login
                     </Link>
                   </li>
                 )}

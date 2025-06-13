@@ -19,8 +19,9 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:shadow-md hover:shadow-secondary/20 hover:-translate-y-0.5",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        halloween:
-          "bg-white text-halloween-purple border border-halloween-purple/30 hover:bg-halloween-purple/10 hover:shadow-md hover:shadow-halloween-purple/20 hover:-translate-y-0.5",
+        modern:
+          "bg-white border hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+          + " text-primary border-primary/30 hover:bg-primary/10 hover:shadow-primary/20",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -30,7 +31,7 @@ const buttonVariants = cva(
       },
     },
     defaultVariants: {
-      variant: "halloween",
+      variant: "default",
       size: "default",
     },
   }

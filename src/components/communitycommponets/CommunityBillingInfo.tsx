@@ -240,13 +240,13 @@ export default function CommunityBillingInfo() {
                 
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Trial Period:</span>
-                  <span className="font-semibold text-halloween-orange">{daysRemaining} days remaining</span>
+                  <span className="font-semibold" style={{ color: "var(--brand-primary)" }}>{daysRemaining} days remaining</span>
                 </div>
-                
+
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div 
-                    className="bg-halloween-orange h-2.5 rounded-full" 
-                    style={{ width: `${percentRemaining}%` }}
+                  <div
+                    className="h-2.5 rounded-full"
+                    style={{ width: `${percentRemaining}%`, backgroundColor: "var(--brand-primary)" }}
                   ></div>
                 </div>
                 

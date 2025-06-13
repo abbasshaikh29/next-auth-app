@@ -51,7 +51,16 @@ export interface ICommunity {
     activated: boolean;
     startDate?: Date;
     endDate?: Date;
+    hasUsedTrial?: boolean; // Track if trial was ever used
+    trialUsedAt?: Date; // When trial was first activated
+    cancelled?: boolean; // If trial was cancelled
+    cancelledDate?: Date; // When trial was cancelled
   };
+
+  // Community suspension status
+  suspended?: boolean;
+  suspendedAt?: Date;
+  suspensionReason?: string;
 }
 
 const communitySchema = new Schema<ICommunity>({
@@ -116,8 +125,17 @@ const communitySchema = new Schema<ICommunity>({
   adminTrialInfo: {
     activated: { type: Boolean, default: false },
     startDate: { type: Date },
-    endDate: { type: Date }
-  }
+    endDate: { type: Date },
+    hasUsedTrial: { type: Boolean, default: false },
+    trialUsedAt: { type: Date },
+    cancelled: { type: Boolean, default: false },
+    cancelledDate: { type: Date }
+  },
+
+  // Community suspension status
+  suspended: { type: Boolean, default: false },
+  suspendedAt: { type: Date },
+  suspensionReason: { type: String }
 });
 
 // Function to generate a slug from a name

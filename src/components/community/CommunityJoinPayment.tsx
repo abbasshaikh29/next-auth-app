@@ -53,7 +53,7 @@ const CommunityJoinPayment: React.FC<CommunityJoinPaymentProps> = ({
 
       // Redirect to community page after a short delay
       setTimeout(() => {
-        router.push(`/community/${communitySlug}`);
+        router.push(`/Newcompage/${communitySlug}`);
         router.refresh();
       }, 1500);
     } catch (error) {

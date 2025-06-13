@@ -12,7 +12,7 @@ function Hero() {
   useEffect(() => {
     const detectTheme = () => {
       const theme =
-        document.documentElement.getAttribute("data-theme") || "whiteHalloween";
+        document.documentElement.getAttribute("data-theme") || "light";
       setCurrentTheme(theme);
     };
 
@@ -126,18 +126,33 @@ function Hero() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-var(--header-height,80px)-var(--footer-height,80px))] flex flex-col items-center justify-center relative bg-[#F5F0E8] text-[#1E1B4B] py-10 px-4">
+    <div
+      className="min-h-[calc(100vh-var(--header-height,80px)-var(--footer-height,80px))] flex flex-col items-center justify-center relative py-10 px-4 transition-colors duration-300"
+      style={{
+        backgroundColor: "var(--bg-primary)",
+        color: "var(--text-primary)"
+      }}
+    >
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16 relative">
-          <h1 className="text-9xl font-bold text-black uppercase text-center leading-tight font-thunder">
+          <h1
+            className="text-9xl font-bold uppercase text-center leading-tight font-thunder"
+            style={{ color: "var(--text-primary)" }}
+          >
             Monetize Your Audience,
             <br />
             Build Your <span className="w-auto">{displayedText}</span>
           </h1>
-          <h2 className="text-5xl font-bold text-black uppercase text-center leading-tight font-thunder">
+          <h2
+            className="text-5xl font-bold uppercase text-center leading-tight font-thunder"
+            style={{ color: "var(--text-primary)" }}
+          >
             for creators by creators.
           </h2>
-          <p className="text-neutral text-center font-sans text-xl font-normal mt-4">
+          <p
+            className="text-center font-sans text-xl font-normal mt-4"
+            style={{ color: "var(--text-secondary)" }}
+          >
             For creators, influencers: Build, connect, monetize <br />
             your exclusive community. Your audience, your growth.
           </p>
@@ -145,12 +160,38 @@ function Hero() {
           {/* Buttons Section */}
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/communityform">
-              <button className="btn bg-[#1E1B4B] text-white hover:bg-[#302d69] border-transparent px-8 py-3 rounded-md text-lg font-medium">
+              <button
+                className="btn border-transparent px-8 py-3 rounded-md text-lg font-medium transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+                style={{
+                  backgroundColor: "var(--brand-primary)",
+                  color: "white"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "var(--brand-secondary)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "var(--brand-primary)";
+                }}
+              >
                 Get Started
               </button>
             </Link>
             <Link href="/community-feed">
-              <button className="btn btn-outline border-[#1E1B4B] text-[#1E1B4B] hover:bg-[#1E1B4B] hover:text-white px-8 py-3 rounded-md text-lg font-medium">
+              <button
+                className="btn btn-outline px-8 py-3 rounded-md text-lg font-medium transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+                style={{
+                  borderColor: "var(--brand-primary)",
+                  color: "var(--brand-primary)"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "var(--brand-primary)";
+                  e.currentTarget.style.color = "white";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                  e.currentTarget.style.color = "var(--brand-primary)";
+                }}
+              >
                 Explore
               </button>
             </Link>

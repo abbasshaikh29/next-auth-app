@@ -156,7 +156,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-8">
-        <Loader2 className="w-6 h-6 animate-spin text-halloween-orange" />
+        <Loader2 className="w-6 h-6 animate-spin" style={{ color: "var(--brand-primary)" }} />
       </div>
     );
   }
@@ -172,7 +172,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   if (transactions.length === 0) {
     return (
       <div className="bg-base-200 rounded-lg p-6 text-center">
-        <p className="text-halloween-black/70">No transactions found.</p>
+        <p style={{ color: "var(--text-secondary)" }}>No transactions found.</p>
       </div>
     );
   }
@@ -204,11 +204,11 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                     </span>
                   )}
                   {transaction.communityId && (
-                    <div className="text-sm text-halloween-black/60">
+                    <div className="text-sm" style={{ color: "var(--text-secondary)" }}>
                       Community: {transaction.communityId.name}
                     </div>
                   )}
-                  <div className="text-xs text-halloween-black/50">
+                  <div className="text-xs" style={{ color: "var(--text-muted)" }}>
                     Order ID: {transaction.orderId.substring(0, 10)}...
                   </div>
                 </div>
