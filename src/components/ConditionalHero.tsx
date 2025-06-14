@@ -2,6 +2,6 @@
 import Hero from "./Hero";
 
 export default function ConditionalHero() {
-  // Always use the Halloween Hero
+  // Always use the modern Hero component
   return <Hero />;
 }

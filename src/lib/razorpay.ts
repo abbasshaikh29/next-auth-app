@@ -1,8 +1,23 @@
 import crypto from "crypto";
+import loadEnv from "@/lib/env-loader";
+
+// Load environment variables
+loadEnv();
 
 // Razorpay API keys
 const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
 const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
+
+// Validate configuration at startup
+export function checkRazorpayConfig() {
+  if (!razorpayKeyId || !razorpayKeySecret) {
+    const errorMessage = "Razorpay configuration error: Missing API credentials. " +
+      "Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET environment variables.";
+    console.error(errorMessage);
+    throw new Error(errorMessage);
+  }
+  console.log("Razorpay configuration validated successfully");
+}
 
 /**
  * Create a new Razorpay order using fetch API
@@ -18,15 +33,29 @@ export const createOrder = async (
   receipt?: string,
   notes?: Record<string, string>
 ) => {
+  // Validate configuration on first use
   if (!razorpayKeyId || !razorpayKeySecret) {
-    throw new Error("Razorpay is not configured");
+    const errorMessage = "Razorpay configuration error: Missing API credentials. " +
+      "Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET environment variables.";
+    console.error(errorMessage);
+    console.error("Current RAZORPAY_KEY_ID:", razorpayKeyId ? "***" : "not set");
+    console.error("Current RAZORPAY_KEY_SECRET:", razorpayKeySecret ? "***" : "not set");
+    throw new Error(errorMessage);
+  }
+
+  // Check for dummy/placeholder credentials
+  if (razorpayKeySecret === "thiIsADummyKeySecret123" ||
+      razorpayKeySecret.includes("dummy") ||
+      razorpayKeySecret.includes("placeholder")) {
+    const errorMessage = "Razorpay configuration error: You are using dummy/placeholder credentials. " +
+      "Please replace with your actual Razorpay API credentials from dashboard.razorpay.com";
+    console.error(errorMessage);
+    throw new Error(errorMessage);
   }
 
   try {
     // Create Basic Auth credentials
-    const auth = Buffer.from(`${razorpayKeyId}:${razorpayKeySecret}`).toString(
-      "base64"
-    );
+    const auth = Buffer.from(`${razorpayKeyId}:${razorpayKeySecret}`).toString("base64");
 
     // Prepare request body
     const requestBody = {
@@ -48,9 +77,26 @@ export const createOrder = async (
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(
-        `Razorpay API error: ${errorData.error?.description || "Unknown error"}`
-      );
+      console.error("Razorpay API Error Details:", {
+        status: response.status,
+        statusText: response.statusText,
+        errorData,
+        keyId: razorpayKeyId,
+        keySecretLength: razorpayKeySecret?.length
+      });
+
+      // Provide specific error messages for common issues
+      let errorMessage = `Razorpay API error: ${errorData.error?.description || "Unknown error"}`;
+
+      if (response.status === 401) {
+        errorMessage += "\n\nThis is an authentication error. Please check:\n" +
+          "1. Your RAZORPAY_KEY_ID is correct\n" +
+          "2. Your RAZORPAY_KEY_SECRET is correct\n" +
+          "3. You're not using dummy/placeholder credentials\n" +
+          "4. Your credentials are from the correct environment (test/live)";
+      }
+
+      throw new Error(errorMessage);
     }
 
     const order = await response.json();

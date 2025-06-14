@@ -6,19 +6,14 @@ import React, { useEffect } from "react";
 function Course() {
   // Force the correct background color for this page
   useEffect(() => {
-    // Get the current theme
-    const currentTheme = document.documentElement.getAttribute("data-theme") || "whiteHalloween";
-    
-    // Apply the correct background color based on theme
-    if (currentTheme === "halloween") {
-      document.body.style.backgroundColor = "#2b2b2e"; // Dark theme background from CSS variables
-    } else {
-      document.body.style.backgroundColor = "#f5f5ee"; // Light theme background
-    }
-    
+    // Apply the background color using CSS variables
+    document.body.style.backgroundColor = "var(--bg-primary)";
+    document.body.style.color = "var(--text-primary)";
+
     // Cleanup function to remove the style when component unmounts
     return () => {
       document.body.style.removeProperty("backgroundColor");
+      document.body.style.removeProperty("color");
     };
   }, []);
 

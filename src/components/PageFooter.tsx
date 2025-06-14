@@ -15,25 +15,53 @@ const PageFooter: React.FC<PageFooterProps> = ({ className = '' }) => {
           <div className="flex items-center gap-6 text-gray-600">
             <Link
               href="/community"
-              className="hover:text-halloween-purple transition-colors"
+              className="transition-colors hover:opacity-80"
+              style={{ color: "var(--text-secondary)" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = "var(--brand-primary)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = "var(--text-secondary)";
+              }}
             >
               Community
             </Link>
             <Link
               href="/affiliates"
-              className="hover:text-halloween-purple transition-colors"
+              className="transition-colors hover:opacity-80"
+              style={{ color: "var(--text-secondary)" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = "var(--brand-primary)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = "var(--text-secondary)";
+              }}
             >
               Affiliates
             </Link>
             <Link
               href="/support"
-              className="hover:text-halloween-purple transition-colors"
+              className="transition-colors hover:opacity-80"
+              style={{ color: "var(--text-secondary)" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = "var(--brand-primary)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = "var(--text-secondary)";
+              }}
             >
               Support
             </Link>
             <Link
               href="/careers"
-              className="hover:text-halloween-purple transition-colors"
+              className="transition-colors hover:opacity-80"
+              style={{ color: "var(--text-secondary)" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = "var(--brand-primary)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = "var(--text-secondary)";
+              }}
             >
               Careers
             </Link>

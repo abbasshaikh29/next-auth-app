@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update transaction status
-    transaction.status = "completed";
+    transaction.status = "captured";
     transaction.paymentId = paymentId;
     transaction.paymentDetails = paymentDetails;
     await transaction.save();

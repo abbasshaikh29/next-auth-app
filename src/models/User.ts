@@ -20,6 +20,13 @@ interface PaymentSettings {
   subscriptionStatus?: "active" | "canceled" | "past_due" | "unpaid" | "trial";
   subscriptionEndDate?: Date;
   enablePayments?: boolean; // For community admins to enable/disable payments
+  // Trial history tracking
+  trialHistory?: {
+    hasUsedTrial: boolean;
+    trialStartDate?: Date;
+    trialEndDate?: Date;
+    trialUsedAt?: Date;
+  };
 }
 
 export interface IUser {
@@ -85,6 +92,13 @@ const userSchema = new mongoose.Schema<IUser>(
       },
       subscriptionEndDate: { type: Date },
       enablePayments: { type: Boolean, default: false },
+      // Trial history tracking
+      trialHistory: {
+        hasUsedTrial: { type: Boolean, default: false },
+        trialStartDate: { type: Date },
+        trialEndDate: { type: Date },
+        trialUsedAt: { type: Date },
+      },
     },
     community: [{ type: Schema.Types.ObjectId, ref: "Community" }],
     followedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],

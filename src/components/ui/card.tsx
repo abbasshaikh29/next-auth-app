@@ -9,16 +9,17 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "card border shadow-halloween rounded-box w-full relative overflow-hidden",
+      "card border rounded-box w-full relative overflow-hidden transition-all duration-200 hover:shadow-lg",
       className
     )}
-    style={{ backgroundColor: "var(--card-bg)", color: "var(--text-primary)", borderColor: "var(--card-border)" }}
+    style={{
+      backgroundColor: "var(--card-bg)",
+      color: "var(--text-primary)",
+      borderColor: "var(--card-border)",
+      boxShadow: "var(--shadow-md)"
+    }}
     {...props}
   >
-    {/* Subtle Halloween corner decoration */}
-    <div className="absolute top-0 right-0 w-16 h-16 overflow-hidden">
-      <div className="absolute top-0 right-0 w-4 h-4 bg-halloween-orange opacity-10 rounded-full"></div>
-    </div>
     {props.children}
   </div>
 ));

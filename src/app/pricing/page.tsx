@@ -32,21 +32,21 @@ export default function PricingPage() {
     <main className="min-h-screen">
       <Header />
 
-      <div className="bg-white py-16 relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-halloween-purple via-halloween-orange to-halloween-green opacity-30"></div>
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-halloween-orange opacity-5 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-halloween-purple opacity-5 rounded-full blur-3xl"></div>
+      <div className="py-16 relative overflow-hidden transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)" }}>
+        {/* Modern decorative elements */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r opacity-30" style={{ backgroundImage: "linear-gradient(to right, var(--brand-primary), var(--brand-secondary), var(--brand-accent))" }}></div>
+        <div className="absolute -top-10 -right-10 w-40 h-40 opacity-5 rounded-full blur-3xl" style={{ backgroundColor: "var(--brand-primary)" }}></div>
+        <div className="absolute -bottom-20 -left-20 w-60 h-60 opacity-5 rounded-full blur-3xl" style={{ backgroundColor: "var(--brand-secondary)" }}></div>
 
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <span className="inline-block px-4 py-1 bg-halloween-orange/10 text-halloween-orange rounded-full text-sm font-medium mb-4">
-              🎃 Halloween Special Offer
+            <span className="inline-block px-4 py-1 rounded-full text-sm font-medium mb-4" style={{ backgroundColor: "var(--brand-primary)", color: "white", opacity: 0.9 }}>
+              ✨ Professional Community Platform
             </span>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 text-halloween-purple">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6" style={{ color: "var(--text-primary)" }}>
               Simple, Transparent Pricing
             </h1>
-            <p className="text-lg text-halloween-black/70 max-w-2xl mx-auto mb-8">
+            <p className="text-lg max-w-2xl mx-auto mb-8" style={{ color: "var(--text-secondary)" }}>
               Everything you need to build and grow your community at an
               affordable price.
             </p>
@@ -68,77 +68,77 @@ export default function PricingPage() {
           <div className="flex flex-col lg:flex-row gap-8 mb-16">
             {/* Our Plan */}
             <div className="flex-1">
-              <div className="card bg-white border border-halloween-orange/20 shadow-halloween hover:shadow-lg transition-all duration-300 overflow-hidden h-full">
-                <div className="absolute top-0 left-0 w-full h-1 bg-halloween-orange opacity-50"></div>
+              <div className="card border hover:shadow-lg transition-all duration-300 overflow-hidden h-full" style={{ backgroundColor: "var(--card-bg)", borderColor: "var(--brand-primary)", opacity: 0.8 }}>
+                <div className="absolute top-0 left-0 w-full h-1 opacity-70" style={{ backgroundColor: "var(--brand-primary)" }}></div>
                 <div className="card-body p-8">
                   <div className="flex justify-between items-start">
-                    <h3 className="card-title text-2xl font-bold text-halloween-orange">
+                    <h3 className="card-title text-2xl font-bold" style={{ color: "var(--brand-primary)" }}>
                       TheTribelab Premium
                     </h3>
-                    <div className="badge badge-lg bg-halloween-orange/10 text-halloween-orange border-halloween-orange/20">
+                    <div className="badge badge-lg" style={{ backgroundColor: "var(--brand-primary)", color: "white", opacity: 0.9 }}>
                       Best Value
                     </div>
                   </div>
                   <div className="mt-4 mb-6">
-                    <span className="text-5xl font-bold text-halloween-black">
+                    <span className="text-5xl font-bold" style={{ color: "var(--text-primary)" }}>
                       $29
                     </span>
-                    <span className="text-halloween-black/60">/month</span>
-                    <p className="text-sm text-halloween-black/60 mt-2">
+                    <span style={{ color: "var(--text-secondary)" }}>/month</span>
+                    <p className="text-sm mt-2" style={{ color: "var(--text-secondary)" }}>
                       Billed monthly. No contracts, cancel anytime.
                     </p>
-                    <div className="mt-2 bg-halloween-orange/10 text-halloween-orange px-3 py-2 rounded-md text-sm font-medium">
+                    <div className="mt-2 px-3 py-2 rounded-md text-sm font-medium" style={{ backgroundColor: "var(--brand-primary)", color: "white", opacity: 0.9 }}>
                       Start with a 14-day free trial. No payment required.
                     </div>
                   </div>
                   <ul className="space-y-4 mb-8">
                     <li className="flex items-start gap-2">
-                      <span className="w-5 h-5 mt-0.5 rounded-full bg-halloween-orange/10 flex items-center justify-center text-halloween-orange flex-shrink-0">
+                      <span className="w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-primary)", color: "white", opacity: 0.9 }}>
                         <Check className="w-3 h-3" />
                       </span>
-                      <span>Unlimited members</span>
+                      <span style={{ color: "var(--text-primary)" }}>Unlimited members</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-5 h-5 mt-0.5 rounded-full bg-halloween-orange/10 flex items-center justify-center text-halloween-orange flex-shrink-0">
+                      <span className="w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-primary)", color: "white", opacity: 0.9 }}>
                         <Check className="w-3 h-3" />
                       </span>
-                      <span>Advanced analytics and reporting</span>
+                      <span style={{ color: "var(--text-primary)" }}>Advanced analytics and reporting</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-5 h-5 mt-0.5 rounded-full bg-halloween-orange/10 flex items-center justify-center text-halloween-orange flex-shrink-0">
+                      <span className="w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-primary)", color: "white", opacity: 0.9 }}>
                         <Check className="w-3 h-3" />
                       </span>
-                      <span>Custom branding and white-labeling</span>
+                      <span style={{ color: "var(--text-primary)" }}>Custom branding and white-labeling</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-5 h-5 mt-0.5 rounded-full bg-halloween-orange/10 flex items-center justify-center text-halloween-orange flex-shrink-0">
+                      <span className="w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-primary)", color: "white", opacity: 0.9 }}>
                         <Check className="w-3 h-3" />
                       </span>
-                      <span>Priority support (24/7 response time)</span>
+                      <span style={{ color: "var(--text-primary)" }}>Priority support (24/7 response time)</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-5 h-5 mt-0.5 rounded-full bg-halloween-orange/10 flex items-center justify-center text-halloween-orange flex-shrink-0">
+                      <span className="w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-primary)", color: "white", opacity: 0.9 }}>
                         <Check className="w-3 h-3" />
                       </span>
-                      <span>Community forums and discussion boards</span>
+                      <span style={{ color: "var(--text-primary)" }}>Community forums and discussion boards</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-5 h-5 mt-0.5 rounded-full bg-halloween-orange/10 flex items-center justify-center text-halloween-orange flex-shrink-0">
+                      <span className="w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-primary)", color: "white", opacity: 0.9 }}>
                         <Check className="w-3 h-3" />
                       </span>
-                      <span>Live streaming and video hosting</span>
+                      <span style={{ color: "var(--text-primary)" }}>Live streaming and video hosting</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-5 h-5 mt-0.5 rounded-full bg-halloween-orange/10 flex items-center justify-center text-halloween-orange flex-shrink-0">
+                      <span className="w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-primary)", color: "white", opacity: 0.9 }}>
                         <Check className="w-3 h-3" />
                       </span>
-                      <span>Course creation and management</span>
+                      <span style={{ color: "var(--text-primary)" }}>Course creation and management</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-5 h-5 mt-0.5 rounded-full bg-halloween-orange/10 flex items-center justify-center text-halloween-orange flex-shrink-0">
+                      <span className="w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-primary)", color: "white", opacity: 0.9 }}>
                         <Check className="w-3 h-3" />
                       </span>
-                      <span>
+                      <span style={{ color: "var(--text-primary)" }}>
                         Monetization tools (subscriptions, one-time payments)
                       </span>
                     </li>
@@ -148,11 +148,11 @@ export default function PricingPage() {
                       <>
                         <StartTrialButton
                           buttonText="Start 14-Day Free Trial"
-                          className="btn bg-halloween-green text-white hover:bg-halloween-green/90 w-full border-none hover:shadow-md hover:shadow-halloween-green/20 hover:-translate-y-0.5 transition-all duration-300"
+                          className="btn bg-success text-white hover:bg-success/90 w-full border-none hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
                           onSuccess={handlePaymentSuccess}
                           onError={handlePaymentError}
                         />
-                        <div className="text-center text-sm text-halloween-black/60">
+                        <div className="text-center text-sm" style={{ color: "var(--text-secondary)" }}>
                           or
                         </div>
                         <RazorpayCheckout
@@ -168,7 +168,7 @@ export default function PricingPage() {
                       <Link href="/api/auth/signin" className="w-full">
                         <button
                           type="button"
-                          className="btn bg-halloween-orange text-white hover:bg-halloween-orange/90 w-full border-none hover:shadow-md hover:shadow-halloween-orange/20 hover:-translate-y-0.5 transition-all duration-300"
+                          className="btn bg-primary text-white hover:bg-primary/90 w-full border-none hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
                         >
                           Sign In to Get Started
                         </button>
@@ -269,7 +269,7 @@ export default function PricingPage() {
 
           {/* Comparison Table */}
           <div className="mt-16">
-            <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 text-halloween-purple">
+            <h2 className="text-2xl md:text-3xl font-bold text-center mb-8" style={{ color: "var(--text-primary)" }}>
               Feature Comparison
             </h2>
             <div className="overflow-x-auto">
@@ -277,7 +277,7 @@ export default function PricingPage() {
                 <thead>
                   <tr className="bg-base-200">
                     <th className="text-left p-4 border-b">Feature</th>
-                    <th className="text-center p-4 border-b text-halloween-orange">
+                    <th className="text-center p-4 border-b" style={{ color: "var(--brand-primary)" }}>
                       TheTribelab ($29/mo)
                     </th>
                     <th className="text-center p-4 border-b text-neutral-600">
@@ -288,7 +288,7 @@ export default function PricingPage() {
                 <tbody>
                   <tr className="hover:bg-base-100">
                     <td className="p-4 border-b">Unlimited Members</td>
-                    <td className="text-center p-4 border-b text-halloween-orange">
+                    <td className="text-center p-4 border-b" style={{ color: "var(--brand-primary)" }}>
                       <Check className="w-5 h-5 mx-auto" />
                     </td>
                     <td className="text-center p-4 border-b text-neutral-600">
@@ -297,7 +297,7 @@ export default function PricingPage() {
                   </tr>
                   <tr className="hover:bg-base-100">
                     <td className="p-4 border-b">Advanced Analytics</td>
-                    <td className="text-center p-4 border-b text-halloween-orange">
+                    <td className="text-center p-4 border-b" style={{ color: "var(--brand-primary)" }}>
                       <Check className="w-5 h-5 mx-auto" />
                     </td>
                     <td className="text-center p-4 border-b text-neutral-600">
@@ -306,7 +306,7 @@ export default function PricingPage() {
                   </tr>
                   <tr className="hover:bg-base-100">
                     <td className="p-4 border-b">Custom Branding</td>
-                    <td className="text-center p-4 border-b text-halloween-orange">
+                    <td className="text-center p-4 border-b" style={{ color: "var(--brand-primary)" }}>
                       <Check className="w-5 h-5 mx-auto" />
                     </td>
                     <td className="text-center p-4 border-b text-neutral-600">
@@ -315,7 +315,7 @@ export default function PricingPage() {
                   </tr>
                   <tr className="hover:bg-base-100">
                     <td className="p-4 border-b">Priority Support</td>
-                    <td className="text-center p-4 border-b text-halloween-orange">
+                    <td className="text-center p-4 border-b" style={{ color: "var(--brand-primary)" }}>
                       <Check className="w-5 h-5 mx-auto" />
                     </td>
                     <td className="text-center p-4 border-b text-neutral-600">
@@ -324,7 +324,7 @@ export default function PricingPage() {
                   </tr>
                   <tr className="hover:bg-base-100">
                     <td className="p-4 border-b">Live Streaming</td>
-                    <td className="text-center p-4 border-b text-halloween-orange">
+                    <td className="text-center p-4 border-b" style={{ color: "var(--brand-primary)" }}>
                       <Check className="w-5 h-5 mx-auto" />
                     </td>
                     <td className="text-center p-4 border-b text-neutral-600">
@@ -333,7 +333,7 @@ export default function PricingPage() {
                   </tr>
                   <tr className="hover:bg-base-100">
                     <td className="p-4 border-b">Monetization Tools</td>
-                    <td className="text-center p-4 border-b text-halloween-orange">
+                    <td className="text-center p-4 border-b" style={{ color: "var(--brand-primary)" }}>
                       <Check className="w-5 h-5 mx-auto" />
                     </td>
                     <td className="text-center p-4 border-b text-neutral-600">
@@ -342,7 +342,7 @@ export default function PricingPage() {
                   </tr>
                   <tr className="hover:bg-base-100">
                     <td className="p-4 border-b">Monthly Price</td>
-                    <td className="text-center p-4 border-b font-bold text-halloween-orange">
+                    <td className="text-center p-4 border-b font-bold" style={{ color: "var(--brand-primary)" }}>
                       $29
                     </td>
                     <td className="text-center p-4 border-b font-bold text-neutral-600">
@@ -351,7 +351,7 @@ export default function PricingPage() {
                   </tr>
                   <tr className="hover:bg-base-100">
                     <td className="p-4 border-b">Annual Savings</td>
-                    <td className="text-center p-4 border-b font-bold text-halloween-orange">
+                    <td className="text-center p-4 border-b font-bold" style={{ color: "var(--brand-primary)" }}>
                       $348/year
                     </td>
                     <td className="text-center p-4 border-b text-neutral-600">
@@ -365,42 +365,70 @@ export default function PricingPage() {
 
           {/* FAQ Section */}
           <div className="mt-16">
-            <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 text-halloween-purple">
+            <h2 className="text-2xl md:text-3xl font-bold text-center mb-8" style={{ color: "var(--text-primary)" }}>
               Frequently Asked Questions
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="card bg-white border border-halloween-purple/10 shadow-halloween p-6">
-                <h3 className="text-xl font-bold mb-2 text-halloween-purple">
+              <div
+                className="card border p-6 transition-all duration-300"
+                style={{
+                  backgroundColor: "var(--card-bg)",
+                  borderColor: "var(--border-color)",
+                  boxShadow: "var(--shadow-md)"
+                }}
+              >
+                <h3 className="text-xl font-bold mb-2" style={{ color: "var(--brand-primary)" }}>
                   Can I cancel anytime?
                 </h3>
-                <p>
+                <p style={{ color: "var(--text-secondary)" }}>
                   Yes, you can cancel your subscription at any time. There are
                   no long-term contracts or commitments.
                 </p>
               </div>
-              <div className="card bg-white border border-halloween-purple/10 shadow-halloween p-6">
-                <h3 className="text-xl font-bold mb-2 text-halloween-purple">
+              <div
+                className="card border p-6 transition-all duration-300"
+                style={{
+                  backgroundColor: "var(--card-bg)",
+                  borderColor: "var(--border-color)",
+                  boxShadow: "var(--shadow-md)"
+                }}
+              >
+                <h3 className="text-xl font-bold mb-2" style={{ color: "var(--brand-primary)" }}>
                   Is there a free trial?
                 </h3>
-                <p>
+                <p style={{ color: "var(--text-secondary)" }}>
                   We offer a 14-day free trial so you can test all premium
                   features before committing.
                 </p>
               </div>
-              <div className="card bg-white border border-halloween-purple/10 shadow-halloween p-6">
-                <h3 className="text-xl font-bold mb-2 text-halloween-purple">
+              <div
+                className="card border p-6 transition-all duration-300"
+                style={{
+                  backgroundColor: "var(--card-bg)",
+                  borderColor: "var(--border-color)",
+                  boxShadow: "var(--shadow-md)"
+                }}
+              >
+                <h3 className="text-xl font-bold mb-2" style={{ color: "var(--brand-primary)" }}>
                   Do you offer refunds?
                 </h3>
-                <p>
+                <p style={{ color: "var(--text-secondary)" }}>
                   We offer a 30-day money-back guarantee if you're not satisfied
                   with our service.
                 </p>
               </div>
-              <div className="card bg-white border border-halloween-purple/10 shadow-halloween p-6">
-                <h3 className="text-xl font-bold mb-2 text-halloween-purple">
+              <div
+                className="card border p-6 transition-all duration-300"
+                style={{
+                  backgroundColor: "var(--card-bg)",
+                  borderColor: "var(--border-color)",
+                  boxShadow: "var(--shadow-md)"
+                }}
+              >
+                <h3 className="text-xl font-bold mb-2" style={{ color: "var(--brand-primary)" }}>
                   Are there any hidden fees?
                 </h3>
-                <p>
+                <p style={{ color: "var(--text-secondary)" }}>
                   No hidden fees. The price you see is the price you pay. All
                   features are included in the $29/month plan.
                 </p>
@@ -410,17 +438,17 @@ export default function PricingPage() {
 
           {/* CTA Section */}
           <div className="mt-16 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-halloween-purple">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>
               Ready to Build Your Community?
             </h2>
-            <p className="text-lg text-halloween-black/70 max-w-2xl mx-auto mb-8">
+            <p className="text-lg max-w-2xl mx-auto mb-8" style={{ color: "var(--text-secondary)" }}>
               Get started with a 14-day free trial. No credit card required.
             </p>
             {session ? (
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <StartTrialButton
                   buttonText="Start Free Trial"
-                  className="btn bg-halloween-green text-white hover:bg-halloween-green/90 px-8 py-3 text-lg border-none hover:shadow-md hover:shadow-halloween-green/20 hover:-translate-y-0.5 transition-all duration-300"
+                  className="btn bg-success text-white hover:bg-success/90 px-8 py-3 text-lg border-none hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
                   onSuccess={handlePaymentSuccess}
                   onError={handlePaymentError}
                 />
@@ -437,7 +465,7 @@ export default function PricingPage() {
               <Link href="/api/auth/signin">
                 <button
                   type="button"
-                  className="btn bg-halloween-orange text-white hover:bg-halloween-orange/90 px-8 py-3 text-lg border-none hover:shadow-md hover:shadow-halloween-orange/20 hover:-translate-y-0.5 transition-all duration-300"
+                  className="btn bg-primary text-white hover:bg-primary/90 px-8 py-3 text-lg border-none hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
                 >
                   Sign In to Get Started
                 </button>

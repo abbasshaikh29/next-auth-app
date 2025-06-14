@@ -9,22 +9,34 @@ export async function GET(request: NextRequest) {
     // Verify the secret key
     const authHeader = request.headers.get('authorization');
     const providedSecret = authHeader?.split(' ')[1];
-    
+
     if (!providedSecret || providedSecret !== CRON_SECRET) {
       console.error('Unauthorized access attempt to cron endpoint');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
-    console.log('Starting trial expiration check...');
-    
-    // Run the trial expiration check
+
+    console.log('Starting comprehensive trial expiration check...');
+
+    // Run the comprehensive trial expiration check
     const result = await checkTrialExpirations();
-    
-    return NextResponse.json(result);
+
+    console.log('Trial expiration check completed:', result);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Trial expiration check completed successfully',
+      details: result,
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
     console.error('Error in trial expiration check endpoint:', error);
     return NextResponse.json(
-      { error: 'Internal server error', message: error instanceof Error ? error.message : String(error) },
+      {
+        success: false,
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }

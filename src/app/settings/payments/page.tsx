@@ -89,19 +89,19 @@ export default function PaymentHistoryPage() {
         {/* Payout Settings Section */}
         {activeTab === "incoming" && (
           <div className="mt-12">
-            <h2 className="text-2xl font-bold mb-6 text-halloween-purple">
+            <h2 className="text-2xl font-bold mb-6" style={{ color: "var(--text-primary)" }}>
               Payout Settings
             </h2>
-            
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <p className="text-center text-halloween-black/70">
+
+            <div className="rounded-lg shadow-lg p-6" style={{ backgroundColor: "var(--card-bg)" }}>
+              <p className="text-center" style={{ color: "var(--text-secondary)" }}>
                 Configure your payout settings to receive payments from your community members.
               </p>
-              
+
               <div className="mt-6 text-center">
                 <button
                   type="button"
-                  className="btn bg-halloween-orange text-white hover:bg-halloween-orange/90 border-none"
+                  className="btn bg-primary text-white hover:bg-primary/90 border-none"
                 >
                   Set Up Payouts
                 </button>
