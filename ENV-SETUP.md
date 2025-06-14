@@ -86,3 +86,14 @@ NODE_ENV=production npm run dev
 2. Keep your production credentials secure
 3. Rotate your API keys periodically
 4. Use different databases for development and production
+
+## Razorpay Configuration
+
+To enable Razorpay payments, you must set the following environment variables:
+
+- `RAZORPAY_KEY_ID`: Your Razorpay API key ID
+- `RAZORPAY_KEY_SECRET`: Your Razorpay API key secret
+
+You can obtain these credentials from your Razorpay dashboard.
+
+If these variables are not set, the application will throw an error on startup and when attempting to create orders.

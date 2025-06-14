@@ -9,6 +9,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Razorpay Modal Fixes */
+.razorpay-container {
+  z-index: 999999 !important;
+}
+
+.razorpay-backdrop {
+  z-index: 999998 !important;
+}
+
+/* Ensure Razorpay iframe is visible when modal is open */
+iframe.razorpay-checkout-frame {
+  z-index: 999999 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Ensure Razorpay elements have proper z-index */
+[class*="razorpay"] {
+  z-index: 999999 !important;
+}
+
 body {
   font-family: var(--font-poppins), Arial, Helvetica, sans-serif;
 }

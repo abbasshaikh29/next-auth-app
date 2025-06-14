@@ -52,9 +52,19 @@ const PaymentPlanCard: React.FC<PaymentPlanProps> = ({
   };
 
   return (
-    <div className="card bg-white border border-halloween-orange/20 shadow-halloween hover:shadow-lg transition-all duration-300 overflow-hidden h-full">
+    <div
+      className="card border hover:shadow-lg transition-all duration-300 overflow-hidden h-full"
+      style={{
+        backgroundColor: "var(--card-bg)",
+        borderColor: isPopular ? "var(--brand-primary)" : "var(--border-color)",
+        boxShadow: "var(--shadow-md)"
+      }}
+    >
       {isPopular && (
-        <div className="absolute top-0 left-0 w-full h-1 bg-halloween-orange opacity-50"></div>
+        <div
+          className="absolute top-0 left-0 w-full h-1 opacity-70"
+          style={{ backgroundColor: "var(--brand-primary)" }}
+        ></div>
       )}
       <div className="card-body p-8">
         <div className="flex justify-between items-start">

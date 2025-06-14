@@ -7,10 +7,18 @@ import { PaymentPlan } from "@/models/PaymentPlan";
 import { User } from "@/models/User";
 import { Community } from "@/models/Community";
 import mongoose from "mongoose";
+import loadEnv from "@/lib/env-loader";
+
+// Load environment variables
+loadEnv();
 
 // POST /api/payments/create-order - Create a new Razorpay order
 export async function POST(request: NextRequest) {
   try {
+    // Debug: Log environment variables
+    console.log("RAZORPAY_KEY_ID:", process.env.RAZORPAY_KEY_ID ? "***" : "not set");
+    console.log("RAZORPAY_KEY_SECRET:", process.env.RAZORPAY_KEY_SECRET ? "***" : "not set");
+
     const session = await getServerSession();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

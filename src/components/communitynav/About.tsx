@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import type { ICommunity } from "@/models/Community";
 import { IUser } from "@/models/User";
 import { useSession } from "next-auth/react";
+import { useSettingsModal } from "@/components/modals/SettingsModalProvider";
 import CommunityJoinForm from "../CommunityJoinForm";
 import Link from "next/link";
 import {
@@ -122,6 +123,7 @@ async function getCommunity(slug: string): Promise<{
 
 function About({ slug }: AboutProps) {
   const { data: session } = useSession();
+  const { openCommunitySettings } = useSettingsModal();
   const [communityData, setCommunityData] = useState<{
     community: ICommunity | null;
     admin: IUser | null;
@@ -318,12 +320,13 @@ function About({ slug }: AboutProps) {
           <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-4">
             Admin Options
           </h2>
-          <Link
-            href={`/Newcompage/${slug}/communitysetting?t=AdminPanel`}
+          <button
+            type="button"
             className="btn btn-sm sm:btn-md btn-primary"
+            onClick={() => openCommunitySettings(slug, "AdminPanel")}
           >
             Go to Admin Panel
-          </Link>
+          </button>
         </div>
       )}
 

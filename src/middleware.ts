@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { checkTrialStatus } from "./middleware/trial-check";
+import { checkCommunityAccess, createSuspendedCommunityResponse } from "./middleware/community-access-check";
 
 // This middleware runs in the Edge Runtime and doesn't use any Node.js features
 
@@ -58,21 +59,35 @@ export async function middleware(request: NextRequest) {
     try {
       // Get the user token to extract the user ID
       const token = await getToken({ req: request });
-      
+
       if (!token || !token.sub) {
         return NextResponse.next();
       }
-      
-      // Check if the user has an active trial or payment
+
+      // First check if community is suspended or accessible
+      const accessCheck = await checkCommunityAccess(request, communitySlug);
+
+      if (!accessCheck.allowed) {
+        if (accessCheck.reason?.includes('suspended')) {
+          // Return suspended community page
+          return createSuspendedCommunityResponse(request, communitySlug, accessCheck.reason);
+        } else if (accessCheck.redirectUrl) {
+          // Redirect to billing page
+          console.log(`Redirecting user ${token.sub} to ${accessCheck.redirectUrl} - ${accessCheck.reason}`);
+          return NextResponse.redirect(new URL(accessCheck.redirectUrl, request.url));
+        }
+      }
+
+      // Legacy check for backward compatibility
       const hasActiveTrialOrPayment = await checkTrialStatus(request, token.sub, communitySlug);
-      
+
       if (!hasActiveTrialOrPayment) {
         // Redirect to billing page if no active trial or payment
         console.log(`Redirecting user ${token.sub} to billing page for community ${communitySlug} - no active trial`);
         return NextResponse.redirect(new URL(`/billing/${communitySlug}`, request.url));
       }
     } catch (error) {
-      console.error('Error in trial check middleware:', error);
+      console.error('Error in community access middleware:', error);
       // In case of error, allow access (fail open)
       return NextResponse.next();
     }

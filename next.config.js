@@ -111,7 +111,7 @@ const nextConfig = {
     minimumCacheTTL: 60,
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    contentSecurityPolicy: "default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://*.razorpay.com; frame-src https://checkout.razorpay.com https://*.razorpay.com; connect-src 'self' https://*.razorpay.com;",
   },
   // Enable strict mode for better development experience
   reactStrictMode: true,
@@ -126,10 +126,6 @@ const nextConfig = {
           {
             key: "Cross-Origin-Opener-Policy",
             value: "same-origin-allow-popups",
-          },
-          {
-            key: "Cross-Origin-Embedder-Policy",
-            value: "credentialless",
           },
           {
             key: "Cross-Origin-Resource-Policy",

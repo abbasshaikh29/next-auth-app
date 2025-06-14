@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth-helpers";
 import { dbconnect } from "@/lib/db";
 import { User } from "@/models/User";
+import { checkTrialEligibility, activateTrial } from "@/lib/trial-service";
 
-// POST /api/payments/start-trial - Start a 14-day free trial
+// POST /api/payments/start-trial - Start a 14-day free trial (User-level trial)
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession();
@@ -13,46 +14,47 @@ export async function POST(request: NextRequest) {
 
     await dbconnect();
 
-    // Find the user
-    const user = await User.findById(session.user.id);
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    // Get client IP and user agent for fraud detection
+    const ipAddress = request.headers.get('x-forwarded-for') ||
+                     request.headers.get('x-real-ip') ||
+                     'unknown';
+    const userAgent = request.headers.get('user-agent') || 'unknown';
 
-    // Check if user already has an active subscription or trial
-    if (
-      user.paymentSettings?.subscriptionStatus === "active" ||
-      user.paymentSettings?.subscriptionStatus === "trial"
-    ) {
+    // Check trial eligibility using the secure trial service
+    const eligibility = await checkTrialEligibility(session.user.id, "user");
+
+    if (!eligibility.eligible) {
       return NextResponse.json(
-        { error: "User already has an active subscription or trial" },
+        { error: eligibility.reason },
         { status: 400 }
       );
     }
 
-    // Initialize payment settings if they don't exist
-    if (!user.paymentSettings) {
-      user.paymentSettings = {};
+    // Activate trial using the secure trial service
+    const result = await activateTrial(
+      session.user.id,
+      "user",
+      undefined, // No community ID for user trials
+      ipAddress,
+      userAgent
+    );
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error },
+        { status: 400 }
+      );
     }
 
-    // Set subscription status to trial
-    user.paymentSettings.subscriptionStatus = "trial";
-
-    // Calculate trial end date (14 days from now)
-    const trialEndDate = new Date();
-    trialEndDate.setDate(trialEndDate.getDate() + 14);
-    user.paymentSettings.subscriptionEndDate = trialEndDate;
-
-    // Set user role to admin during trial
-    user.role = "admin";
-
-    // Save the user
-    await user.save();
+    console.log('User trial activated successfully:', {
+      userId: session.user.id,
+      trialEndDate: result.trialEndDate
+    });
 
     return NextResponse.json({
       success: true,
-      message: "Free trial started successfully",
-      trialEndDate: trialEndDate,
+      message: "Free trial started successfully. This is your one-time trial - make the most of it!",
+      trialEndDate: result.trialEndDate,
       daysRemaining: 14,
     });
   } catch (error) {
