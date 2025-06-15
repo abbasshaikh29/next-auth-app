@@ -15,6 +15,9 @@ import { useNotification } from "@/components/Notification";
 const CommunityAboutcard = lazy(
   () => import("@/components/communitycommponets/CommunityAboutcard")
 );
+const CompactLeaderboard = lazy(
+  () => import("@/components/gamification/CompactLeaderboard")
+);
 const CreatePost = lazy(() =>
   import("@/components/postcommponets/Createpost").then((mod) => ({
     default: mod.CreatePost,
@@ -645,11 +648,23 @@ export default function HomeIdPage() {
               </div>
 
               {/* About card - Hidden on mobile, visible on large screens */}
-              <div className="hidden lg:block lg:w-1/3 mt-6">
+              <div className="hidden lg:block lg:w-1/3 mt-6 space-y-4">
                 <Suspense
                   fallback={<div className="skeleton h-96 w-full"></div>}
                 >
                   <CommunityAboutcard slug={slug} />
+                </Suspense>
+
+                {/* Compact Leaderboard */}
+                <Suspense
+                  fallback={<div className="skeleton h-64 w-full"></div>}
+                >
+                  <CompactLeaderboard
+                    communityId={community?._id?.toString() || ""}
+                    communitySlug={slug}
+                    period="30day"
+                    limit={5}
+                  />
                 </Suspense>
               </div>
 

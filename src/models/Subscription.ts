@@ -49,6 +49,14 @@ export interface ICommunitySubscription {
     sentAt: Date;
     channel: "email" | "sms" | "push";
   }>;
+  // Trial reminder tracking
+  trialReminders: Array<{
+    daysRemaining: number;
+    sentAt: Date;
+    emailSent: boolean;
+    inAppSent: boolean;
+    metadata?: Record<string, any>;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -125,17 +133,25 @@ const communitySubscriptionSchema = new Schema<ICommunitySubscription>(
     consecutiveFailures: { type: Number, default: 0 },
     // Notifications
     notificationsSent: [{
-      type: { 
-        type: String, 
+      type: {
+        type: String,
         enum: ["renewal_reminder", "payment_failed", "subscription_cancelled", "payment_retry"],
-        required: true 
+        required: true
       },
       sentAt: { type: Date, default: Date.now },
-      channel: { 
-        type: String, 
-        enum: ["email", "sms", "push"], 
-        required: true 
+      channel: {
+        type: String,
+        enum: ["email", "sms", "push"],
+        required: true
       }
+    }],
+    // Trial reminder tracking
+    trialReminders: [{
+      daysRemaining: { type: Number, required: true },
+      sentAt: { type: Date, default: Date.now },
+      emailSent: { type: Boolean, default: false },
+      inAppSent: { type: Boolean, default: false },
+      metadata: { type: Schema.Types.Mixed }
     }]
   },
   {

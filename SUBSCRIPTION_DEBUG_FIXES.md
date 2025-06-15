@@ -35,9 +35,7 @@ This document outlines the fixes implemented to resolve subscription and payment
 - `src/app/api/admin/fix-subscription-dates/route.ts` - Updated to use new cleanup logic
 
 ### UI Components
-- `src/components/debug/BillingDebugInfo.tsx` - Enhanced debug display with better date formatting
-- `src/components/debug/SubscriptionDataCleanup.tsx` - New comprehensive debug and cleanup component
-- `src/components/communitycommponets/CommunityBillingInfo.tsx` - Added new debug component
+- `src/components/communitycommponets/CommunityBillingInfo.tsx` - Enhanced billing information display
 
 ## Key Improvements
 
@@ -83,23 +81,17 @@ The new `subscription-data-cleanup.ts` provides:
 - Detailed admin trial info breakdown
 - Visual highlighting of problematic data
 
-#### SubscriptionDataCleanup Component
-- Get detailed subscription status with validation results
-- One-click data cleanup functionality
-- Comprehensive display of community data, subscription records, and validation results
-- Real-time status updates after cleanup
+## How to Use the Billing Tools
 
-## How to Use the Debug Tools
-
-### 1. Access Debug Interface
-Navigate to any community's billing page (`/billing/[slug]`) as the community admin. The debug components are displayed at the top of the page.
+### 1. Access Billing Interface
+Navigate to any community's billing page (`/billing/[slug]`) as the community admin.
 
 ### 2. View Current Status
-The **BillingDebugInfo** component shows:
+The billing interface shows:
 - Current payment and subscription status
 - Days remaining and trial information
 - Subscription ID and status
-- Admin trial details with color coding
+- Admin trial details
 
 ### 3. Get Detailed Analysis
 Click **"Get Detailed Status"** in the **SubscriptionDataCleanup** component to see:

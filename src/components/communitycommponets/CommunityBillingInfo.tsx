@@ -8,6 +8,8 @@ import { apiClient } from "@/lib/api-client";
 import RazorpayCheckout from "@/components/payments/RazorpayCheckout";
 import { useSettingsModal } from "@/components/modals/SettingsModalProvider";
 import { useCommunityBilling } from "@/contexts/CommunityBillingContext";
+import TrialReminderBanner from "@/components/trial/TrialReminderBanner";
+import PayNowButton, { TrialConversionButton } from "@/components/payments/PayNowButton";
 
 
 export default function CommunityBillingInfo() {
@@ -348,6 +350,12 @@ export default function CommunityBillingInfo() {
 
   return (
     <div className="space-y-8">
+      {/* Trial Reminder Banner */}
+      <TrialReminderBanner
+        communityId={billingInfo?._id}
+        communitySlug={slug}
+      />
+
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Billing & Subscription</h2>
         <button
@@ -572,14 +580,32 @@ export default function CommunityBillingInfo() {
                   </li>
                 </ul>
 
-                <RazorpayCheckout
-                  communityId={billingInfo?._id}
-                  communitySlug={slug}
-                  buttonText="Subscribe Now ($29/month)"
-                  onSuccess={handlePaymentSuccess}
-                  onError={handlePaymentError}
-                  className={paymentLoading ? "opacity-50 pointer-events-none" : ""}
-                />
+                {trialActive ? (
+                  <TrialConversionButton
+                    communityId={billingInfo?._id}
+                    communitySlug={slug}
+                    daysRemaining={daysRemaining}
+                    size="lg"
+                    showFeatures={true}
+                    context="billing"
+                    disabled={paymentLoading}
+                    onSuccess={handlePaymentSuccess}
+                    onError={handlePaymentError}
+                  />
+                ) : (
+                  <PayNowButton
+                    communityId={billingInfo?._id}
+                    communitySlug={slug}
+                    buttonText="Subscribe Now ($29/month)"
+                    variant="primary"
+                    size="lg"
+                    showFeatures={true}
+                    context="billing"
+                    disabled={paymentLoading}
+                    onSuccess={handlePaymentSuccess}
+                    onError={handlePaymentError}
+                  />
+                )}
               </div>
 
               {!trialActive && (

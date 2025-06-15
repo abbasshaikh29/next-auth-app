@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth-helpers";
 import { getUserGamificationData } from "@/lib/gamification";
+import { dbconnect } from "@/lib/db";
+import { Community } from "@/models/Community";
+import mongoose from "mongoose";
 
 // GET /api/gamification/user/[userId] - Get user's gamification data
 export async function GET(
@@ -17,9 +20,30 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const communityId = searchParams.get("communityId");
 
+    let resolvedCommunityId: string | undefined = undefined;
+
+    if (communityId) {
+      await dbconnect();
+
+      if (mongoose.Types.ObjectId.isValid(communityId)) {
+        // If it's already a valid ObjectId, use it directly
+        resolvedCommunityId = communityId;
+      } else {
+        // If it's a slug, resolve it to ObjectId
+        const community = await Community.findOne({ slug: communityId }).select("_id");
+        if (!community) {
+          return NextResponse.json(
+            { error: "Community not found" },
+            { status: 404 }
+          );
+        }
+        resolvedCommunityId = community._id.toString();
+      }
+    }
+
     const gamificationData = await getUserGamificationData(
       params.userId,
-      communityId || undefined
+      resolvedCommunityId
     );
 
     return NextResponse.json(gamificationData);

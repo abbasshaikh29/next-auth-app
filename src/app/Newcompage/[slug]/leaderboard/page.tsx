@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import Header from "@/components/Header";
 import CommunityNav from "@/components/communitynav/CommunityNav";
 import Leaderboard from "@/components/gamification/Leaderboard";
 import { Trophy, Calendar, Clock, Infinity } from "lucide-react";
@@ -61,7 +60,6 @@ export default function LeaderboardPage() {
   if (loading) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
-        <Header />
         <CommunityNav />
         <div className="container mx-auto px-4 py-8 mt-6">
           <div className="animate-pulse">
@@ -88,7 +86,6 @@ export default function LeaderboardPage() {
   if (!community) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
-        <Header />
         <CommunityNav />
         <div className="container mx-auto px-4 py-8 mt-6">
           <div className="text-center">
@@ -106,7 +103,6 @@ export default function LeaderboardPage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
-      <Header />
       <CommunityNav />
 
       <div className="container mx-auto px-4 py-8 mt-6">
@@ -174,7 +170,7 @@ export default function LeaderboardPage() {
           <div className="lg:col-span-2 xl:col-span-2">
             <div className="rounded-lg p-6" style={{ backgroundColor: 'var(--card-bg)', boxShadow: 'var(--shadow-sm)' }}>
               <Leaderboard
-                communityId={community._id}
+                communityId={community._id?.toString() || ""}
                 period={selectedPeriod}
                 limit={20}
               />

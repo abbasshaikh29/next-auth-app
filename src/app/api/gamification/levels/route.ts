@@ -25,8 +25,26 @@ export async function GET(request: NextRequest) {
 
     await dbconnect();
 
+    // Resolve community slug to ObjectId
+    let communityObjectId: mongoose.Types.ObjectId;
+
+    if (mongoose.Types.ObjectId.isValid(communityId)) {
+      // If it's already a valid ObjectId, use it directly
+      communityObjectId = new mongoose.Types.ObjectId(communityId);
+    } else {
+      // If it's a slug, resolve it to ObjectId
+      const community = await Community.findOne({ slug: communityId }).select("_id");
+      if (!community) {
+        return NextResponse.json(
+          { error: "Community not found" },
+          { status: 404 }
+        );
+      }
+      communityObjectId = community._id;
+    }
+
     const config = await LevelConfig.findOne({
-      communityId: new mongoose.Types.ObjectId(communityId),
+      communityId: communityObjectId,
     });
 
     return NextResponse.json({
@@ -61,8 +79,26 @@ export async function PUT(request: NextRequest) {
 
     await dbconnect();
 
-    // Check if user is admin of the community
-    const community = await Community.findById(communityId);
+    // Resolve community slug to ObjectId and get community data
+    let community;
+    let communityObjectId: mongoose.Types.ObjectId;
+
+    if (mongoose.Types.ObjectId.isValid(communityId)) {
+      // If it's already a valid ObjectId, use it directly
+      communityObjectId = new mongoose.Types.ObjectId(communityId);
+      community = await Community.findById(communityObjectId);
+    } else {
+      // If it's a slug, resolve it to ObjectId
+      community = await Community.findOne({ slug: communityId });
+      if (!community) {
+        return NextResponse.json(
+          { error: "Community not found" },
+          { status: 404 }
+        );
+      }
+      communityObjectId = community._id;
+    }
+
     if (!community) {
       return NextResponse.json(
         { error: "Community not found" },
@@ -89,7 +125,7 @@ export async function PUT(request: NextRequest) {
 
     // Update or create level configuration
     await LevelConfig.findOneAndUpdate(
-      { communityId: new mongoose.Types.ObjectId(communityId) },
+      { communityId: communityObjectId },
       { levels: validatedLevels },
       { upsert: true, new: true }
     );

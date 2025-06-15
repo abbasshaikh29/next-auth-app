@@ -14,6 +14,7 @@ import AnalyticsDashboard from "@/components/communitycommponets/AnalyticsDashbo
 import AdminPanelSettings from "@/components/communitycommponets/AdminPanelSettings";
 import LevelManagement from "@/components/gamification/LevelManagement";
 import { CommunityBillingProvider } from "@/contexts/CommunityBillingContext";
+import { DetailedPlanInfoCard } from "@/components/billing/PlanInfoCard";
 
 interface CommunitySettingsModalProps {
   isOpen: boolean;
@@ -110,6 +111,31 @@ export default function CommunitySettingsModal({
         return isAdmin ? <CommunityAccessSettings /> : null;
       case "PlanInfo":
         return isAdmin ? <CommunityPlanInfo /> : null;
+      case "Billing":
+        return isAdmin ? (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold">Billing & Subscription</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Manage your community subscription and payment details
+                </p>
+              </div>
+            </div>
+            <DetailedPlanInfoCard
+              communityId={slug}
+              communitySlug={slug}
+              onPaymentSuccess={(subscription) => {
+                console.log('Payment successful in settings modal:', subscription);
+                // Could add a success toast here
+              }}
+              onPaymentError={(error) => {
+                console.error('Payment error in settings modal:', error);
+                // Could add an error toast here
+              }}
+            />
+          </div>
+        ) : null;
 
       case "AdminPanel":
         return isAdmin ? <AdminPanelSettings /> : null;
@@ -193,6 +219,14 @@ export default function CommunitySettingsModal({
                       }`}
                     >
                       Plan Info
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("Billing")}
+                      className={`py-2 lg:py-3 px-3 lg:px-4 w-full lg:w-auto flex-shrink-0 text-left font-semibold text-xs lg:text-sm transition-colors duration-200 rounded-lg hover:bg-base-200 ${
+                        activeTab === "Billing" ? "bg-primary text-primary-content" : ""
+                      }`}
+                    >
+                      Billing
                     </button>
 
                     <button

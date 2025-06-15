@@ -246,22 +246,7 @@ export const CommunityBillingProvider: React.FC<CommunityBillingProviderProps> =
   const subscriptionActive = statusData ? statusData.hasActiveSubscription : isSubscriptionActiveFallback();
   const percentRemaining = trialActive ? (daysRemaining / 14) * 100 : 0;
 
-  // Debug logging
-  console.log('CommunityBillingContext computed values:', {
-    statusDataAvailable: !!statusData,
-    statusData,
-    billingData: billingData ? {
-      paymentStatus: billingData.paymentStatus,
-      adminTrialInfo: billingData.adminTrialInfo,
-      subscriptionEndDate: billingData.subscriptionEndDate,
-    } : null,
-    computed: {
-      daysRemaining,
-      trialActive,
-      subscriptionActive,
-      percentRemaining
-    }
-  });
+  // Debug logging removed for production build
 
   const contextValue: CommunityBillingContextType = {
     billingData,

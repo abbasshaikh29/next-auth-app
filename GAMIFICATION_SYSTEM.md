@@ -77,6 +77,7 @@ This implementation provides a complete 9-level gamification system with points,
 - `src/components/gamification/LevelBadge.tsx` - Level badge component
 - `src/components/gamification/ProgressBar.tsx` - Progress indicator
 - `src/components/gamification/Leaderboard.tsx` - Leaderboard display
+- `src/components/gamification/CompactLeaderboard.tsx` - Compact leaderboard for sidebars
 - `src/components/gamification/LevelManagement.tsx` - Admin level management
 
 ### Pages

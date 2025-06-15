@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Loader2, AlertCircle, CheckCircle, Clock, Calendar, RefreshCw, X } from "lucide-react";
 import { useCommunityBilling } from "@/contexts/CommunityBillingContext";
+import PayNowButton, { TrialConversionButton } from "@/components/payments/PayNowButton";
 
 
 export default function CommunityPlanInfo() {
@@ -224,6 +225,24 @@ export default function CommunityPlanInfo() {
                     <span>Ends: {formatDate(planInfo.adminTrialInfo.endDate)}</span>
                   )}
                 </div>
+
+                {/* Trial Conversion Button */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <TrialConversionButton
+                    communityId={planInfo?._id}
+                    communitySlug={slug}
+                    daysRemaining={daysRemaining}
+                    context="settings"
+                    onSuccess={(subscription) => {
+                      console.log('Trial converted successfully:', subscription);
+                      refreshBillingData(); // Refresh the billing data
+                    }}
+                    onError={(error) => {
+                      console.error('Trial conversion error:', error);
+                      setLocalError(error);
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -270,12 +289,53 @@ export default function CommunityPlanInfo() {
             
             <div className="space-y-3">
               {!subscriptionActive && (
-                <a 
-                  href={`/billing/${slug}`}
-                  className="btn btn-primary btn-block"
-                >
-                  {trialActive ? "Upgrade to Premium" : "Start Trial or Subscribe"}
-                </a>
+                <div className="space-y-2">
+                  {trialActive ? (
+                    <TrialConversionButton
+                      communityId={planInfo?._id}
+                      communitySlug={slug}
+                      daysRemaining={daysRemaining}
+                      size="md"
+                      showFeatures={false}
+                      context="settings"
+                      onSuccess={(subscription) => {
+                        console.log('Subscription activated:', subscription);
+                        refreshBillingData();
+                      }}
+                      onError={(error) => {
+                        console.error('Subscription error:', error);
+                        setLocalError(error);
+                      }}
+                    />
+                  ) : (
+                    <PayNowButton
+                      communityId={planInfo?._id}
+                      communitySlug={slug}
+                      buttonText="Start 14-Day Free Trial"
+                      variant="primary"
+                      size="md"
+                      showFeatures={true}
+                      context="settings"
+                      onSuccess={(subscription) => {
+                        console.log('Trial started:', subscription);
+                        refreshBillingData();
+                      }}
+                      onError={(error) => {
+                        console.error('Trial start error:', error);
+                        setLocalError(error);
+                      }}
+                    />
+                  )}
+
+                  <div className="text-center">
+                    <a
+                      href={`/billing/${slug}`}
+                      className="text-sm text-blue-600 hover:text-blue-800 underline"
+                    >
+                      View full billing details
+                    </a>
+                  </div>
+                </div>
               )}
               
               {subscriptionActive && (

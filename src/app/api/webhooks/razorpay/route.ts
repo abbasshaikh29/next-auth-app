@@ -6,6 +6,7 @@ import { User } from "@/models/User";
 import { Community } from "@/models/Community";
 import { Transaction } from "@/models/Transaction";
 import { validateAndConvertTimestamp } from "@/lib/subscription-date-utils";
+import { CommunitySuspensionService } from "@/lib/community-suspension-service";
 
 // POST /api/webhooks/razorpay - Handle Razorpay webhook events
 export async function POST(request: NextRequest) {
@@ -302,6 +303,15 @@ async function handleSubscriptionActivated(payload: any) {
       await User.findByIdAndUpdate(dbSubscription.adminId, {
         "communityAdminSubscription.subscriptionStatus": "active"
       });
+
+      // Reactivate community if it was suspended
+      try {
+        await CommunitySuspensionService.reactivateCommunity(subscription.id);
+        console.log(`Community reactivated for subscription ${subscription.id}`);
+      } catch (reactivationError) {
+        console.error(`Error reactivating community for subscription ${subscription.id}:`, reactivationError);
+        // Don't fail the webhook if reactivation fails
+      }
     }
   } catch (error) {
     console.error("Error handling subscription activated:", error);
