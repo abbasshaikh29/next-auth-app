@@ -8,9 +8,12 @@ import UserCommunitySettings from "@/components/communitycommponets/UserCommunit
 import CommunitySettingsForm from "@/components/communitycommponets/CommunitySettingsForm";
 import CommunityAboutMediaManager from "@/components/communitycommponets/CommunityAboutMediaManager";
 import CommunityAccessSettings from "@/components/communitycommponets/CommunityAccessSettings";
-import CommunityBillingInfo from "@/components/communitycommponets/CommunityBillingInfo";
+import CommunityPlanInfo from "@/components/communitycommponets/CommunityPlanInfo";
+
 import AnalyticsDashboard from "@/components/communitycommponets/AnalyticsDashboard";
 import AdminPanelSettings from "@/components/communitycommponets/AdminPanelSettings";
+import LevelManagement from "@/components/gamification/LevelManagement";
+import { CommunityBillingProvider } from "@/contexts/CommunityBillingContext";
 
 interface CommunitySettingsModalProps {
   isOpen: boolean;
@@ -93,10 +96,21 @@ export default function CommunitySettingsModal({
         ) : null;
       case "Analytics":
         return (isAdmin || isSubAdmin) ? <AnalyticsDashboard /> : null;
+      case "LevelManagement":
+        return (isAdmin || isSubAdmin) ? (
+          <div className="space-y-6">
+            <h3 className="text-xl font-bold">Level Management</h3>
+            <p className="text-sm text-gray-600">
+              Customize level names for your community's gamification system.
+            </p>
+            <LevelManagement communityId={slug || ""} />
+          </div>
+        ) : null;
       case "AccessSettings":
         return isAdmin ? <CommunityAccessSettings /> : null;
-      case "Billing":
-        return isAdmin ? <CommunityBillingInfo /> : null;
+      case "PlanInfo":
+        return isAdmin ? <CommunityPlanInfo /> : null;
+
       case "AdminPanel":
         return isAdmin ? <AdminPanelSettings /> : null;
       case "UserSettings":
@@ -106,13 +120,14 @@ export default function CommunitySettingsModal({
   };
 
   return (
-    <SettingsModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Community Settings"
-      maxWidth="max-w-6xl"
-    >
-      <div className="flex flex-col lg:flex-row h-full">
+    <CommunityBillingProvider>
+      <SettingsModal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Community Settings"
+        maxWidth="max-w-6xl"
+      >
+        <div className="flex flex-col lg:flex-row h-full">
         {/* Sidebar Navigation */}
         <div className="w-full lg:w-64 border-b lg:border-b-0 lg:border-r border-base-300 p-4 lg:p-6">
           <div className="flex flex-row lg:flex-col space-x-2 lg:space-x-0 lg:space-y-2 overflow-x-auto lg:overflow-x-visible">
@@ -153,6 +168,14 @@ export default function CommunitySettingsModal({
                 >
                   Analytics
                 </button>
+                <button
+                  onClick={() => setActiveTab("LevelManagement")}
+                  className={`py-2 lg:py-3 px-3 lg:px-4 w-full lg:w-auto flex-shrink-0 text-left font-semibold text-xs lg:text-sm transition-colors duration-200 rounded-lg hover:bg-base-200 ${
+                    activeTab === "LevelManagement" ? "bg-primary text-primary-content" : ""
+                  }`}
+                >
+                  Level Management
+                </button>
                 {isAdmin && (
                   <>
                     <button
@@ -164,13 +187,14 @@ export default function CommunitySettingsModal({
                       Access & Pricing
                     </button>
                     <button
-                      onClick={() => setActiveTab("Billing")}
+                      onClick={() => setActiveTab("PlanInfo")}
                       className={`py-2 lg:py-3 px-3 lg:px-4 w-full lg:w-auto flex-shrink-0 text-left font-semibold text-xs lg:text-sm transition-colors duration-200 rounded-lg hover:bg-base-200 ${
-                        activeTab === "Billing" ? "bg-primary text-primary-content" : ""
+                        activeTab === "PlanInfo" ? "bg-primary text-primary-content" : ""
                       }`}
                     >
-                      Billing & Trial
+                      Plan Info
                     </button>
+
                     <button
                       onClick={() => setActiveTab("AdminPanel")}
                       className={`py-2 lg:py-3 px-3 lg:px-4 w-full lg:w-auto flex-shrink-0 text-left font-semibold text-xs lg:text-sm transition-colors duration-200 rounded-lg hover:bg-base-200 ${
@@ -192,5 +216,6 @@ export default function CommunitySettingsModal({
         </div>
       </div>
     </SettingsModal>
+    </CommunityBillingProvider>
   );
 }

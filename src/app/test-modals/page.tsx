@@ -55,12 +55,13 @@ export default function TestModalsPage() {
                 >
                   Open Community Tab
                 </button>
-                <button 
+                <button
                   className="btn btn-accent"
                   onClick={() => openCommunitySettings("test-community", "Analytics")}
                 >
                   Open Analytics Tab
                 </button>
+
               </div>
             </div>
           </div>

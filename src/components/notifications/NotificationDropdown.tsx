@@ -44,7 +44,7 @@ export default function NotificationDropdown({
     };
 
     fetchNotifications();
-  }, [session, showNotification]);
+  }, [session]);
 
   const handleMarkAllAsRead = async () => {
     if (!session?.user?.id || markingRead) return;

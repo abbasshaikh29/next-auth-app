@@ -76,7 +76,7 @@ export default function NotificationIcon() {
     return () => {
       notificationCleanup();
     };
-  }, [isEnabled, session?.user?.id, showNotification]);
+  }, [isEnabled, session?.user?.id]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

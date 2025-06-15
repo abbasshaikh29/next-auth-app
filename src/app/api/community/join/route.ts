@@ -3,6 +3,7 @@ import { getServerSession } from "@/lib/auth-helpers";
 import { Community } from "@/models/Community";
 import { Notification } from "@/models/Notification";
 import { User } from "@/models/User";
+import { ensureCommunityHasSubscriptionPlan } from "@/lib/community-subscription-middleware";
 
 import { dbconnect } from "@/lib/db";
 import mongoose from "mongoose";
@@ -24,7 +25,8 @@ export async function POST(req: Request) {
     const { communityId, answers } = await req.json();
     await dbconnect();
 
-    const community = await Community.findById(communityId);
+    // Ensure community has subscription plan (handles migration)
+    const community = await ensureCommunityHasSubscriptionPlan(communityId);
     if (!community) {
       return NextResponse.json(
         { error: "Community not found" },
